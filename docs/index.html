@@ -564,7 +564,7 @@ function g3T4EasyQuestion() {
       q: `求 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$ 的中點坐標`,
       ans: ansStr,
       opts,
-      hint: `中點公式 $M = \\left(\\frac{x_1+x_2}{2}, \\frac{y_1+y_2}{2}\\right) = ${ansStr}$`,
+      hint: `中點公式 $M = \\left(\\frac{x_1+x_2}{2}, \\frac{y_1+y_2}{2}\\right) = ${ansStr}`,
     };
   }
 
@@ -607,7 +607,7 @@ function g3T4DseQuestion() {
       q: `點 $A(${x1}, ${y1})$ 與 $B(${x2}, k)$ 的距離為 $${dist}$，求 $k$ 的所有可能值`,
       ans,
       opts,
-      hint: `列式 $\\sqrt{(${x2}-${x1})^2 + (k-${y1})^2} = ${dist}$，化簡得 $(k-${y1})^2 = ${other * other}$，故 ${ans}$`,
+      hint: `列式 $\\sqrt{(${x2}-${x1})^2 + (k-${y1})^2} = ${dist}$，化簡得 $(k-${y1})^2 = ${other * other}$，故 ${ans}`,
     };
   }
 
@@ -631,7 +631,7 @@ function g3T4DseQuestion() {
       q: `點 $A(k, ${y1})$ 與 $B(${xBase}, ${y2})$ 的距離為 $${dist}$，求 $k$ 的所有可能值`,
       ans,
       opts,
-      hint: `列式 $\\sqrt{(${xBase}-k)^2 + (${y2}-${y1})^2} = ${dist}$，化簡得 $(k-${xBase})^2 = ${other * other}$，故 ${ans}$`,
+      hint: `列式 $\\sqrt{(${xBase}-k)^2 + (${y2}-${y1})^2} = ${dist}$，化簡得 $(k-${xBase})^2 = ${other * other}$，故 ${ans}`,
     };
   }
 
@@ -651,7 +651,7 @@ function g3T4DseQuestion() {
         q: `$A(${x1}, ${y1})$ 與 $B(k, ${y2})$ 的中點為 $M(${mx}, ${my})$，求 $k$`,
         ans,
         opts,
-        hint: `中點公式 $\\frac{${x1}+k}{2} = ${mx}$，解得 ${ans}$`,
+        hint: `中點公式 $\\frac{${x1}+k}{2} = ${mx}$，解得 ${ans}`,
       };
     }
     const k = 2 * my - y1;
@@ -661,7 +661,7 @@ function g3T4DseQuestion() {
       q: `$A(${x1}, ${y1})$ 與 $B(${x2}, k)$ 的中點為 $M(${mx}, ${my})$，求 $k$`,
       ans,
       opts,
-      hint: `中點公式 $\\frac{${y1}+k}{2} = ${my}$，解得 ${ans}$`,
+      hint: `中點公式 $\\frac{${y1}+k}{2} = ${my}$，解得 ${ans}`,
     };
   }
 
@@ -682,7 +682,7 @@ function g3T4DseQuestion() {
         q: `直線通過 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$，斜率為 $${m}$。點 $C(${x2 + dx}, k)$ 亦在該直線上，求 $k$`,
         ans,
         opts,
-        hint: `斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{k-${y2}}{${x2 + dx}-${x2}} = ${m}$，解得 ${ans}$`,
+        hint: `斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{k-${y2}}{${x2 + dx}-${x2}} = ${m}$，解得 ${ans}`,
       };
     }
     const k = x1 + dx + (y2 - y1) / m;
@@ -692,7 +692,7 @@ function g3T4DseQuestion() {
       q: `直線通過 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$，斜率為 $${m}$。點 $C(k, ${y2 + m * dx})$ 亦在該直線上，求 $k$`,
       ans,
       opts,
-      hint: `斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{${y2 + m * dx}-${y1}}{k-${x1}} = ${m}$，解得 ${ans}$`,
+      hint: `斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{${y2 + m * dx}-${y1}}{k-${x1}} = ${m}$，解得 ${ans}`,
     };
   }
 
@@ -717,7 +717,7 @@ function g3T4DseQuestion() {
         q: `長方形 $ABCD$ 中，$A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(${x3}, ${y3})$，求頂點 $D$ 的坐標`,
         ans,
         opts,
-        hint: `長方形對角線互相平分：$D = A + C - B = (${x1}+${x3}-${x2},\\ ${y1}+${y3}-${y2}) = ${ans}$`,
+        hint: `長方形對角線互相平分：$D = A + C - B = (${x1}+${x3}-${x2},\\ ${y1}+${y3}-${y2}) = ${ans}`,
       };
     }
     const ax = rand(-2, 3);
@@ -738,7 +738,7 @@ function g3T4DseQuestion() {
       q: `正方形 $ABCD$ 中，$A(${ax}, ${ay})$、$B(${bx}, ${by})$、$C(${cx}, ${cy})$（按順序排列），求頂點 $D$ 的坐標`,
       ans,
       opts,
-      hint: `正方形對角線互相平分：$D = A + C - B = (${ax}+${cx}-${bx},\\ ${ay}+${cy}-${by}) = ${ans}$`,
+      hint: `正方形對角線互相平分：$D = A + C - B = (${ax}+${cx}-${bx},\\ ${ay}+${cy}-${by}) = ${ans}`,
     };
   }
 
@@ -760,7 +760,7 @@ function g3T4DseQuestion() {
       q: `三點 $A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(k, ${y3})$ 共線，求 $k$`,
       ans,
       opts,
-      hint: `共線則斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{${y3}-${y2}}{k-${x2}} = ${m}$，解得 ${ans}$`,
+      hint: `共線則斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{${y3}-${y2}}{k-${x2}} = ${m}$，解得 ${ans}`,
     };
   }
   const k = y3;
@@ -770,7 +770,7 @@ function g3T4DseQuestion() {
     q: `三點 $A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(${x3}, k)$ 共線，求 $k$`,
     ans,
     opts,
-    hint: `共線則斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{k-${y2}}{${x3}-${x2}} = ${m}$，解得 ${ans}$`,
+    hint: `共線則斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{k-${y2}}{${x3}-${x2}} = ${m}$，解得 ${ans}`,
   };
 }
 
