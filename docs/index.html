@@ -1239,7 +1239,8 @@ const rawCurriculumGenerators = {
         }),
     },
   ],
-  3: [    {
+  3: [
+    {
       id: "g3_t1",
       title: "1. 續多項式的因式分解",
       generate: (difficulty = "easy") =>
@@ -1271,7 +1272,7 @@ const rawCurriculumGenerators = {
             hint: `十字相乘：${ansStr}`,
           };
         }),
-    },,
+    },
     {
       id: "g3_t2",
       title: "2. 整數指數定律",
@@ -1485,7 +1486,7 @@ const rawCurriculumGenerators = {
             hint: `$(a^{${m}} b)^{${n}} = a^{${expA}} b^{${n}}$，$a$ 指數：$${expA}+${p}-${q} = ${ansA}$，$b$ 保持 $${n}$`,
           };
         }),
-    },,
+    },
     {
       id: "g3_t3",
       title: "3. 利息 (Interest)",
@@ -1571,13 +1572,13 @@ const rawCurriculumGenerators = {
             hint: compoundHint(2),
           };
         }),
-    },,
+    },
     {
       id: "g3_t4",
       title: "4. 面積及體積 (角錐、圓錐、球體、相似圖形)",
       generate: (difficulty = "easy") =>
         generate10Unique(() => g3T4VolumeQuestion(difficulty)),
-    },,
+    },
     {
       id: "g3_t5",
       title: "5. 直角三角比 (sin, cos, tan)",
@@ -1619,13 +1620,13 @@ const rawCurriculumGenerators = {
             hint,
           };
         }),
-    },,
+    },
     {
       id: "g3_t6",
       title: "6. 座標幾何 (距離、中點、斜率)",
       generate: (difficulty = "easy") =>
         generate10Unique(() => (difficulty === "dse" ? g3T4DseQuestion() : g3T4EasyQuestion())),
-    },,
+    },
     {
       id: "g3_t7",
       title: "7. 相似三角形邊長比",
@@ -1642,7 +1643,7 @@ const rawCurriculumGenerators = {
             hint: `對應邊成比例：$${side1} \\times ${ratio} = ${side2}$`,
           };
         }),
-    },,
+    },
 
   ],
   4: [
