@@ -421,45 +421,64 @@ const TRIG_TRIPLES = [
   [12, 35, 37],
 ];
 
-function trigSideLabel(hideSide, target, value, showSideNames) {
+function trigSideParts(hideSide, target, value, showSideNames) {
   const num = target === hideSide ? "?" : String(value);
-  if (!showSideNames) return num;
+  if (!showSideNames) return { name: "", num };
   const name = target === "opp" ? "對邊" : target === "adj" ? "鄰邊" : "斜邊";
-  return `${name} ${num}`;
+  return { name, num };
+}
+
+function trigLabelText(x, y, parts, fill, anchor, baseline = "middle") {
+  const style =
+    'font-size:13px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums';
+  if (!parts.name) {
+    return `<text x="${x}" y="${y}" fill="${fill}" style="${style}" text-anchor="${anchor}" dominant-baseline="${baseline}">${parts.num}</text>`;
+  }
+  return `<text x="${x}" y="${y}" fill="${fill}" style="${style}" text-anchor="${anchor}" dominant-baseline="${baseline}"><tspan x="${x}" dy="-0.55em">${parts.name}</tspan><tspan x="${x}" dy="1.15em">${parts.num}</tspan></text>`;
 }
 
 function trigTriangleSvg(opp, adj, hyp, showSideNames = true, hideSide = null) {
-  const oppLabel = trigSideLabel(hideSide, "opp", opp, showSideNames);
-  const adjLabel = trigSideLabel(hideSide, "adj", adj, showSideNames);
-  const hypLabel = trigSideLabel(hideSide, "hyp", hyp, showSideNames);
+  const oppParts = trigSideParts(hideSide, "opp", opp, showSideNames);
+  const adjParts = trigSideParts(hideSide, "adj", adj, showSideNames);
+  const hypParts = trigSideParts(hideSide, "hyp", hyp, showSideNames);
 
-  const leftPad = 16 + oppLabel.length * 9;
-  const bottomPad = 30;
-  const topPad = 14;
-  const rightPad = 20;
+  const W = 230;
+  const H = 175;
+  const leftPad = 52;
+  const rightPad = 14;
+  const topPad = 22;
+  const bottomPad = 38;
+  const innerW = W - leftPad - rightPad;
+  const innerH = H - topPad - bottomPad;
 
-  const unit = Math.min(108 / Math.max(adj, opp), 7);
+  const unit = Math.min(innerW / adj, innerH / opp);
   const w = adj * unit;
   const h = opp * unit;
-  const x0 = leftPad;
-  const y0 = topPad;
+  const x0 = leftPad + (innerW - w) / 2;
+  const y0 = topPad + (innerH - h) / 2;
   const x1 = x0 + w;
   const y1 = y0 + h;
-  const W = x1 + rightPad;
-  const H = y1 + bottomPad;
   const ra = 10;
-  const hypAngle = Math.round((Math.atan2(opp, adj) * 180) / Math.PI);
-  const hypMidX = (x0 + x1) / 2 + 4;
-  const hypMidY = (y0 + y1) / 2 - 2;
   const oppMidY = (y0 + y1) / 2;
+
+  const hypDx = x0 - x1;
+  const hypDy = y0 - y1;
+  const hypLen = Math.hypot(hypDx, hypDy) || 1;
+  const nx = -hypDy / hypLen;
+  const ny = hypDx / hypLen;
+  const hypLabelX = (x1 + x0) / 2 + nx * 22;
+  const hypLabelY = (y1 + y0) / 2 + ny * 22;
+
+  const thetaStyle =
+    'font-size:13px;font-weight:700;font-family:system-ui,-apple-system,sans-serif';
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="直角三角形" style="max-width:260px;width:100%;height:auto;display:block;margin:6px auto">
 <polygon points="${x0},${y1} ${x1},${y1} ${x0},${y0}" fill="rgba(108,92,231,0.18)" stroke="#a29bfe" stroke-width="2.5"/>
 <polyline points="${x0},${y1} ${x0 + ra},${y1} ${x0 + ra},${y1 - ra} ${x0},${y1 - ra}" fill="none" stroke="#f1c40f" stroke-width="1.8"/>
-<text x="${x0 - 8}" y="${oppMidY}" fill="#ff7675" font-size="11" font-weight="bold" text-anchor="end" dominant-baseline="middle">${oppLabel}</text>
-<text x="${(x0 + x1) / 2}" y="${y1 + 20}" fill="#55efc4" font-size="11" font-weight="bold" text-anchor="middle">${adjLabel}</text>
-<text x="${hypMidX}" y="${hypMidY}" fill="#ffeaa7" font-size="11" font-weight="bold" text-anchor="middle" transform="rotate(-${hypAngle}, ${hypMidX}, ${hypMidY})">${hypLabel}</text>
-<text x="${x1 - 4}" y="${y1 - 6}" fill="#f1c40f" font-size="15" font-weight="bold">θ</text>
+${trigLabelText(leftPad - 4, oppMidY, oppParts, "#ff7675", "end")}
+${trigLabelText((x0 + x1) / 2, H - 12, adjParts, "#55efc4", "middle", "auto")}
+${trigLabelText(hypLabelX, hypLabelY, hypParts, "#ffeaa7", "middle")}
+<text x="${x1 - 2}" y="${y1 - 8}" fill="#f1c40f" style="${thetaStyle}">θ</text>
 </svg>`;
 }
 
