@@ -1,0 +1,3752 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>數學勇者地城 — 單檔完整版（含 PK）</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.4/dist/mqtt.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;
+  font-family:'PingFang HK','Microsoft JhengHei',-apple-system,sans-serif;user-select:none}
+body{background:#0b091a;color:#fff;min-height:100vh;display:flex;justify-content:center;padding:10px}
+.app{width:100%;max-width:520px;background:linear-gradient(180deg,#181331,#0c081d);
+  border:3px solid #5a499a;border-radius:24px;padding:16px;min-height:720px;
+  box-shadow:0 12px 40px rgba(0,0,0,.9),0 0 25px rgba(120,80,255,.3);position:relative}
+.screen{display:none;flex-direction:column;flex:1;animation:fadeIn .25s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.top-bar{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.07);
+  padding:10px 14px;border-radius:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,.12)}
+.coin-badge{background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#2d3436;padding:4px 10px;
+  border-radius:20px;font-weight:900;font-size:12px}
+.star-badge{background:linear-gradient(135deg,#ff7675,#d63031);color:#fff;padding:4px 10px;
+  border-radius:20px;font-weight:900;font-size:12px;margin-left:6px}
+.btn{width:100%;border:none;padding:14px 18px;font-size:16px;font-weight:bold;border-radius:50px;
+  cursor:pointer;margin-top:8px;touch-action:manipulation;color:#fff;
+  background:linear-gradient(180deg,#ff7675,#d63031);box-shadow:0 5px 0 #b22222}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b22222}
+.btn.sec{background:linear-gradient(180deg,#6c5ce7,#341f97);box-shadow:0 5px 0 #1b1464}
+.btn.gold{background:linear-gradient(180deg,#f1c40f,#e67e22);color:#000;box-shadow:0 5px 0 #d35400}
+.btn-sm{padding:10px;font-size:13px;border-radius:14px;box-shadow:none;margin-top:4px}
+.grade-tabs{display:flex;gap:4px;overflow-x:auto;margin-bottom:10px}
+.grade-tab{flex:1;min-width:52px;padding:8px 4px;border:none;border-radius:10px;font-weight:bold;
+  font-size:11px;background:rgba(255,255,255,.08);color:#a29bfe;cursor:pointer}
+.grade-tab.on{background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff}
+.topic-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:12px;
+  border-radius:14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.topic-card.on{border-color:#f1c40f;background:rgba(241,196,15,.12)}
+.diff-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.diff-btn{padding:12px;border-radius:12px;border:2px solid #4a3e7d;background:rgba(0,0,0,.3);
+  color:#a29bfe;font-weight:bold;cursor:pointer;font-size:13px}
+.diff-btn.on-easy{border-color:#55efc4;background:rgba(85,239,196,.15);color:#55efc4}
+.diff-btn.on-dse{border-color:#ff7675;background:rgba(255,118,117,.15);color:#ff7675}
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.opt-btn{background:linear-gradient(180deg,#341f97,#2e86de);border:none;color:#fff;padding:14px 10px;
+  min-height:52px;border-radius:12px;font-weight:bold;font-size:14px;cursor:pointer;touch-action:manipulation}
+.opt-btn.ok{background:linear-gradient(180deg,#00b894,#55efc4)!important;color:#000}
+.opt-btn.bad{background:linear-gradient(180deg,#d63031,#ff7675)!important;opacity:.6}
+.opt-btn.hide{opacity:.12;pointer-events:none}
+.explain{background:rgba(241,196,15,.12);border:1px solid #f1c40f;color:#ffeaa7;padding:10px;
+  border-radius:12px;font-size:13px;line-height:1.5;margin-top:8px;display:none}
+.progress{height:8px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin:8px 0}
+.progress>div{height:100%;background:linear-gradient(90deg,#6c5ce7,#f1c40f);transition:width .3s}
+.nav{display:flex;justify-content:space-around;background:rgba(0,0,0,.5);padding:8px;border-radius:16px;margin-top:10px}
+.nav-item{text-align:center;font-size:10px;color:#a29bfe;cursor:pointer;padding:4px 8px}
+.nav-item.on{color:#f1c40f;font-weight:bold}
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;
+  justify-content:center;z-index:200;padding:20px;border-radius:24px}
+.modal.show{display:flex}
+.modal-card{background:linear-gradient(135deg,#6c5ce7,#341f97);border-radius:20px;padding:24px;
+  text-align:center;max-width:300px;width:90%;animation:popIn .4s ease}
+@keyframes popIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;background:rgba(0,0,0,.4);
+  color:#fff;font-size:15px;margin:8px 0}
+.pk-score{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;margin-bottom:10px;text-align:center}
+.countdown{font-size:48px;font-weight:900;color:#f1c40f;text-align:center;padding:30px}
+.title-main{font-size:22px;font-weight:900;color:#f1c40f;text-align:center;margin-bottom:4px}
+.sub{text-align:center;font-size:12px;color:#a29bfe;margin-bottom:12px}
+.avatar-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.av{font-size:28px;padding:6px 10px;border:2px solid #4a3e7d;border-radius:14px;cursor:pointer}
+.av.on{border-color:#f1c40f;background:rgba(241,196,15,.2)}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<div class="top-bar" id="topBar" style="display:none">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span id="hdrAv" style="font-size:28px">🧙‍♂️</span>
+    <div><div id="hdrName" style="font-size:13px;font-weight:bold">勇者</div>
+    <div id="hdrTitle" style="font-size:9px;color:#f1c40f">見習冒險者</div></div>
+  </div>
+  <div><span class="coin-badge">🪙 <span id="hdrCoins">0</span></span>
+  <span class="star-badge">⭐ <span id="hdrStars">0</span></span></div>
+</div>
+
+<!-- 登入 -->
+<div class="screen active" id="scrLogin">
+  <div style="text-align:center;margin-top:20px">
+    <div style="font-size:48px">🏰📐</div>
+    <div class="title-main">數學勇者地城</div>
+    <p class="sub">單檔完整版 · 含 PK 對戰 · 中一至中六</p>
+  </div>
+  <label style="font-size:13px;color:#a29bfe;font-weight:bold">選擇角色：</label>
+  <div class="avatar-row" id="avRow">
+    <div class="av on" data-av="🧙‍♂️" onclick="pickAv(this)">🧙‍♂️</div>
+    <div class="av" data-av="🥷" onclick="pickAv(this)">🥷</div>
+    <div class="av" data-av="🧝‍♀️" onclick="pickAv(this)">🧝‍♀️</div>
+    <div class="av" data-av="🤖" onclick="pickAv(this)">🤖</div>
+    <div class="av" data-av="🦊" onclick="pickAv(this)">🦊</div>
+    <div class="av" data-av="🐉" onclick="pickAv(this)">🐉</div>
+  </div>
+<script>
+let selectedAv='🧙‍♂️';
+function pickAv(el){ selectedAv=el.dataset.av||el.textContent; document.querySelectorAll('#avRow .av').forEach(x=>x.classList.remove('on')); el.classList.add('on'); }
+</script>
+  <label style="font-size:13px;color:#a29bfe;font-weight:bold">姓名 / 學號：</label>
+  <input class="inp" id="inpName" placeholder="例如：陳大文 2B-12">
+  <button class="btn" onclick="doLogin()">進入數學王國 ⚔️</button>
+  <p style="font-size:10px;color:#666;text-align:center;margin-top:10px">資料儲存於本機 · PK 需兩位玩家連線</p>
+</div>
+
+<!-- 主選單 -->
+<div class="screen" id="scrHome">
+  <p class="title-main" style="margin-top:8px">🎯 選擇挑戰</p>
+  <div class="grade-tabs" id="gradeTabs"></div>
+  <div class="diff-row">
+    <button class="diff-btn on-easy" id="btnEasy" onclick="setDiff('easy')">🌱 簡單 (+1⭐/題)</button>
+    <button class="diff-btn" id="btnDse" onclick="setDiff('dse')">🔥 DSE (+2⭐/題)</button>
+  </div>
+  <div id="topicList" style="max-height:340px;overflow-y:auto;flex:1"></div>
+  <button class="btn" onclick="startSingle()">⚔️ 單人挑戰（10 題）</button>
+  <button class="btn sec" onclick="showScreen('scrPKLobby')">🔥 PK 對戰（5 回合）</button>
+</div>
+
+<!-- 單人答題 -->
+<div class="screen" id="scrQuiz">
+  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+    <span id="qzTopic" style="color:#a29bfe"></span>
+    <span id="qzProg" style="color:#f1c40f;font-weight:bold"></span>
+  </div>
+  <div class="progress"><div id="qzBar" style="width:10%"></div></div>
+  <div style="text-align:right;font-size:12px;color:#55efc4;margin-bottom:6px">得分：<b id="qzScore">0</b></div>
+  <div style="background:rgba(255,255,255,.07);border-radius:16px;padding:14px;margin-bottom:8px">
+    <div id="qzText" style="font-size:16px;font-weight:bold;text-align:center;line-height:1.5"></div>
+  </div>
+  <button class="btn-sm btn gold" id="btn5050" onclick="use5050()">🌓 50/50 卡 (<span id="cnt5050">0</span>)</button>
+  <div class="opt-grid" id="qzOpts"></div>
+  <div class="explain" id="qzExplain"></div>
+  <button class="btn sec" id="btnNext" style="display:none" onclick="nextQuizQ()">下一題 →</button>
+</div>
+
+<!-- 單人結算 -->
+<div class="screen" id="scrResult">
+  <div style="text-align:center;padding:20px 0">
+    <div id="resEmoji" style="font-size:56px">🏆</div>
+    <div class="title-main" id="resTitle">挑戰完成！</div>
+    <p id="resEval" style="color:#ffeaa7;font-weight:bold;margin:8px 0"></p>
+    <p id="resScore" style="font-size:32px;font-weight:900;color:#f1c40f"></p>
+    <p id="resDetail" style="font-size:12px;color:#a29bfe;margin:12px 0;line-height:1.6"></p>
+    <button class="btn sec" onclick="showScreen('scrHome')">返回主選單</button>
+  </div>
+</div>
+
+<!-- PK 大廳 -->
+<div class="screen" id="scrPKLobby">
+  <p class="title-main">🔥 PK 對戰大廳</p>
+  <p class="sub">建立房間或輸入代碼加入 · 支援跨 WiFi / 4G 對戰</p>
+  <button class="btn" onclick="pkCreate()">建立房間（我是房主）</button>
+  <p style="text-align:center;color:#a29bfe;margin:12px 0;font-size:13px">— 或 —</p>
+  <input class="inp" id="pkJoinCode" placeholder="輸入 8 位房間代碼" maxlength="8" style="text-transform:uppercase">
+  <button class="btn sec" onclick="pkJoin()">加入房間</button>
+  <button class="btn-sm btn" style="background:#333;box-shadow:none;margin-top:16px" onclick="showScreen('scrHome')">← 返回</button>
+</div>
+
+<!-- PK 等候 / 對戰 -->
+<div class="screen" id="scrPK">
+  <div class="pk-score">
+    <div><div style="font-size:28px" id="pkMyAv">🧙‍♂️</div><b>我</b><div id="pkMyWins" style="color:#55efc4">勝 0</div></div>
+    <div><div id="pkRoundLbl" style="font-size:11px;color:#a29bfe">第 1/5 回合</div>
+    <div id="pkTimer" style="font-size:28px;font-weight:900;color:#f1c40f">--</div></div>
+    <div><div style="font-size:28px">👾</div><b>對手</b><div id="pkOpWins" style="color:#ff7675">勝 0</div></div>
+  </div>
+  <div id="pkWait" style="text-align:center;padding:30px 0">
+    <p style="font-size:11px;color:#a29bfe">房間代碼（分享給對手）</p>
+    <p id="pkCodeDisp" style="font-size:36px;font-weight:900;color:#f1c40f;letter-spacing:6px;font-family:monospace"></p>
+    <p id="pkWaitMsg" style="color:#a29bfe;margin-top:12px">等待對手加入...</p>
+  </div>
+  <div id="pkSync" style="display:none;text-align:center;padding:24px 0">
+    <div class="countdown" id="pkCountdown">⏳</div>
+    <p id="pkSyncMsg" style="color:#a29bfe;font-size:13px">等待雙方準備...</p>
+  </div>
+  <div id="pkBattle" style="display:none">
+    <div style="background:rgba(255,255,255,.07);border-radius:16px;padding:14px;margin-bottom:8px">
+      <div id="pkQText" style="font-size:15px;font-weight:bold;text-align:center"></div>
+    </div>
+    <div class="opt-grid" id="pkOpts"></div>
+    <button class="btn" id="pkSubmit" onclick="pkSubmitAns()" style="display:none">提交答案 ⚔️</button>
+    <div class="explain" id="pkExplain"></div>
+    <button class="btn sec" id="pkNextR" style="display:none" onclick="pkNextRound()">下一回合 →</button>
+  </div>
+  <div id="pkMatchEnd" style="display:none;text-align:center;padding:20px 0">
+    <div style="font-size:56px" id="pkEndEmoji">🏆</div>
+    <p id="pkEndTxt" style="font-size:20px;font-weight:bold;margin:8px 0"></p>
+    <button class="btn sec" onclick="pkExit()">返回主選單</button>
+  </div>
+</div>
+
+<!-- 抽卡 -->
+<div class="screen" id="scrGacha">
+  <p class="title-main">🎴 抽卡（50 ⭐）</p>
+  <p class="sub">N:小糖果/道具 · R:紙包飲品 · SSR:零食大禮包</p>
+  <div style="text-align:center;padding:20px;background:rgba(0,0,0,.3);border-radius:16px;border:2px solid #f1c40f">
+    <div style="font-size:48px">🔮</div>
+    <button class="btn gold" onclick="drawGacha()">✨ 抽一次（50 ⭐）</button>
+  </div>
+  <div id="couponList" style="margin-top:12px;max-height:200px;overflow-y:auto"></div>
+</div>
+
+<!-- 商店 -->
+<div class="screen" id="scrShop">
+  <p class="title-main">🎁 商店</p>
+  <div id="shopList"></div>
+</div>
+
+<!-- 排行榜 -->
+<div class="screen" id="scrLB">
+  <p class="title-main">🏆 排行榜</p>
+  <p class="sub">本機紀錄</p>
+  <div id="lbList"></div>
+</div>
+
+<div class="nav" id="navBar" style="display:none">
+  <div class="nav-item on" onclick="nav('scrHome',this)"><div style="font-size:18px">⚔️</div>挑戰</div>
+  <div class="nav-item" onclick="nav('scrGacha',this)"><div style="font-size:18px">🎴</div>抽卡</div>
+  <div class="nav-item" onclick="nav('scrShop',this)"><div style="font-size:18px">🎁</div>商店</div>
+  <div class="nav-item" onclick="nav('scrLB',this)"><div style="font-size:18px">🏆</div>榜</div>
+</div>
+
+<div class="modal" id="gachaModal">
+  <div class="modal-card" id="gachaCard">
+    <div id="gachaTier" style="font-size:12px;font-weight:900"></div>
+    <div id="gachaIcon" style="font-size:48px;margin:12px 0"></div>
+    <div id="gachaName" style="font-size:18px;font-weight:900"></div>
+    <p id="gachaDesc" style="font-size:11px;margin:12px 0;opacity:.9"></p>
+    <button class="btn" onclick="closeGachaModal()">收入囊中 🎒</button>
+  </div>
+</div>
+</div>
+
+<script>
+/**
+ * 課程題目生成引擎 — 完整移植自用戶原本的 HTML 檔案
+ * (gemini-code-1784628582574.html)
+ * 中一至中六，每級 5 個課題，每次挑戰生成 10 條不重複題目。
+ */
+
+
+
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function createUniqueOpts(correctAns, distractorGenFn) {
+  const optsSet = new Set();
+  optsSet.add(String(correctAns));
+
+  let safetyCount = 0;
+  while (optsSet.size < 4 && safetyCount < 100) {
+    safetyCount++;
+    const candidate = String(distractorGenFn(optsSet.size));
+    if (candidate && candidate !== "undefined" && candidate !== "NaN") {
+      optsSet.add(candidate);
+    }
+  }
+  // Fallback: if the distractor formula keeps producing duplicates (the loop above
+  // stalls because distractorGenFn(size) is deterministic), jitter numbers inside the
+  // last generated candidate so we can always present 4 distinct options.
+  if (optsSet.size < 4) {
+    let jitter = 1;
+    let guard = 0;
+    while (optsSet.size < 4 && guard < 50) {
+      guard++;
+      const base = String(distractorGenFn(optsSet.size));
+      const jittered = base.replace(/-?\d+(?!\d*})/, m => String(parseInt(m, 10) + jitter));
+      jitter = jitter > 0 ? -jitter : -jitter + 1;
+      if (jittered && jittered !== "undefined" && jittered !== "NaN") optsSet.add(jittered);
+    }
+  }
+  return Array.from(optsSet).sort(() => Math.random() - 0.5);
+}
+
+function generate10Unique(builderFn) {
+  const qList = [];
+  const qSet = new Set();
+  let attempts = 0;
+
+  while (qList.length < 10 && attempts < 300) {
+    attempts++;
+    const qData = builderFn();
+    if (qData && !qSet.has(qData.q)) {
+      if (new Set(qData.opts).size === 4) {
+        qSet.add(qData.q);
+        qList.push(qData);
+      }
+    }
+  }
+  return qList;
+}
+
+function formatQuad(a, b, c) {
+  let res = a === 1 ? "x^2" : a === -1 ? "-x^2" : a + "x^2";
+  if (b > 0) res += " + " + (b === 1 ? "" : b) + "x";
+  else if (b < 0) res += " - " + (Math.abs(b) === 1 ? "" : Math.abs(b)) + "x";
+
+  if (c > 0) res += " + " + c;
+  else if (c < 0) res += " - " + Math.abs(c);
+  return res;
+}
+
+function formatFactor(a, m) {
+  const ax = a === 1 ? "x" : `${a}x`;
+  return m >= 0 ? `(${ax} + ${m})` : `(${ax} - ${Math.abs(m)})`;
+}
+
+function roundMoney(n) {
+  return Math.round(n);
+}
+
+function calcSimpleInterest(P, r, years) {
+  const I = roundMoney((P * r * years) / 100);
+  return { I, A: P + I };
+}
+
+function calcCompoundInterest(P, r, years, compoundsPerYear) {
+  const A = roundMoney(P * Math.pow(1 + r / (100 * compoundsPerYear), compoundsPerYear * years));
+  return { A, I: A - P };
+}
+
+const COMPOUND_FREQ = [
+  { k: 1, label: "按年複利" },
+  { k: 4, label: "按季複利" },
+  { k: 12, label: "按月複利" },
+];
+
+function moneyAns(n) {
+  return `$${n}$`;
+}
+
+function formatPeriodicRate(r, k) {
+  if (k === 1) return `${r}\\%`;
+  const per = r / k;
+  if (Number.isInteger(per)) return `${per}\\%`;
+  return `\\dfrac{${r}}{${k}}\\%`;
+}
+
+function buildCompoundHintDse(
+  P,
+  r,
+  years,
+  k,
+  target,
+  A,
+  I,
+) {
+  const periods = k * years;
+  const periodicRate = formatPeriodicRate(r, k);
+  const rateName = k === 1 ? "年利率" : k === 4 ? "季利率" : "月利率";
+  const rateConvertStep =
+    k === 1
+      ? `① 按年複利，每期利率即年利率 $${r}\\%$`
+      : k === 4
+        ? `① 年利率 $${r}\\%$ 化為季利率：$${r}\\% \\div 4 = ${periodicRate}$（每年 4 季，每季複利一次）`
+        : `① 年利率 $${r}\\%$ 化為月利率：$${r}\\% \\div 12 = ${periodicRate}$（每年 12 個月，每月複利一次）`;
+  const periodStep =
+    k === 1
+      ? `② 期數 $= ${years}$ 年`
+      : k === 4
+        ? `② 期數 $= 4 \\times ${years} = ${periods}$ 季`
+        : `② 期數 $= 12 \\times ${years} = ${periods}$ 個月`;
+
+  if (target === 0) {
+    return `${rateConvertStep}<br>${periodStep}<br>③ $A = P(1 + ${rateName})^{期數} = ${P}\\left(1 + ${periodicRate}\\right)^{${periods}} \\approx ${A}$`;
+  }
+  if (target === 1) {
+    return `${rateConvertStep}<br>${periodStep}<br>③ 本利和 $A = ${P}\\left(1 + ${periodicRate}\\right)^{${periods}} \\approx ${A}$<br>④ 利息 $I = A - P = ${A} - ${P} = ${I}$`;
+  }
+  return `${rateConvertStep}<br>${periodStep}<br>③ $P = \\dfrac{A}{(1 + ${periodicRate})^{${periods}}} = \\dfrac{${A}}{\\left(1 + ${periodicRate}\\right)^{${periods}}} \\approx ${P}$`;
+}
+
+function buildCompoundHintEasy(P, r, years, k, target, A, I) {
+  if (target === 0) {
+    return `$A = P\\left(1 + \\dfrac{r\\%}{${k}}\\right)^{${k}t} = ${P}\\left(1 + \\dfrac{${r}\\%}{${k}}\\right)^{${k * years}} \\approx ${A}$`;
+  }
+  if (target === 1) {
+    return `先求本利和 $A \\approx ${A}$，利息 $I = A - P = ${A} - ${P} = ${I}$`;
+  }
+  return `$P = \\dfrac{A}{\\left(1 + \\dfrac{r\\%}{${k}}\\right)^{${k}t}} = \\dfrac{${A}}{\\left(1 + \\dfrac{${r}\\%}}{${k}}\\right)^{${k * years}}} \\approx ${P}$`;
+}
+
+function fracLatex(num, den) {
+  const g = gcd(Math.abs(num), Math.abs(den));
+  num = Math.abs(num) / g;
+  den = Math.abs(den) / g;
+  if (den === 1) return `${num}`;
+  return `\\frac{${num}}{${den}}`;
+}
+
+function gcd(a, b) {
+  a = Math.abs(a);
+  b = Math.abs(b);
+  while (b) {
+    [a, b] = [b, a % b];
+  }
+  return a || 1;
+}
+
+/** 常見直角三角形邊長（對邊, 鄰邊, 斜邊）— 含 3-4-5 及其倍數、其他勾股數 */
+const TRIG_TRIPLES = [
+  [3, 4, 5],
+  [6, 8, 10],
+  [9, 12, 15],
+  [5, 12, 13],
+  [10, 24, 26],
+  [8, 15, 17],
+  [7, 24, 25],
+  [20, 21, 29],
+  [11, 60, 61],
+  [12, 35, 37],
+];
+
+function trigSideLabel(hideSide, target, value, showSideNames) {
+  const num = target === hideSide ? "?" : String(value);
+  if (!showSideNames) return num;
+  const name = target === "opp" ? "對邊" : target === "adj" ? "鄰邊" : "斜邊";
+  return `${name} ${num}`;
+}
+
+function trigTriangleSvg(opp, adj, hyp, showSideNames = true, hideSide = null) {
+  const oppLabel = trigSideLabel(hideSide, "opp", opp, showSideNames);
+  const adjLabel = trigSideLabel(hideSide, "adj", adj, showSideNames);
+  const hypLabel = trigSideLabel(hideSide, "hyp", hyp, showSideNames);
+
+  const leftPad = 16 + oppLabel.length * 9;
+  const bottomPad = 30;
+  const topPad = 14;
+  const rightPad = 20;
+
+  const unit = Math.min(108 / Math.max(adj, opp), 7);
+  const w = adj * unit;
+  const h = opp * unit;
+  const x0 = leftPad;
+  const y0 = topPad;
+  const x1 = x0 + w;
+  const y1 = y0 + h;
+  const W = x1 + rightPad;
+  const H = y1 + bottomPad;
+  const ra = 10;
+  const hypAngle = Math.round((Math.atan2(opp, adj) * 180) / Math.PI);
+  const hypMidX = (x0 + x1) / 2 + 4;
+  const hypMidY = (y0 + y1) / 2 - 2;
+  const oppMidY = (y0 + y1) / 2;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="直角三角形" style="max-width:260px;width:100%;height:auto;display:block;margin:6px auto">
+<polygon points="${x0},${y1} ${x1},${y1} ${x0},${y0}" fill="rgba(108,92,231,0.18)" stroke="#a29bfe" stroke-width="2.5"/>
+<polyline points="${x0},${y1} ${x0 + ra},${y1} ${x0 + ra},${y1 - ra} ${x0},${y1 - ra}" fill="none" stroke="#f1c40f" stroke-width="1.8"/>
+<text x="${x0 - 8}" y="${oppMidY}" fill="#ff7675" font-size="11" font-weight="bold" text-anchor="end" dominant-baseline="middle">${oppLabel}</text>
+<text x="${(x0 + x1) / 2}" y="${y1 + 20}" fill="#55efc4" font-size="11" font-weight="bold" text-anchor="middle">${adjLabel}</text>
+<text x="${hypMidX}" y="${hypMidY}" fill="#ffeaa7" font-size="11" font-weight="bold" text-anchor="middle" transform="rotate(-${hypAngle}, ${hypMidX}, ${hypMidY})">${hypLabel}</text>
+<text x="${x1 - 4}" y="${y1 - 6}" fill="#f1c40f" font-size="15" font-weight="bold">θ</text>
+</svg>`;
+}
+
+function trigDseHint(opp, adj, hyp, hideSide, ratioName, val) {
+  if (hideSide === "opp") {
+    return `先用畢氏定理：$${adj}^2 + x^2 = ${hyp}^2$，得 $x = ${opp}$，再求 $${ratioName} = ${val}$`;
+  }
+  if (hideSide === "adj") {
+    return `先用畢氏定理：$${opp}^2 + x^2 = ${hyp}^2$，得 $x = ${adj}$，再求 $${ratioName} = ${val}$`;
+  }
+  return `先用畢氏定理：$${opp}^2 + ${adj}^2 = x^2$，得 $x = ${hyp}$，再求 $${ratioName} = ${val}$`;
+}
+
+function trigDseWrongPool(opp, adj, hyp, hideSide, val) {
+  const sin = fracLatex(opp, hyp);
+  const cos = fracLatex(adj, hyp);
+  const tan = fracLatex(opp, adj);
+  const pool = [sin, cos, tan, fracLatex(adj, opp), fracLatex(hyp, opp), fracLatex(hyp, adj)];
+  if (hideSide === "opp") {
+    pool.push(cos, fracLatex(hyp, adj));
+  } else if (hideSide === "adj") {
+    pool.push(sin, tan);
+  } else {
+    pool.push(sin, cos, tan);
+  }
+  return [...new Set(pool.filter(f => f !== val))];
+}
+
+function hashCode(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return h >>> 0;
+}
+
+function mulberry32(seed) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** 舊課題中已內建 easy/dse 分難度的 id */
+const LEGACY_DIFFICULTY_TOPIC_IDS = new Set(["g3_t1", "g3_t2", "g3_t3"]);
+
+/** 將原有 5 課題包裝為支援 easy/dse（DSE 用不同亂數種子重新生成） */
+function wrapLegacyTopic(topic) {
+  const legacyGen = topic.generate.bind(topic);
+  const hasBuiltInDiff = LEGACY_DIFFICULTY_TOPIC_IDS.has(topic.id);
+  return {
+    id: topic.id,
+    title: topic.title,
+    generate: (difficulty = "easy") => {
+      if (hasBuiltInDiff) return legacyGen(difficulty);
+      if (difficulty === "easy") return legacyGen();
+      const original = Math.random;
+      Math.random = mulberry32(hashCode(topic.id + "_dse"));
+      try {
+        return legacyGen();
+      } finally {
+        Math.random = original;
+      }
+    },
+  };
+}
+
+function buildFullCurriculum() {
+  const result = {};
+  for (const [gradeStr, topics] of Object.entries(rawCurriculumGenerators)) {
+    const grade = Number(gradeStr);
+    const legacy = topics.map(wrapLegacyTopic);
+    const extra = extraTopicsByGrade[grade] ?? [];
+    result[grade] = [...legacy, ...extra];
+  }
+  return result;
+}
+
+const rawCurriculumGenerators = {
+  1: [
+    {
+      id: "g1_t1",
+      title: "1. 有向數加減運算",
+      generate: () =>
+        generate10Unique(() => {
+          const a = rand(-25, 25),
+            b = rand(-25, 25);
+          const ans = a - b;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[ans + rand(1, 4), ans - rand(1, 4), -ans, a + b][i - 1]}$`);
+          return {
+            q: `計算：$(${a}) - (${b}) = ?$`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `減去負數等於加上正數：$(${a}) - (${b}) = ${a} + (${-b}) = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g1_t2",
+      title: "2. 一元一次方程",
+      generate: () =>
+        generate10Unique(() => {
+          const x = rand(2, 18),
+            a = rand(2, 8),
+            b = rand(1, 30);
+          const rhs = a * x + b;
+          const opts = createUniqueOpts(`$x = ${x}$`, i => `$x = ${[x + 1, x - 1, x + 2, x - 2, x + 3][i - 1]}$`);
+          return {
+            q: `解方程：$${a}x + ${b} = ${rhs}$，求 $x$ 的值`,
+            ans: `$x = ${x}$`,
+            opts,
+            hint: `移項得：$${a}x = ${rhs} - ${b} = ${a * x} \\implies x = ${x}$`,
+          };
+        }),
+    },
+    {
+      id: "g1_t3",
+      title: "3. 百分數基礎 (Percentages)",
+      generate: () =>
+        generate10Unique(() => {
+          const total = rand(2, 30) * 50;
+          const rate = rand(1, 18) * 5;
+          const ans = (total * rate) / 100;
+          const opts = createUniqueOpts(`$${ans}`, i => `$${[ans + 10, ans - 5, ans + 20, ans * 2][i - 1]}`);
+          return {
+            q: `求 $${total} 的 $${rate}\\%$ 是多少？`,
+            ans: `$${ans}`,
+            opts,
+            hint: `$${total} \\times ${rate}\\% = $${ans}`,
+          };
+        }),
+    },
+    {
+      id: "g1_t4",
+      title: "4. 代數式求值",
+      generate: () =>
+        generate10Unique(() => {
+          const a = rand(2, 6),
+            x = rand(-6, 8),
+            y = rand(-8, 8);
+          const ans = a * x + y;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[ans + 2, ans - 3, ans + 5, a * x * y][i - 1]}$`);
+          return {
+            q: `當 $x = ${x}, y = ${y}$ 時，求代數式 $${a}x + y$ 的值`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `代入得：$${a}(${x}) + (${y}) = ${a * x} + (${y}) = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g1_t5",
+      title: "5. 多邊形內角和 (Polygons)",
+      generate: () =>
+        generate10Unique(() => {
+          const type = rand(1, 2);
+          const n = rand(3, 12);
+          if (type === 1) {
+            const ans = (n - 2) * 180;
+            const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i => `$${[ans + 180, ans - 180, n * 180, ans + 90][i - 1]}^{\\circ}$`);
+            return {
+              q: `求 $${n}$ 邊形的內角和 (Sum of interior angles)`,
+              ans: `$${ans}^{\\circ}$`,
+              opts,
+              hint: `內角和公式：$(n - 2) \\times 180^{\\circ} = (${n} - 2) \\times 180^{\\circ} = ${ans}^{\\circ}$`,
+            };
+          } else {
+            const ans = 360 / n;
+            return {
+              q: `正 $${n}$ 邊形每一個外角 (Exterior angle) 是多少度？`,
+              ans: `$${ans}^{\\circ}$`,
+              opts: createUniqueOpts(`$${ans}^{\\circ}$`, i => `$${[ans + 10, ans - 5, ans + 15, 180 - ans][i - 1]}^{\\circ}$`),
+              hint: `正多邊形外角和為 $360^{\\circ}$，故每個外角 $= \\frac{360^{\\circ}}{${n}} = ${ans}^{\\circ}$`,
+            };
+          }
+        }),
+    },
+  ],
+  2: [
+    {
+      id: "g2_t1",
+      title: "1. 因式分解 (平方差)",
+      generate: () =>
+        generate10Unique(() => {
+          const a = rand(2, 15);
+          const ansStr = `$(x - ${a})(x + ${a})$`;
+          const opts = createUniqueOpts(ansStr, i =>
+            [`$(x - ${a})^2$`, `$(x + ${a})^2$`, `$(x - ${a * 2})(x + 1)$`, `$(x - ${a + 1})(x + ${a - 1})$`][i - 1],
+          );
+          return {
+            q: `因式分解：$x^2 - ${a * a}$`,
+            ans: ansStr,
+            opts,
+            hint: `利用平方差公式：$a^2 - b^2 = (a - b)(a + b) \\implies x^2 - ${a}^2 = ${ansStr}$`,
+          };
+        }),
+    },
+    {
+      id: "g2_t2",
+      title: "2. 因式分解 (十字相乘法進階版)",
+      generate: () =>
+        generate10Unique(() => {
+          const a1 = [1, 1, 1, 2, 3][rand(0, 4)];
+          const a2 = [1, 1, 2][rand(0, 2)];
+          let m = rand(-8, 8);
+          while (m === 0) m = rand(-8, 8);
+          let n = rand(-8, 8);
+          while (n === 0) n = rand(-8, 8);
+
+          const A = a1 * a2;
+          const B = a1 * n + a2 * m;
+          const C = m * n;
+
+          const polyStr = formatQuad(A, B, C);
+          const ansStr = `$${formatFactor(a1, m)}${formatFactor(a2, n)}$`;
+
+          const opts = createUniqueOpts(ansStr, i =>
+            [
+              `$${formatFactor(a1, -m)}${formatFactor(a2, n)}$`,
+              `$${formatFactor(a1, m)}${formatFactor(a2, -n)}$`,
+              `$${formatFactor(a1, -m)}${formatFactor(a2, -n)}$`,
+              `$${formatFactor(a1, m + 1)}${formatFactor(a2, n - 1)}$`,
+            ][i - 1],
+          );
+
+          return {
+            q: `因式分解 (Cross-method)：$${polyStr}$`,
+            ans: ansStr,
+            opts,
+            hint: `十字相乘驗證：$${a1}x \\times (${n}) + ${a2}x \\times (${m}) = ${B}x$，常數項 $(${m}) \\times (${n}) = ${C}$。結果為 ${ansStr}`,
+          };
+        }),
+    },
+    {
+      id: "g2_t3",
+      title: "3. 畢氏定理 (Pythagoras)",
+      generate: () =>
+        generate10Unique(() => {
+          const triples = [
+            [3, 4, 5],
+            [5, 12, 13],
+            [6, 8, 10],
+            [7, 24, 25],
+            [8, 15, 17],
+            [9, 12, 15],
+            [9, 40, 41],
+            [10, 24, 26],
+            [12, 16, 20],
+            [15, 20, 25],
+          ];
+          const t = triples[rand(0, triples.length - 1)];
+          const findHyp = rand(0, 1) === 0;
+
+          if (findHyp) {
+            const opts = createUniqueOpts(`$${t[2]}$`, i => `$${[t[2] + 2, t[2] - 1, t[0] + t[1], t[2] + 3][i - 1]}$`);
+            return {
+              q: `直角三角形兩條直角邊分別為 $${t[0]}$ 和 $${t[1]}$，求斜邊 $c$ 的長度`,
+              ans: `$${t[2]}$`,
+              opts,
+              hint: `$c^2 = a^2 + b^2 \\implies c = \\sqrt{${t[0]}^2 + ${t[1]}^2} = ${t[2]}$`,
+            };
+          } else {
+            const opts = createUniqueOpts(`$${t[0]}$`, i => `$${[t[0] + 2, t[0] - 1, t[2] - t[1], t[0] + 3][i - 1]}$`);
+            return {
+              q: `直角三角形斜邊為 $${t[2]}$，其中一條直角邊為 $${t[1]}$，求另一條直角邊 $a$ 的長度`,
+              ans: `$${t[0]}$`,
+              opts,
+              hint: `$a^2 = c^2 - b^2 \\implies a = \\sqrt{${t[2]}^2 - ${t[1]}^2} = ${t[0]}$`,
+            };
+          }
+        }),
+    },
+    {
+      id: "g2_t4",
+      title: "4. 聯立一次方程",
+      generate: () =>
+        generate10Unique(() => {
+          const x = rand(1, 9),
+            y = rand(1, 9);
+          const c1 = x + y,
+            c2 = x - y;
+          const opts = createUniqueOpts(`$x = ${x}$`, i => `$x = ${[y, x + 1, x + 2, x - 1][i - 1]}$`);
+          return {
+            q: `解聯立方程：$\\begin{cases} x + y = ${c1} \\\\ x - y = ${c2} \\end{cases}$，求 $x$ 的值`,
+            ans: `$x = ${x}$`,
+            opts,
+            hint: `兩式相加：$2x = ${c1 + c2} \\implies x = ${x}$`,
+          };
+        }),
+    },
+    {
+      id: "g2_t5",
+      title: "5. 速率與單位變換",
+      generate: () =>
+        generate10Unique(() => {
+          const speed = rand(2, 10) * 10;
+          const time = rand(2, 6);
+          const dist = speed * time;
+          const opts = createUniqueOpts(`$${dist}\\text{ km}$`, i => `$${[dist + 20, speed + time, dist - 10, dist + 40][i - 1]}\\text{ km}$`);
+          return {
+            q: `汽車以 $${speed}\\text{ km/h}$ 的速率行駛 $${time}$ 小時，求行駛距離`,
+            ans: `$${dist}\\text{ km}$`,
+            opts,
+            hint: `距離 $= \\text{速率} \\times \\text{時間} = ${speed} \\times ${time} = ${dist}\\text{ km}$`,
+          };
+        }),
+    },
+  ],
+  3: [
+    {
+      id: "g3_t1",
+      title: "1. 利息 (Interest)",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const P = rand(2, dse ? 12 : 8) * 1000;
+          const r = rand(2, dse ? 10 : 8);
+          const years = rand(1, dse ? 5 : 4);
+          const target = rand(0, 2);
+          const useSimple = dse ? rand(0, 1) === 0 : rand(1, 100) <= 50;
+
+          if (useSimple) {
+            const { I, A } = calcSimpleInterest(P, r, years);
+            if (target === 0) {
+              const wrongI = calcSimpleInterest(P, r, years + 1).A;
+              return {
+                q: `本金 $${P}$，年利率 $${r}\\%$，以單利息計算，存 $${years}$ 年，本利和為多少？`,
+                ans: moneyAns(A),
+                opts: createUniqueOpts(moneyAns(A), i =>
+                  [moneyAns(P + I + 200), moneyAns(wrongI), moneyAns(A - 100), moneyAns(P + roundMoney((P * r) / 100))][i - 1],
+                ),
+                hint: `單利息：$I = P \\times r\\% \\times t = ${P} \\times ${r}\\% \\times ${years} = ${I}$，本利和 $A = ${P} + ${I} = ${A}$`,
+              };
+            }
+            if (target === 1) {
+              const compoundI = calcCompoundInterest(P, r, years, 1).I;
+              return {
+                q: `本金 $${P}$，年利率 $${r}\\%$，以單利息計算，存 $${years}$ 年，利息為多少？`,
+                ans: moneyAns(I),
+                opts: createUniqueOpts(moneyAns(I), i =>
+                  [moneyAns(compoundI), moneyAns(I + 100), moneyAns(I - 50), moneyAns(roundMoney((P * r) / 100))][i - 1],
+                ),
+                hint: `$I = P \\times r\\% \\times t = ${P} \\times ${r}\\% \\times ${years} = ${I}$`,
+              };
+            }
+            return {
+              q: `以單利息計算，年利率 $${r}\\%$，存 $${years}$ 年後利息為 $${I}$，求本金。`,
+              ans: moneyAns(P),
+              opts: createUniqueOpts(moneyAns(P), i =>
+                [moneyAns(P + 1000), moneyAns(P - 500), moneyAns(roundMoney((I * 100) / (r * (years + 1)))), moneyAns(P + 2000)][i - 1],
+              ),
+              hint: `$P = \\dfrac{I}{r\\% \\times t} = \\dfrac{${I}}{${r}\\% \\times ${years}} = ${P}$`,
+            };
+          }
+
+          const freqPool = dse ? COMPOUND_FREQ : [COMPOUND_FREQ[0]];
+          const { k, label } = freqPool[rand(0, freqPool.length - 1)];
+          const { A, I } = calcCompoundInterest(P, r, years, k);
+          const simpleA = calcSimpleInterest(P, r, years).A;
+          const simpleI = calcSimpleInterest(P, r, years).I;
+          const roundNote = "（取整）";
+          const compoundHint = (t) =>
+            dse ? buildCompoundHintDse(P, r, years, k, t, A, I) : buildCompoundHintEasy(P, r, years, k, t, A, I);
+
+          if (target === 0) {
+            const annualOnly = calcCompoundInterest(P, r, years, 1).A;
+            return {
+              q: `本金 $${P}$，年利率 $${r}\\%$，${label}，存 $${years}$ 年，本利和為多少？${roundNote}`,
+              ans: moneyAns(A),
+              opts: createUniqueOpts(moneyAns(A), i =>
+                [moneyAns(simpleA), moneyAns(k === 1 ? A + 100 : annualOnly), moneyAns(A + 150), moneyAns(A - 80)][i - 1],
+              ),
+              hint: compoundHint(0),
+            };
+          }
+          if (target === 1) {
+            return {
+              q: `本金 $${P}$，年利率 $${r}\\%$，${label}，存 $${years}$ 年，利息為多少？${roundNote}`,
+              ans: moneyAns(I),
+              opts: createUniqueOpts(moneyAns(I), i =>
+                [moneyAns(simpleI), moneyAns(I + 100), moneyAns(A), moneyAns(I - 60)][i - 1],
+              ),
+              hint: compoundHint(1),
+            };
+          }
+          return {
+            q: `年利率 $${r}\\%$，${label}，存 $${years}$ 年後本利和為 $${A}$${roundNote}，求本金。`,
+            ans: moneyAns(P),
+            opts: createUniqueOpts(moneyAns(P), i =>
+              [moneyAns(P + 1000), moneyAns(roundMoney(A / (1 + (r * years) / 100))), moneyAns(P - 500), moneyAns(P + 2000)][i - 1],
+            ),
+            hint: compoundHint(2),
+          };
+        }),
+    },
+    {
+      id: "g3_t2",
+      title: "2. 直角三角比 (sin, cos, tan)",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const [opp, adj, hyp] = TRIG_TRIPLES[rand(0, TRIG_TRIPLES.length - 1)];
+          const specs = [
+            { name: "\\sin \\theta", num: opp, den: hyp },
+            { name: "\\cos \\theta", num: adj, den: hyp },
+            { name: "\\tan \\theta", num: opp, den: adj },
+          ];
+          const spec = specs[rand(0, specs.length - 1)];
+          const val = fracLatex(spec.num, spec.den);
+          const hideSides = ["opp", "adj", "hyp"];
+          const hideSide = dse ? hideSides[rand(0, hideSides.length - 1)] : null;
+          const wrongPool = dse
+            ? trigDseWrongPool(opp, adj, hyp, hideSide, val)
+            : [
+                fracLatex(opp, hyp),
+                fracLatex(adj, hyp),
+                fracLatex(opp, adj),
+                fracLatex(adj, opp),
+                fracLatex(hyp, opp),
+                fracLatex(hyp, adj),
+              ].filter(f => f !== val);
+          const opts = createUniqueOpts(`$${val}$`, i => `$${wrongPool[i - 1] ?? wrongPool[0]}$`);
+          const diagram = trigTriangleSvg(opp, adj, hyp, !dse, hideSide);
+          const qSuffix = dse
+            ? `求 $${spec.name}$（$\\theta$ 為圖中銳角；有一邊長未給出）`
+            : `求 $${spec.name}$（$\\theta$ 為圖中銳角；對邊在 $\\theta$ 的左方）`;
+          const hint = dse
+            ? trigDseHint(opp, adj, hyp, hideSide, spec.name, val)
+            : `依三角比定義：$\\sin\\theta = \\frac{\\text{對邊}}{\\text{斜邊}}$，$\\cos\\theta = \\frac{\\text{鄰邊}}{\\text{斜邊}}$，$\\tan\\theta = \\frac{\\text{對邊}}{\\text{鄰邊}}$。故 $${spec.name} = ${val}$`;
+          return {
+            q: `${diagram}<p style="margin-top:8px;text-align:center">${qSuffix}</p>`,
+            ans: `$${val}$`,
+            opts,
+            hint,
+          };
+        }),
+    },
+    {
+      id: "g3_t3",
+      title: "3. 指數律 (Laws of Indices)",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+
+          if (!dse) {
+            const type = rand(1, 7);
+            if (type === 1) {
+              const m = rand(2, 7);
+              const n = rand(2, 7);
+              const ans = m + n;
+              const opts = createUniqueOpts(`$a^{${ans}}$`, i =>
+                [`$a^{${m * n}}$`, `$a^{${Math.abs(m - n)}}$`, `$a^{${ans + 1}}$`, `$a^{${ans - 1}}$`][i - 1],
+              );
+              return {
+                q: `化簡：$a^{${m}} \\times a^{${n}}$`,
+                ans: `$a^{${ans}}$`,
+                opts,
+                hint: `同底相乘，指數相加：$a^{${m}} \\times a^{${n}} = a^{${ans}}$`,
+              };
+            }
+            if (type === 2) {
+              const m = rand(5, 12);
+              const n = rand(2, m - 1);
+              const ans = m - n;
+              const opts = createUniqueOpts(`$a^{${ans}}$`, i =>
+                [`$a^{${m + n}}$`, `$a^{${m * n}}$`, `$a^{${ans + 1}}$`, `$a^{${ans - 1}}$`][i - 1],
+              );
+              return {
+                q: `化簡：$\\dfrac{a^{${m}}}{a^{${n}}}$`,
+                ans: `$a^{${ans}}$`,
+                opts,
+                hint: `同底相除，指數相減：$a^{${m}} \\div a^{${n}} = a^{${ans}}$`,
+              };
+            }
+            if (type === 3) {
+              const m = rand(2, 6);
+              const n = rand(2, 4);
+              const ans = m * n;
+              const opts = createUniqueOpts(`$a^{${ans}}$`, i =>
+                [`$a^{${m + n}}$`, `$a^{${ans + 1}}$`, `$a^{${ans - 1}}$`, `$a^{${m + n + 1}}$`][i - 1],
+              );
+              return {
+                q: `化簡：$(a^{${m}})^{${n}}$`,
+                ans: `$a^{${ans}}$`,
+                opts,
+                hint: `括號次方，指數相乘：$(a^{${m}})^{${n}} = a^{${ans}}$`,
+              };
+            }
+            if (type === 4) {
+              const opts = createUniqueOpts(`$1$`, i => [`$0$`, `$-1$`, `$a$`, `$a^0$`][i - 1]);
+              return {
+                q: `化簡：$a^0$`,
+                ans: `$1$`,
+                opts,
+                hint: `任何非零數的零次方等於 1：$a^0 = 1$`,
+              };
+            }
+            if (type === 5) {
+              const m = rand(2, 5);
+              const n = rand(2, 5);
+              const p = rand(2, 5);
+              const ansA = m + n;
+              const ansStr = `$a^{${ansA}} b^{${p}}$`;
+              const opts = createUniqueOpts(ansStr, i =>
+                [`$a^{${m + n + 1}} b^{${p}}$`, `$a^{${m}} b^{${p + 1}}$`, `$a^{${m * n}} b^{${p}}$`, `$a^{${ansA}} b^{${p - 1}}$`][i - 1],
+              );
+              return {
+                q: `化簡：$a^{${m}} \\times a^{${n}} \\times b^{${p}}$`,
+                ans: ansStr,
+                opts,
+                hint: `分別合併同底：$a^{${m}} \\times a^{${n}} = a^{${ansA}}$，$b^{${p}}$ 不變 → $${ansStr}$`,
+              };
+            }
+            if (type === 6) {
+              const n = rand(2, 4);
+              const ansStr = `$a^{${n}} b^{${n}}$`;
+              const opts = createUniqueOpts(ansStr, i =>
+                [`$a b^{${n}}$`, `$a^{${n + 1}} b^{${n}}$`, `$a^{${n}} b^{${n + 1}}$`, `$(ab)^{${n + 1}}$`][i - 1],
+              );
+              return {
+                q: `化簡：$(ab)^{${n}}$`,
+                ans: ansStr,
+                opts,
+                hint: `積的次方：$(ab)^{${n}} = a^{${n}} b^{${n}}$`,
+              };
+            }
+            const m = rand(2, 5);
+            const n = rand(2, 4);
+            const p = rand(2, 5);
+            const q = rand(2, 4);
+            const ansStr = `$a^{${m + p}} b^{${n + q}}$`;
+            const opts = createUniqueOpts(ansStr, i =>
+              [`$a^{${m + p + 1}} b^{${n + q}}$`, `$a^{${m + p}} b^{${n + q + 1}}$`, `$a^{${m * p}} b^{${n * q}}$`, `$a^{${m + n}} b^{${p + q}}$`][i - 1],
+            );
+            return {
+              q: `化簡：$a^{${m}} b^{${n}} \\times a^{${p}} b^{${q}}$`,
+              ans: ansStr,
+              opts,
+              hint: `$a^{${m}} \\times a^{${p}} = a^{${m + p}}$，$b^{${n}} \\times b^{${q}} = b^{${n + q}}$`,
+            };
+          }
+
+          const type = rand(1, 6);
+          if (type === 1) {
+            const m = rand(2, 6);
+            const n = rand(2, 5);
+            const p = rand(2, 4);
+            const ans = m + n - p;
+            const opts = createUniqueOpts(`$a^{${ans}}$`, i =>
+              [`$a^{${m + n + p}}$`, `$a^{${m + n}}$`, `$a^{${Math.abs(m - n + p)}}$`, `$a^{${ans + 1}}$`][i - 1],
+            );
+            return {
+              q: `化簡：$a^{${m}} \\times a^{${n}} \\div a^{${p}}$`,
+              ans: `$a^{${ans}}$`,
+              opts,
+              hint: `先乘後除：指數 $${m}+${n}-${p} = ${ans}$，得 $a^{${ans}}$`,
+            };
+          }
+          if (type === 2) {
+            const m = rand(2, 5);
+            const n = rand(2, 4);
+            const p = rand(2, 6);
+            const ans = m * n + p;
+            const opts = createUniqueOpts(`$a^{${ans}}$`, i =>
+              [`$a^{${m * n}}$`, `$a^{${m + n + p}}$`, `$a^{${ans - 1}}$`, `$a^{${m * n - p}}$`][i - 1],
+            );
+            return {
+              q: `化簡：$(a^{${m}})^{${n}} \\times a^{${p}}$`,
+              ans: `$a^{${ans}}$`,
+              opts,
+              hint: `$(a^{${m}})^{${n}} = a^{${m * n}}$，再乘 $a^{${p}}$ → 指數 $${m * n}+${p} = ${ans}$`,
+            };
+          }
+          if (type === 3) {
+            const m = rand(2, 5);
+            const n = rand(2, 4);
+            const p = rand(2, 5);
+            const ans = m * n - p;
+            const opts = createUniqueOpts(`$a^{${ans}}$`, i =>
+              [`$a^{${m * n + p}}$`, `$a^{${m + n - p}}$`, `$a^{${ans + 1}}$`, `$a^{${m * n}}$`][i - 1],
+            );
+            return {
+              q: `化簡：$\\dfrac{(a^{${m}})^{${n}}}{a^{${p}}}$`,
+              ans: `$a^{${ans}}$`,
+              opts,
+              hint: `$(a^{${m}})^{${n}} = a^{${m * n}}$，再除以 $a^{${p}}$ → 指數 $${m * n}-${p} = ${ans}$`,
+            };
+          }
+          if (type === 4) {
+            const m = rand(2, 5);
+            const n = rand(2, 4);
+            const p = rand(2, 5);
+            const q = rand(2, 4);
+            const expA = m + p - 2;
+            const expB = n + q - 1;
+            const correct = `$a^{${expA}} b^{${expB}}$`;
+            const opts = createUniqueOpts(correct, i =>
+              [`$a^{${expA + 1}} b^{${expB}}$`, `$a^{${expA}} b^{${expB + 1}}$`, `$a^{${m + n}} b^{${p + q}}$`, `$a^{${expA - 1}} b^{${expB}}$`][i - 1],
+            );
+            return {
+              q: `化簡：$a^{${m}} b^{${n}} \\times a^{${p}} b^{${q}} \\div a^{2} b$`,
+              ans: correct,
+              opts,
+              hint: `$a$ 指數：$${m}+${p}-2 = ${expA}$；$b$ 指數：$${n}+${q}-1 = ${expB}$`,
+            };
+          }
+          if (type === 5) {
+            const m = rand(2, 4);
+            const n = rand(2, 3);
+            const p = rand(2, 4);
+            const expA = m * n;
+            const expB = n;
+            const correct = `$a^{${expA + p}} b^{${expB}}$`;
+            const opts = createUniqueOpts(correct, i =>
+              [
+                `$a^{${expA + p}} b^{${expA}}$`,
+                `$a^{${expA}} b^{${expB + p}}$`,
+                `$a^{${expA + p + 1}} b^{${expB}}$`,
+                `$a^{${expA + p}} b^{${expB + 1}}$`,
+              ][i - 1],
+            );
+            return {
+              q: `化簡：$(a^{${m}} b)^{${n}} \\times a^{${p}}$`,
+              ans: correct,
+              opts,
+              hint: `$(a^{${m}} b)^{${n}} = a^{${expA}} b^{${n}}$，再乘 $a^{${p}}$ → $a^{${expA + p}} b^{${n}}$`,
+            };
+          }
+          const m = rand(2, 4);
+          const n = rand(2, 3);
+          const p = rand(2, 4);
+          const q = rand(2, 3);
+          const expA = m * n;
+          const ansA = expA + p - q;
+          const correct = `$a^{${ansA}} b^{${n}}$`;
+          const opts = createUniqueOpts(correct, i =>
+            [
+              `$a^{${ansA}} b^{${expA}}$`,
+              `$a^{${ansA + 1}} b^{${n}}$`,
+              `$a^{${expA + p}} b^{${n}}$`,
+              `$a^{${ansA}} b^{${n + 1}}$`,
+            ][i - 1],
+          );
+          return {
+            q: `化簡：$(a^{${m}} b)^{${n}} \\times a^{${p}} \\div a^{${q}}$`,
+            ans: correct,
+            opts,
+            hint: `$(a^{${m}} b)^{${n}} = a^{${expA}} b^{${n}}$，$a$ 指數：$${expA}+${p}-${q} = ${ansA}$，$b$ 保持 $${n}$`,
+          };
+        }),
+    },
+    {
+      id: "g3_t4",
+      title: "4. 座標幾何 (距離公式)",
+      generate: () =>
+        generate10Unique(() => {
+          const dx = rand(1, 4) * 3;
+          const dy = rand(1, 4) * 4;
+          const dist = Math.round(Math.sqrt(dx * dx + dy * dy));
+          const opts = createUniqueOpts(`$${dist}$`, i => `$${[dist + 2, dist - 1, dx + dy, dist + 4][i - 1]}$`);
+          return {
+            q: `求點 $A(0, 0)$ 與點 $B(${dx}, ${dy})$ 之間的距離`,
+            ans: `$${dist}$`,
+            opts,
+            hint: `距離 $= \\sqrt{(${dx}-0)^2 + (${dy}-0)^2} = \\sqrt{${dx * dx + dy * dy}} = ${dist}$`,
+          };
+        }),
+    },
+    {
+      id: "g3_t5",
+      title: "5. 相似三角形邊長比",
+      generate: () =>
+        generate10Unique(() => {
+          const ratio = rand(2, 5);
+          const side1 = rand(3, 8);
+          const side2 = side1 * ratio;
+          const opts = createUniqueOpts(`$${side2}$`, i => `$${[side1 + ratio, side2 + 2, side1 * 2, side2 - 3][i - 1]}$`);
+          return {
+            q: `兩相似三角形邊長比為 $1 : ${ratio}$，若小三角形對應邊長為 $${side1}$，求大三角形對應邊長`,
+            ans: `$${side2}$`,
+            opts,
+            hint: `對應邊成比例：$${side1} \\times ${ratio} = ${side2}$`,
+          };
+        }),
+    },
+  ],
+  4: [
+    {
+      id: "g4_t1",
+      title: "1. 二次方程與判別式 Δ",
+      generate: () =>
+        generate10Unique(() => {
+          const type = rand(1, 3);
+          if (type === 1) {
+            const a = rand(1, 4) * (rand(0, 1) ? 1 : -1);
+            const b = rand(-8, 8);
+            const c = rand(-8, 8);
+            const delta = b * b - 4 * a * c;
+            const ans = delta > 0 ? "2 個 (相異實根)" : delta === 0 ? "1 個 (重根/相等實根)" : "0 個 (沒有實根)";
+            const poly = formatQuad(a, b, c);
+
+            return {
+              q: `求二次方程 $${poly} = 0$ 的實根數目`,
+              ans,
+              opts: ["2 個 (相異實根)", "1 個 (重根/相等實根)", "0 個 (沒有實根)", "無限多個"],
+              hint: `計算判別式 $\\Delta = b^2 - 4ac = (${b})^2 - 4(${a})(${c}) = ${delta}$。因為 $\\Delta$ ${delta > 0 ? "> 0 (有 2 個相異實根)" : delta === 0 ? "= 0 (有 1 個重根)" : "< 0 (沒有實根)"}`,
+            };
+          } else if (type === 2) {
+            const a = rand(1, 5) * (rand(0, 1) ? 1 : -1);
+            const b = rand(-9, 9);
+            const c = rand(-9, 9);
+            const delta = b * b - 4 * a * c;
+            const poly = formatQuad(a, b, c);
+            const opts = createUniqueOpts(`$\\Delta = ${delta}$`, i => `$\\Delta = ${[delta + 4, delta - 4, b * b + 4 * a * c, -delta][i - 1]}$`);
+
+            return {
+              q: `求二次方程 $${poly} = 0$ 的判別式 $\\Delta$ (Discriminant) 之值`,
+              ans: `$\\Delta = ${delta}$`,
+              opts,
+              hint: `$\\Delta = b^2 - 4ac = (${b})^2 - 4(${a})(${c}) = ${delta}$`,
+            };
+          } else {
+            const a = rand(1, 3) * (rand(0, 1) ? 1 : -1);
+            let x_root = rand(-5, 5);
+            while (x_root === 0) x_root = rand(-5, 5);
+            const b = -2 * a * x_root;
+            const k = a * x_root * x_root;
+
+            const aStr = a === 1 ? "x^2" : a === -1 ? "-x^2" : a + "x^2";
+            const bStr = b > 0 ? ` + ${b === 1 ? "" : b}x` : ` - ${Math.abs(b) === 1 ? "" : Math.abs(b)}x`;
+            const poly = `${aStr}${bStr} + k = 0`;
+
+            const opts = createUniqueOpts(`$k = ${k}$`, i => `$k = ${[k + 2, k - 3, -k, k + 5][i - 1]}$`);
+            return {
+              q: `若方程 $${poly}$ 有兩個相等實根 ($\\Delta = 0$)，求 $k$ 的值`,
+              ans: `$k = ${k}$`,
+              opts,
+              hint: `有相等實根 $\\implies \\Delta = b^2 - 4ac = 0 \\implies (${b})^2 - 4(${a})(k) = 0 \\implies k = ${k}$`,
+            };
+          }
+        }),
+    },
+    {
+      id: "g4_t2",
+      title: "2. 二次函數頂點求值 (Vertex)",
+      generate: () =>
+        generate10Unique(() => {
+          const type = rand(1, 2);
+          const a = rand(1, 4) * (rand(0, 1) ? 1 : -1);
+          let h = rand(-8, 8);
+          while (h === 0) h = rand(-8, 8);
+          let k = rand(-12, 12);
+          while (k === 0) k = rand(-12, 12);
+
+          const ansStr = `$(${h}, ${k})$`;
+
+          if (type === 1) {
+            const aStr = a === 1 ? "" : a === -1 ? "-" : `${a}`;
+            const hStr = h > 0 ? `(x - ${h})^2` : `(x + ${Math.abs(h)})^2`;
+            const kStr = k > 0 ? ` + ${k}` : ` - ${Math.abs(k)}`;
+            const eq = `y = ${aStr}${hStr}${kStr}`;
+
+            const opts = createUniqueOpts(ansStr, i => [`$(${-h}, ${k})$`, `$(${h}, ${-k})$`, `$(${-h}, ${-k})$`, `$(${k}, ${h})$`][i - 1]);
+
+            return {
+              q: `求二次函數 $${eq}$ 的頂點座標 (Vertex)`,
+              ans: ansStr,
+              opts,
+              hint: `根據頂點式 $y = a(x - h)^2 + k$，頂點座標為 $(h, k) = (${h}, ${k})$`,
+            };
+          } else {
+            const b = -2 * a * h;
+            const c = a * h * h + k;
+            const poly = "y = " + formatQuad(a, b, c);
+
+            const opts = createUniqueOpts(ansStr, i => [`$(${-h}, ${k})$`, `$(${h}, ${-k})$`, `$(${-h}, ${-k})$`, `$(${c}, ${b})$`][i - 1]);
+
+            return {
+              q: `求二次函數 $${poly}$ 的頂點座標 (Vertex)`,
+              ans: ansStr,
+              opts,
+              hint: `利用頂點公式 $x = -\\frac{b}{2a} = -\\frac{${b}}{2(${a})} = ${h}$，代入得 $y = ${k}$。頂點為 $(${h}, ${k})$`,
+            };
+          }
+        }),
+    },
+    {
+      id: "g4_t3",
+      title: "3. 多項式餘式定理 (Remainder Theorem)",
+      generate: () =>
+        generate10Unique(() => {
+          const type = rand(1, 3);
+          if (type === 1) {
+            const a = rand(1, 3);
+            const b = rand(-4, 4);
+            const c = rand(-5, 5);
+            const d = rand(-10, 10);
+            let k = rand(-3, 3);
+            while (k === 0) k = rand(-3, 3);
+
+            const R = a * Math.pow(k, 3) + b * Math.pow(k, 2) + c * k + d;
+
+            let polyStr = `${a === 1 ? "" : a === -1 ? "-" : a}x^3`;
+            if (b !== 0) polyStr += (b > 0 ? ` + ${b === 1 ? "" : b}` : ` - ${Math.abs(b) === 1 ? "" : Math.abs(b)}`) + `x^2`;
+            if (c !== 0) polyStr += (c > 0 ? ` + ${c === 1 ? "" : c}` : ` - ${Math.abs(c) === 1 ? "" : Math.abs(c)}`) + `x`;
+            if (d !== 0) polyStr += d > 0 ? ` + ${d}` : ` - ${Math.abs(d)}`;
+
+            const divStr = k > 0 ? `(x - ${k})` : `(x + ${Math.abs(k)})`;
+
+            const opts = createUniqueOpts(`$R = ${R}$`, i => `$R = ${[R + rand(1, 4), R - rand(1, 4), R + 5, -R][i - 1]}$`);
+
+            return {
+              q: `當多項式 $P(x) = ${polyStr}$ 除以 $${divStr}$ 時，求餘數 $R$`,
+              ans: `$R = ${R}$`,
+              opts,
+              hint: `根據餘式定理，餘數 $R = P(${k}) = ${a}(${k})^3 + (${b})(${k})^2 + (${c})(${k}) + (${d}) = ${R}$`,
+            };
+          } else if (type === 2) {
+            const a = rand(2, 4);
+            const b = rand(1, 3) * a;
+            const sign = rand(0, 1) ? 1 : -1;
+            const root = (b / a) * sign;
+
+            const A = rand(1, 3);
+            const B = rand(-5, 5);
+            const C = rand(-10, 10);
+
+            const R = A * root * root + B * root + C;
+
+            const polyStr = formatQuad(A, B, C);
+            const divStr = sign === 1 ? `(${a}x - ${b})` : `(${a}x + ${b})`;
+
+            const opts = createUniqueOpts(`$R = ${R}$`, i => `$R = ${[R + 2, R - 3, R + 5, -R + 1][i - 1]}$`);
+
+            return {
+              q: `當 $P(x) = ${polyStr}$ 除以 $${divStr}$ 時，求餘數 $R$`,
+              ans: `$R = ${R}$`,
+              opts,
+              hint: `令 $${divStr} = 0 \\implies x = ${root}$。由餘式定理，餘數 $R = P(${root}) = ${R}$`,
+            };
+          } else {
+            let k = rand(-4, 4);
+            while (k === 0) k = rand(-4, 4);
+            const a = rand(1, 3);
+            const b = rand(-5, 5);
+            const C = -(Math.pow(k, 3) + a * k * k + b * k);
+
+            const polyStr =
+              `x^3` +
+              (a !== 0 ? (a > 0 ? ` + ${a === 1 ? "" : a}x^2` : ` - ${Math.abs(a) === 1 ? "" : Math.abs(a)}x^2`) : "") +
+              (b !== 0 ? (b > 0 ? ` + ${b === 1 ? "" : b}x` : ` - ${Math.abs(b) === 1 ? "" : Math.abs(b)}x`) : "") +
+              ` + K`;
+            const divStr = k > 0 ? `(x - ${k})` : `(x + ${Math.abs(k)})`;
+
+            const opts = createUniqueOpts(`$K = ${C}$`, i => `$K = ${[C + 3, C - 4, -C, C + 6][i - 1]}$`);
+
+            return {
+              q: `若 $${divStr}$ 是 $P(x) = ${polyStr}$ 的因式 (Factor)，求常數 $K$ 的值`,
+              ans: `$K = ${C}$`,
+              opts,
+              hint: `由因式定理得：$P(${k}) = 0 \\implies (${k})^3 + ${a}(${k})^2 + ${b}(${k}) + K = 0 \\implies K = ${C}$`,
+            };
+          }
+        }),
+    },
+    {
+      id: "g4_t4",
+      title: "4. 對數運算 (Logarithms)",
+      generate: () =>
+        generate10Unique(() => {
+          const type = rand(1, 4);
+          if (type === 1) {
+            const choice = rand(1, 2);
+            if (choice === 1) {
+              const pairs = [
+                { q: "\\log(2) + \\log(5)", ans: "1", hint: "\\log(2) + \\log(5) = \\log(2 \\times 5) = \\log(10) = 1" },
+                { q: "\\log(4) + \\log(25)", ans: "2", hint: "\\log(4) + \\log(25) = \\log(4 \\times 25) = \\log(100) = 2" },
+                { q: "\\log(8) + \\log(125)", ans: "3", hint: "\\log(8) + \\log(125) = \\log(8 \\times 125) = \\log(1000) = 3" },
+                { q: "\\log(200) - \\log(2)", ans: "2", hint: "\\log(200) - \\log(2) = \\log\\left(\\frac{200}{2}\\right) = \\log(100) = 2" },
+              ];
+              const item = pairs[rand(0, pairs.length - 1)];
+              const opts = createUniqueOpts(`$${item.ans}$`, i => `$${[1, 2, 3, 4, 0, 10].filter(x => String(x) !== item.ans)[i - 1]}$`);
+              return {
+                q: `求 $${item.q}$ 的數值`,
+                ans: `$${item.ans}$`,
+                opts,
+                hint: `$${item.hint}$`,
+              };
+            } else {
+              const a = rand(2, 9),
+                b = rand(2, 9);
+              const opts = createUniqueOpts(`$\\log(${a * b})$`, i =>
+                [`$\\log(${a + b})$`, `$\\log\\left(\\frac{${a}}{${b}}\\right)$`, `$${a * b}$`, `$\\log(${a}^{${b}})$`][i - 1],
+              );
+              return {
+                q: `化簡：$\\log(${a}) + \\log(${b})$`,
+                ans: `$\\log(${a * b})$`,
+                opts,
+                hint: `對數加法法則：$\\log(A) + \\log(B) = \\log(A \\times B) = \\log(${a * b})$`,
+              };
+            }
+          } else if (type === 2) {
+            const a = rand(2, 5),
+              p = rand(2, 4);
+            const ans = `$\\log(${Math.pow(a, p)})$`;
+            const opts = createUniqueOpts(ans, i =>
+              [`$\\log(${a * p})$`, `$${p}\\log(${a})$`, `$\\log(${a + p})$`, `$\\log(${Math.pow(a, p + 1)})$`][i - 1],
+            );
+            return {
+              q: `將 $${p} \\log(${a})$ 化簡為單一對數`,
+              ans,
+              opts,
+              hint: `對數指數法則：$k \\log(x) = \\log(x^k) = \\log(${a}^{${p}}) = \\log(${Math.pow(a, p)})$`,
+            };
+          } else if (type === 3) {
+            const base = rand(2, 5);
+            const power = rand(2, 4);
+            const val = Math.pow(base, power);
+            const ans = `$${power}$`;
+            const opts = createUniqueOpts(ans, i => `$${[power + 1, power - 1, base, val][i - 1]}$`);
+            return {
+              q: `計算：$\\frac{\\log(${val})}{\\log(${base})}$ 的值`,
+              ans,
+              opts,
+              hint: `換底公式：$\\frac{\\log(${val})}{\\log(${base})} = \\log_{${base}}(${val}) = \\log_{${base}}(${base}^{${power}}) = ${power}$`,
+            };
+          } else {
+            const b = rand(2, 5);
+            const c = rand(2, 4);
+            const x = Math.pow(b, c);
+            const opts = createUniqueOpts(`$x = ${x}$`, i => `$x = ${[b * c, x + b, x - 1, Math.pow(c, b)][i - 1]}$`);
+            return {
+              q: `解方程：$\\log_{${b}}(x) = ${c}$，求 $x$ 的值`,
+              ans: `$x = ${x}$`,
+              opts,
+              hint: `對數定義：若 $\\log_b(x) = c \\implies x = b^c = ${b}^{${c}} = ${x}$`,
+            };
+          }
+        }),
+    },
+    {
+      id: "g4_t5",
+      title: "5. 直線方程與斜率",
+      generate: () =>
+        generate10Unique(() => {
+          const type = rand(1, 4);
+          if (type === 1) {
+            const x1 = rand(-5, 5),
+              y1 = rand(-5, 5);
+            let m = rand(-4, 4);
+            while (m === 0) m = rand(-4, 4);
+            const dx = rand(1, 4);
+            const x2 = x1 + dx;
+            const y2 = y1 + m * dx;
+
+            const opts = createUniqueOpts(`$m = ${m}$`, i => `$m = ${[m + 1, m - 1, -m, m * 2][i - 1]}$`);
+            return {
+              q: `求通過點 $A(${x1}, ${y1})$ 與點 $B(${x2}, ${y2})$ 的直線斜率 (Slope)`,
+              ans: `$m = ${m}$`,
+              opts,
+              hint: `斜率公式 $m = \\frac{y_2 - y_1}{x_2 - x_1} = \\frac{${y2} - (${y1})}{${x2} - (${x1})} = ${m}$`,
+            };
+          } else if (type === 2) {
+            let m = rand(-5, 5);
+            while (m === 0) m = rand(-5, 5);
+            let c = rand(-8, 8);
+            while (c === 0) c = rand(-8, 8);
+
+            const mStr = m === 1 ? "x" : m === -1 ? "-x" : `${m}x`;
+            const cStr = c > 0 ? ` + ${c}` : ` - ${Math.abs(c)}`;
+            const ans = `$y = ${mStr}${cStr}$`;
+
+            const opts = createUniqueOpts(ans, i =>
+              [
+                `$y = ${mStr}${c > 0 ? ` - ${c}` : ` + ${Math.abs(c)}`}$`,
+                `$y = ${c}x ${m > 0 ? `+ ${m}` : `- ${Math.abs(m)}`}$`,
+                `$x = ${mStr}${cStr}$`,
+                `$y = ${-m}x${cStr}$`,
+              ][i - 1],
+            );
+
+            return {
+              q: `求斜率為 $${m}$ 且 $y$ 軸截距 ($y$-intercept) 為 $${c}$ 的直線方程`,
+              ans,
+              opts,
+              hint: `斜截式：$y = mx + c \\implies y = ${mStr}${cStr}$`,
+            };
+          } else if (type === 3) {
+            let m = rand(-3, 3);
+            while (m === 0) m = rand(-3, 3);
+            const x1 = rand(-4, 4);
+            const y1 = rand(-4, 4);
+            const c = y1 - m * x1;
+
+            const mStr = m === 1 ? "x" : m === -1 ? "-x" : `${m}x`;
+            const cStr = c === 0 ? "" : c > 0 ? ` + ${c}` : ` - ${Math.abs(c)}`;
+            const ans = `$y = ${mStr}${cStr}$`;
+
+            const opts = createUniqueOpts(ans, i =>
+              [
+                `$y = ${mStr} + ${y1}$`,
+                `$y = ${-m}x${cStr}$`,
+                `$y = ${mStr}${c >= 0 ? ` - ${c + 2}` : ` + ${Math.abs(c) + 2}`}$`,
+                `$x = ${mStr}${cStr}$`,
+              ][i - 1],
+            );
+
+            return {
+              q: `求通過點 $(${x1}, ${y1})$ 且斜率為 $${m}$ 的直線方程`,
+              ans,
+              opts,
+              hint: `點斜式：$y - y_1 = m(x - x_1) \\implies y - (${y1}) = ${m}(x - (${x1})) \\implies ${ans}$`,
+            };
+          } else {
+            const x1 = rand(1, 4),
+              y1 = rand(1, 5);
+            const m = rand(1, 3);
+            const dx = rand(1, 3);
+            const x2 = x1 + dx;
+            const y2 = y1 + m * dx;
+            const c = y1 - m * x1;
+
+            const mStr = m === 1 ? "x" : `${m}x`;
+            const cStr = c === 0 ? "" : c > 0 ? ` + ${c}` : ` - ${Math.abs(c)}`;
+            const ans = `$y = ${mStr}${cStr}$`;
+
+            const opts = createUniqueOpts(ans, i =>
+              [`$y = ${m + 1}x${cStr}$`, `$y = ${mStr} + ${y1}$`, `$y = -${mStr}${cStr}$`, `$y = ${mStr} - 5$`][i - 1],
+            );
+
+            return {
+              q: `求通過點 $A(${x1}, ${y1})$ 和點 $B(${x2}, ${y2})$ 的直線方程`,
+              ans,
+              opts,
+              hint: `先求斜率 $m = \\frac{${y2} - ${y1}}{${x2} - ${x1}} = ${m}$，再用點斜式得 ${ans}`,
+            };
+          }
+        }),
+    },
+  ],
+  5: [
+    {
+      id: "g5_t1",
+      title: "1. 等差數列 (A.P.)",
+      generate: () =>
+        generate10Unique(() => {
+          const a = rand(1, 10),
+            d = rand(2, 6),
+            n = rand(5, 15);
+          const Tn = a + (n - 1) * d;
+          const opts = createUniqueOpts(`$T_{${n}} = ${Tn}$`, i => `$T_{${n}} = ${[Tn + d, Tn - 1, a + n * d, Tn + 2][i - 1]}$`);
+          return {
+            q: `等差數列首項 $a = ${a}$，公差 $d = ${d}$，求第 $${n}$ 項 $T_{${n}}$`,
+            ans: `$T_{${n}} = ${Tn}$`,
+            opts,
+            hint: `通項公式：$T_n = a + (n - 1)d = ${a} + (${n}-1)(${d}) = ${Tn}$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t2",
+      title: "2. 等比數列 (G.P.)",
+      generate: () =>
+        generate10Unique(() => {
+          const a = rand(1, 3),
+            r = 2,
+            n = rand(3, 7);
+          const Tn = a * Math.pow(r, n - 1);
+          const opts = createUniqueOpts(`$T_{${n}} = ${Tn}$`, i => `$T_{${n}} = ${[Tn * 2, Tn + 2, a * r * n, Tn - 4][i - 1]}$`);
+          return {
+            q: `等比數列首項 $a = ${a}$，公比 $r = ${r}$，求第 $${n}$ 項 $T_{${n}}$`,
+            ans: `$T_{${n}} = ${Tn}$`,
+            opts,
+            hint: `通項公式：$T_n = a \\times r^{n-1} = ${a} \\times 2^{${n}-1} = ${Tn}$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t3",
+      title: "3. 圓幾何 (Circle Geometry)",
+      generate: () =>
+        generate10Unique(() => {
+          const centerAngle = rand(4, 16) * 10;
+          const circumAngle = centerAngle / 2;
+          const opts = createUniqueOpts(`$${circumAngle}^{\\circ}$`, i => `$${[centerAngle, centerAngle * 2, 180 - centerAngle, circumAngle + 10][i - 1]}^{\\circ}$`);
+          return {
+            q: `同弓形圓心角為 $${centerAngle}^{\\circ}$，求對應的圓周角 (Angle at circumference)`,
+            ans: `$${circumAngle}^{\\circ}$`,
+            opts,
+            hint: `圓心角兩倍於圓周角：$\\frac{${centerAngle}^{\\circ}}{2} = ${circumAngle}^{\\circ}$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t4",
+      title: "4. 排列與組合 (P 與 C)",
+      generate: () =>
+        generate10Unique(() => {
+          const n = rand(5, 9);
+          const ans = (n * (n - 1) * (n - 2)) / 6;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[ans * 2, n * 3, ans + 4, ans - 3][i - 1]}$`);
+          return {
+            q: `從 $${n}$ 名學生中選出 3 人組成小組，共有多少種選法 $C_{3}^{${n}}$？`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `組合公式 $C_3^{${n}} = \\frac{${n} \\times ${n - 1} \\times ${n - 2}}{3 \\times 2 \\times 1} = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t5",
+      title: "5. 概率基礎 (Probability)",
+      generate: () =>
+        generate10Unique(() => {
+          const red = rand(2, 6),
+            blue = rand(3, 8);
+          const total = red + blue;
+          const opts = createUniqueOpts(
+            `$\\frac{${red}}{${total}}$`,
+            i =>
+              [`\\frac{${blue}}{${total}}`, `\\frac{${red}}{${blue}}`, `\\frac{1}{${total}}`, `\\frac{${red + 1}}{${total}}`].map(x => `$${x}$`)[i - 1],
+          );
+          return {
+            q: `袋中有 $${red}$ 個紅球與 $${blue}$ 個藍球，隨機抽出一個是紅球的概率為？`,
+            ans: `$\\frac{${red}}{${total}}$`,
+            opts,
+            hint: `概率 $= \\frac{\\text{目標結果數}}{\\text{總結果數}} = \\frac{${red}}{${red}+${blue}} = \\frac{${red}}{${total}}$`,
+          };
+        }),
+    },
+  ],
+  6: [
+    {
+      id: "g6_t1",
+      title: "1. 正變與反變 (Variations)",
+      generate: () =>
+        generate10Unique(() => {
+          const k = rand(2, 6),
+            x = rand(2, 8);
+          const y = k * x;
+          const opts = createUniqueOpts(`$y = ${y}$`, i => `$y = ${[y + 2, k + x, y * 2, y - 3][i - 1]}$`);
+          return {
+            q: `已知 $y$ 隨 $x$ 正變 ($y \\propto x$)，常數 $k = ${k}$。當 $x = ${x}$ 時，求 $y$ 的值`,
+            ans: `$y = ${y}$`,
+            opts,
+            hint: `正變公式：$y = kx \\implies y = ${k} \\times ${x} = ${y}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t2",
+      title: "2. 圓的方程 (Circle Equation)",
+      generate: () =>
+        generate10Unique(() => {
+          const r = rand(2, 9);
+          const r2 = r * r;
+          const opts = createUniqueOpts(`$x^2 + y^2 = ${r2}$`, i =>
+            [`$x^2 + y^2 = ${r}$`, `$(x-${r})^2 + y^2 = 0$`, `$x + y = ${r2}$`, `$x^2 + y^2 = ${r2 * 2}$`][i - 1],
+          );
+          return {
+            q: `圓心位於原點 $(0,0)$ 且半徑為 $${r}$ 的圓方程為？`,
+            ans: `$x^2 + y^2 = ${r2}$`,
+            opts,
+            hint: `標準方程：$x^2 + y^2 = r^2 \\implies x^2 + y^2 = ${r}^2 = ${r2}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t3",
+      title: "3. 3D 三角學基礎",
+      generate: () =>
+        generate10Unique(() => {
+          const angleType = rand(1, 2);
+          if (angleType === 1) {
+            return {
+              q: `正方體中，相鄰兩個面的對應兩面角 (Dihedral angle) 為多少度？`,
+              ans: `$90^{\\circ}$`,
+              opts: createUniqueOpts(`$90^{\\circ}$`, i => `$${[45, 60, 180][i - 1]}^{\\circ}$`),
+              hint: `正方體相鄰兩面垂直，故兩面角為 $90^{\\circ}$`,
+            };
+          } else {
+            return {
+              q: `在正方體底面上，底面對角線與邊長形成的夾角為多少度？`,
+              ans: `$45^{\\circ}$`,
+              opts: createUniqueOpts(`$45^{\\circ}$`, i => `$${[30, 60, 90][i - 1]}^{\\circ}$`),
+              hint: `正方形對角線平分 $90^{\\circ}$ 直角，故為 $45^{\\circ}$`,
+            };
+          }
+        }),
+    },
+    {
+      id: "g6_t4",
+      title: "4. 統計學 (平均數與標準差)",
+      generate: () =>
+        generate10Unique(() => {
+          const mean = rand(50, 80),
+            add = rand(2, 8);
+          const newMean = mean + add;
+          const opts = createUniqueOpts(`$${newMean}$`, i => `$${[mean, mean * add, newMean + 2, mean - add][i - 1]}$`);
+          return {
+            q: `一組數據平均數為 $${mean}$。若每個數據均加上 $${add}$，新平均數為多少？`,
+            ans: `$${newMean}$`,
+            opts,
+            hint: `所有數據加上常量 $k$，平均數亦加上 $k \\implies ${mean} + ${add} = ${newMean}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t5",
+      title: "5. 複數運算 (Complex Numbers)",
+      generate: () =>
+        generate10Unique(() => {
+          const a = rand(2, 6),
+            b = rand(2, 6);
+          const ans = a * a + b * b;
+          const opts = createUniqueOpts(`$|z|^2 = ${ans}$`, i => `$|z|^2 = ${[a + b, (a + b) * (a + b), ans - 2, ans + 5][i - 1]}$`);
+          return {
+            q: `求複數 $z = ${a} + ${b}i$ 的模的平方 ($|z|^2$)`,
+            ans: `$|z|^2 = ${ans}$`,
+            opts,
+            hint: `$|z|^2 = a^2 + b^2 = ${a}^2 + ${b}^2 = ${ans}$`,
+          };
+        }),
+    },
+  ],
+};
+
+function roundTo(n, dp) {
+  const f = Math.pow(10, dp);
+  return Math.round(n * f) / f;
+}
+
+const extraTopicsByGrade = {
+  1: [
+    {
+      id: "g1_t6",
+      title: "6. 指數與數列規律",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const type = rand(1, 2);
+            if (type === 1) {
+              const m = rand(2, 5);
+              const n = rand(2, 5);
+              const ans = m + n;
+              const opts = createUniqueOpts(`$a^{${ans}}$`, i =>
+                [`$a^{${m * n}}$`, `$a^{${Math.abs(m - n)}}$`, `$a^{${ans + 1}}$`, `$a^{${ans - 1}}$`][i - 1],
+              );
+              return {
+                q: `化簡：$a^{${m}} \\times a^{${n}}$`,
+                ans: `$a^{${ans}}$`,
+                opts,
+                hint: `同底指數相乘，指數相加：$a^{${m}} \\times a^{${n}} = a^{${ans}}$`,
+              };
+            }
+            const base = rand(2, 4);
+            const exp = rand(2, 4);
+            const inner = rand(2, 3);
+            const ans = base * inner;
+            const opts = createUniqueOpts(`$${base}^{${ans}}$`, i =>
+              [`$${base}^{${base * inner}}$`, `$${base + inner}^{${exp}}$`, `$${base}^{${exp + inner}}$`, `$${base * exp}^{${inner}}$`][i - 1],
+            );
+            return {
+              q: `化簡：$(${base}^{${exp}})^{${inner}}$`,
+              ans: `$${base}^{${ans}}$`,
+              opts,
+              hint: `幂的幂：指數相乘 $${exp} \\times ${inner} = ${ans}$`,
+            };
+          }
+          const type = rand(1, 2);
+          if (type === 1) {
+            const base = rand(2, 5);
+            const exp = rand(2, 4);
+            const ans = Math.pow(base, exp);
+            const opts = createUniqueOpts(`$${ans}$`, i => `$${[ans + base, ans - 1, base * exp, ans + exp][i - 1]}$`);
+            return {
+              q: `計算：$${base}^{${exp}} = ?$`,
+              ans: `$${ans}$`,
+              opts,
+              hint: `$${base}^{${exp}} = ${base}${exp > 1 ? " \\times ".repeat(exp - 1).trim() + base : ""} = ${ans}$`,
+            };
+          }
+          const start = rand(2, 8);
+          const diff = rand(2, 5);
+          const n = rand(4, 6);
+          const ans = start + (n - 1) * diff;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[ans + diff, ans - diff, start + n * diff, ans + 1][i - 1]}$`);
+          return {
+            q: `數列 $${start}, ${start + diff}, ${start + 2 * diff}, \\ldots$ 的第 $${n}$ 項是？`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `等差數列：第 $${n}$ 項 $= ${start} + (${n}-1) \\times ${diff} = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g1_t7",
+      title: "7. 多項式運算基礎",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const a = rand(2, 4);
+            const b = rand(1, 5);
+            const c = rand(1, 4);
+            const d = rand(-3, 5);
+            const ansA = a + c;
+            const ansB = b + d;
+            const ansStr = ansB >= 0 ? `$${ansA}x + ${ansB}$` : `$${ansA}x - ${Math.abs(ansB)}$`;
+            const opts = createUniqueOpts(ansStr, i =>
+              [
+                ansB >= 0 ? `$${ansA + 1}x + ${ansB}$` : `$${ansA + 1}x - ${Math.abs(ansB)}$`,
+                ansB >= 0 ? `$${ansA}x + ${ansB + 2}$` : `$${ansA}x - ${Math.abs(ansB + 2)}$`,
+                ansB >= 0 ? `$${ansA - 1}x + ${ansB}$` : `$${ansA - 1}x - ${Math.abs(ansB)}$`,
+                ansB >= 0 ? `$${ansA}x + ${ansB - 1}$` : `$${ansA}x - ${Math.abs(ansB - 1)}$`,
+              ][i - 1],
+            );
+            return {
+              q: `化簡：$${a}x + ${b} + ${c}x + (${d})$`,
+              ans: ansStr,
+              opts,
+              hint: `合併同類項：$(${a}+${c})x + (${b}+(${d})) = ${ansStr}$`,
+            };
+          }
+          const coeff1 = rand(2, 8);
+          const coeff2 = rand(1, 7);
+          const ans = coeff1 + coeff2;
+          const opts = createUniqueOpts(`$${ans}x$`, i => `$${[ans + 1, ans - 1, ans + 2, coeff1 * coeff2]}x$`[i - 1]);
+          return {
+            q: `化簡：$${coeff1}x + ${coeff2}x$`,
+            ans: `$${ans}x$`,
+            opts,
+            hint: `同類項相加：$(${coeff1} + ${coeff2})x = ${ans}x$`,
+          };
+        }),
+    },
+    {
+      id: "g1_t8",
+      title: "8. 近似值與估算",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const val = rand(123, 987) + rand(0, 9) / 10;
+            const rounded = roundTo(val, 1);
+            const opts = createUniqueOpts(`$${rounded}$`, i =>
+              [`$${roundTo(val, 0)}$`, `$${roundTo(val + 0.5, 1)}$`, `$${roundTo(val - 0.3, 1)}$`, `$${roundTo(val, 2)}$`][i - 1],
+            );
+            return {
+              q: `將 $${val}$ 近似至 1 個有效數字`,
+              ans: `$${rounded}$`,
+              opts,
+              hint: `首個非零數字起計 1 位有效數字 → $${rounded}$`,
+            };
+          }
+          const val = rand(12, 98) * 10 + rand(0, 9);
+          const rounded = Math.round(val / 10) * 10;
+          const opts = createUniqueOpts(`$${rounded}$`, i => `$${[rounded + 10, rounded - 10, val, rounded + 5][i - 1]}$`);
+          return {
+            q: `將 $${val}$ 四捨五入至最接近的十位`,
+            ans: `$${rounded}$`,
+            opts,
+            hint: `個位 ${val % 10} ${val % 10 >= 5 ? "≥ 5，十位進 1" : "< 5，十位不變"} → $${rounded}$`,
+          };
+        }),
+    },
+    {
+      id: "g1_t9",
+      title: "9. 幾何簡介與角",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const a1 = rand(30, 80);
+            const a2 = rand(20, 70);
+            const ans = 360 - a1 - a2;
+            if (ans <= 0 || ans >= 360) return null;
+            const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i =>
+              [`$${360 - a1}^{\\circ}$`, `$${180 - a1}^{\\circ}$`, `$${a1 + a2}^{\\circ}$`, `$${ans + 20}^{\\circ}$`][i - 1],
+            );
+            return {
+              q: `三條直線交於一點，其中兩角分別為 $${a1}^{\\circ}$ 和 $${a2}^{\\circ}$，求第三角`,
+              ans: `$${ans}^{\\circ}$`,
+              opts,
+              hint: `同點各角之和 $= 360^{\\circ}$，故 $360 - ${a1} - ${a2} = ${ans}^{\\circ}$`,
+            };
+          }
+          const known = rand(40, 140);
+          const ans = 180 - known;
+          const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i =>
+            [`$${known}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ans + 10}^{\\circ}$`, `$${ans - 10}^{\\circ}$`][i - 1],
+          );
+          return {
+            q: `直線上兩鄰角，其中一個為 $${known}^{\\circ}$，求另一角`,
+            ans: `$${ans}^{\\circ}$`,
+            opts,
+            hint: `同一直線上各角之和 $= 180^{\\circ}$，故 $180 - ${known} = ${ans}^{\\circ}$`,
+          };
+        }),
+    },
+    {
+      id: "g1_t10",
+      title: "10. 面積與體積 (I)",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const type = rand(1, 2);
+            if (type === 1) {
+              const r = rand(2, 6);
+              const ans = Math.round(Math.PI * r * r);
+              const opts = createUniqueOpts(`$${ans}$`, i => `$${[2 * Math.PI * r, r * r, ans + r, ans - r][i - 1]}$`);
+              return {
+                q: `圓的半徑為 $${r}$，取 $\\pi \\approx 3.14$，求面積（取最接近的整數）`,
+                ans: `$${ans}$`,
+                opts,
+                hint: `$A = \\pi r^2 \\approx 3.14 \\times ${r}^2 \\approx ${ans}$`,
+              };
+            }
+            const l = rand(3, 8);
+            const w = rand(2, 6);
+            const h = rand(2, 5);
+            const ans = l * w * h;
+            const opts = createUniqueOpts(`$${ans}$`, i => `$${[l * w, l + w + h, ans + l, ans - w][i - 1]}$`);
+            return {
+              q: `長方體長 $${l}$、闊 $${w}$、高 $${h}$，求體積`,
+              ans: `$${ans}$`,
+              opts,
+              hint: `$V = lwh = ${l} \\times ${w} \\times ${h} = ${ans}$`,
+            };
+          }
+          const type = rand(1, 2);
+          if (type === 1) {
+            const l = rand(3, 12);
+            const w = rand(2, 10);
+            const ans = l * w;
+            const opts = createUniqueOpts(`$${ans}$`, i => `$${[l + w, 2 * (l + w), ans + 5, ans - 3][i - 1]}$`);
+            return {
+              q: `長方形長 $${l}$、闊 $${w}$，求面積`,
+              ans: `$${ans}$`,
+              opts,
+              hint: `$A = l \\times w = ${l} \\times ${w} = ${ans}$`,
+            };
+          }
+          const base = rand(4, 12);
+          const height = rand(2, 8);
+          const ans = (base * height) / 2;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[base * height, ans + 2, ans - 1, base + height][i - 1]}$`);
+          return {
+            q: `三角形底 $${base}$、高 $${height}$，求面積`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `$A = \\frac{1}{2} \\times \\text{底} \\times \\text{高} = \\frac{${base} \\times ${height}}{2} = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g1_t11",
+      title: "11. 坐標簡介",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const x1 = rand(-5, 5);
+            const y1 = rand(-5, 5);
+            const x2 = rand(-5, 5);
+            const y2 = rand(-5, 5);
+            const mx = (x1 + x2) / 2;
+            const my = (y1 + y2) / 2;
+            const ansStr = mx % 1 === 0 && my % 1 === 0 ? `$(${mx}, ${my})$` : `$\\left(${mx}, ${my}\\right)$`;
+            const opts = createUniqueOpts(ansStr, i =>
+              [`$(${x2}, ${y1})$`, `$(${x1}, ${y2})$`, `$(${mx + 1}, ${my})$`, `$(${mx}, ${my + 1})$`][i - 1],
+            );
+            return {
+              q: `求 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$ 的中點坐標`,
+              ans: ansStr,
+              opts,
+              hint: `中點 $= \\left(\\frac{${x1}+${x2}}{2}, \\frac{${y1}+${y2}}{2}\\right) = ${ansStr}$`,
+            };
+          }
+          let x = rand(-8, 8);
+          let y = rand(-8, 8);
+          if (x === 0 || y === 0) return null;
+          let quadrant;
+          if (x > 0 && y > 0) quadrant = "第一象限";
+          else if (x < 0 && y > 0) quadrant = "第二象限";
+          else if (x < 0 && y < 0) quadrant = "第三象限";
+          else if (x > 0 && y < 0) quadrant = "第四象限";
+          else quadrant = "坐標軸上";
+          const opts = createUniqueOpts(quadrant, i =>
+            ["第一象限", "第二象限", "第三象限", "第四象限"].filter(q => q !== quadrant)[i - 1] ?? "原點",
+          );
+          return {
+            q: `點 $P(${x}, ${y})$ 位於哪個象限？`,
+            ans: quadrant,
+            opts,
+            hint: `x ${x > 0 ? ">" : x < 0 ? "<" : "="} 0，y ${y > 0 ? ">" : y < 0 ? "<" : "="} 0 → ${quadrant}`,
+          };
+        }),
+    },
+    {
+      id: "g1_t12",
+      title: "12. 統計簡介",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const f1 = rand(2, 5);
+            const f2 = rand(3, 6);
+            const f3 = rand(1, 4);
+            const v1 = rand(1, 4);
+            const v2 = v1 + rand(2, 4);
+            const v3 = v2 + rand(2, 4);
+            const total = f1 + f2 + f3;
+            const sum = f1 * v1 + f2 * v2 + f3 * v3;
+            const mean = sum / total;
+            const meanStr = mean % 1 === 0 ? `$${mean}$` : `$${roundTo(mean, 1)}$`;
+            const opts = createUniqueOpts(meanStr, i =>
+              [`$${mean + 1}$`, `$${mean - 1}$`, `$${v2}$`, `$${sum}$`][i - 1],
+            );
+            return {
+              q: `頻率表：值 $${v1}$ 出現 $${f1}$ 次，$${v2}$ 出現 $${f2}$ 次，$${v3}$ 出現 $${f3}$ 次，求平均數`,
+              ans: meanStr,
+              opts,
+              hint: `平均數 $= \\frac{${f1}\\times${v1} + ${f2}\\times${v2} + ${f3}\\times${v3}}{${total}} = ${meanStr}$`,
+            };
+          }
+          const n = rand(3, 5);
+          const nums = [];
+          for (let i = 0; i < n; i++) nums.push(rand(2, 20));
+          const sum = nums.reduce((a, b) => a + b, 0);
+          const mean = sum / n;
+          const meanStr = mean % 1 === 0 ? `$${mean}$` : `$${roundTo(mean, 1)}$`;
+          const opts = createUniqueOpts(meanStr, i =>
+            [`$${mean + 2}$`, `$${mean - 1}$`, `$${sum}$`, `$${Math.max(...nums)}$`][i - 1],
+          );
+          return {
+            q: `求數據 $${nums.join(", ")}$ 的平均數`,
+            ans: meanStr,
+            opts,
+            hint: `平均數 $= \\frac{${nums.join("+")}}{${n}} = ${meanStr}$`,
+          };
+        }),
+    },
+  ],
+  2: [
+    {
+      id: "g2_t6",
+      title: "6. 近似與誤差",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const measured = rand(10, 50) + rand(1, 9) / 10;
+            const trueVal = roundTo(measured + rand(-2, 2) / 10, 1);
+            const absErr = roundTo(Math.abs(measured - trueVal), 1);
+            const opts = createUniqueOpts(`$${absErr}$`, i =>
+              [`$${roundTo(absErr + 0.5, 1)}$`, `$${roundTo(absErr - 0.3, 1)}$`, `$${roundTo(measured, 1)}$`, `$${roundTo(trueVal, 1)}$`][i - 1],
+            );
+            return {
+              q: `測量值 $${measured}$，真值 $${trueVal}$，求絕對誤差`,
+              ans: `$${absErr}$`,
+              opts,
+              hint: `絕對誤差 $= |\\text{測量值} - \\text{真值}| = |${measured} - ${trueVal}| = ${absErr}$`,
+            };
+          }
+          const val = rand(100, 999) / 10;
+          const rounded = roundTo(val, 1);
+          const opts = createUniqueOpts(`$${rounded}$`, i =>
+            [`$${roundTo(val, 0)}$`, `$${roundTo(val, 2)}$`, `$${rounded + 0.1}$`, `$${rounded - 0.1}$`][i - 1],
+          );
+          return {
+            q: `將 $${val}$ 四捨五入至 1 位小數`,
+            ans: `$${rounded}$`,
+            opts,
+            hint: `看第 2 位小數決定進位 → $${rounded}$`,
+          };
+        }),
+    },
+    {
+      id: "g2_t7",
+      title: "7. 恆等式",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const a = rand(2, 12);
+            const ansStr = `$(x - ${a})(x + ${a})$`;
+            const opts = createUniqueOpts(ansStr, i =>
+              [`$(x - ${a})^2$`, `$(x + ${a})^2$`, `$(x - ${a * 2})(x + 1)$`, `$(x - ${a + 1})(x + ${a - 1})$`][i - 1],
+            );
+            return {
+              q: `因式分解：$x^2 - ${a * a}$`,
+              ans: ansStr,
+              opts,
+              hint: `$a^2 - b^2 = (a-b)(a+b) \\implies x^2 - ${a}^2 = ${ansStr}$`,
+            };
+          }
+          const a = rand(2, 8);
+          const b = rand(1, 6);
+          const ans = a * a + 2 * a * b + b * b;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[ans + 1, (a + b) * 2, ans - 2, a * b][i - 1]}$`);
+          return {
+            q: `展開：$(${a} + ${b})^2 = ?$`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `$(a+b)^2 = a^2 + 2ab + b^2 = ${a}^2 + 2(${a})(${b}) + ${b}^2 = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g2_t8",
+      title: "8. 公式與主項變換",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const k = rand(2, 8);
+            const y = rand(10, 60);
+            const ans = y / k;
+            const opts = createUniqueOpts(`$x = ${ans}$`, i => `$x = ${[ans + 1, ans - 1, y - k, k * y][i - 1]}$`);
+            return {
+              q: `已知 $y = ${k}x$，當 $y = ${y}$ 時，以 $x$ 為主項，求 $x$`,
+              ans: `$x = ${ans}$`,
+              opts,
+              hint: `$x = \\frac{y}{k} = \\frac{${y}}{${k}} = ${ans}$`,
+            };
+          }
+          const b = rand(1, 15);
+          const x = rand(2, 12);
+          const a = rand(2, 6);
+          const y = a * x + b;
+          const opts = createUniqueOpts(`$x = ${x}$`, i => `$x = ${[x + 1, x - 1, y - b, (y - b) / a + 1][i - 1]}$`);
+          return {
+            q: `已知 $y = ${a}x + ${b}$，當 $y = ${y}$ 時，求 $x$`,
+            ans: `$x = ${x}$`,
+            opts,
+            hint: `$${a}x = ${y} - ${b} = ${a * x} \\implies x = ${x}$`,
+          };
+        }),
+    },
+    {
+      id: "g2_t9",
+      title: "9. 率、比及比例",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const scale = rand(2, 5) * 10000;
+            const mapCm = rand(2, 8);
+            const realM = (mapCm * scale) / 100;
+            const opts = createUniqueOpts(`$${realM}\\text{ m}$`, i =>
+              [`$${realM + 10}\\text{ m}$`, `$${mapCm * scale}\\text{ m}$`, `$${realM / 2}\\text{ m}$`, `$${realM + scale / 1000}\\text{ m}$`][i - 1],
+            );
+            return {
+              q: `地圖比例尺 $1 : ${scale.toLocaleString()}$，地圖上 $${mapCm}$ cm 代表實際多少米？`,
+              ans: `$${realM}\\text{ m}$`,
+              opts,
+              hint: `實際 $= ${mapCm} \\times ${scale} \\text{ cm} = ${realM * 100} \\text{ cm} = ${realM} \\text{ m}$`,
+            };
+          }
+          const a = rand(2, 6);
+          const b = rand(2, 6);
+          const factor = rand(2, 5);
+          const ans = `${a * factor} : ${b * factor}`;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[a + b, `${a * factor + 1} : ${b * factor}`, `${a} : ${b * factor}`, `${a * factor} : ${b}`][i - 1]}$`);
+          return {
+            q: `化簡比例 $${a * factor * 2} : ${b * factor * 2}$`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `同除以 ${factor * 2} → $${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g2_t10",
+      title: "10. 百分法應用",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const P = rand(2, 10) * 500;
+            const r = rand(3, 8);
+            const ans = Math.round(P * (1 - r / 100));
+            const opts = createUniqueOpts(`$${ans}$`, i => `$${[P - (P * r) / 100 + 50, P, ans + 100, ans - 50][i - 1]}$`);
+            return {
+              q: `某商品原價 $${P}$，打折 $${r}\\%$，求折後價（取整）`,
+              ans: `$${ans}$`,
+              opts,
+              hint: `折後價 $= ${P} \\times (1 - ${r}\\%) = ${ans}$`,
+            };
+          }
+          const P = rand(2, 20) * 100;
+          const r = rand(2, 10);
+          const ans = (P * r) / 100;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[ans + 10, P + r, ans * 2, ans - 5][i - 1]}$`);
+          return {
+            q: `本金 $${P}$，年利率 $${r}\\%$，求 1 年利息`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `利息 $= ${P} \\times ${r}\\% = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g2_t11",
+      title: "11. 角與平行線",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const coInt = rand(60, 110);
+            const ans = 180 - coInt;
+            const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i =>
+              [`$${coInt}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ans + 15}^{\\circ}$`, `$${ans - 10}^{\\circ}$`][i - 1],
+            );
+            return {
+              q: `兩平行線被橫線所截，同旁內角之一為 $${coInt}^{\\circ}$，求另一同旁內角`,
+              ans: `$${ans}^{\\circ}$`,
+              opts,
+              hint: `同旁內角互補：$180 - ${coInt} = ${ans}^{\\circ}$`,
+            };
+          }
+          const angle = rand(40, 130);
+          const opts = createUniqueOpts(`$${angle}^{\\circ}$`, i =>
+            [`$${180 - angle}^{\\circ}$`, `$${90}^{\\circ}$`, `$${angle + 10}^{\\circ}$`, `$${angle - 10}^{\\circ}$`][i - 1],
+          );
+          return {
+            q: `兩平行線被橫線所截，同位角之一為 $${angle}^{\\circ}$，求另一同位角`,
+            ans: `$${angle}^{\\circ}$`,
+            opts,
+            hint: `同位角相等 → $${angle}^{\\circ}$`,
+          };
+        }),
+    },
+    {
+      id: "g2_t12",
+      title: "12. 面積和體積 (II)",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const r = rand(3, 8);
+            const angle = rand(2, 5) * 30;
+            const arcLen = roundTo((2 * Math.PI * r * angle) / 360, 1);
+            const opts = createUniqueOpts(`$${arcLen}$`, i =>
+              [`$${roundTo(arcLen + 1, 1)}$`, `$${roundTo(Math.PI * r, 1)}$`, `$${roundTo(arcLen - 0.5, 1)}$`, `$${2 * r}$`][i - 1],
+            );
+            return {
+              q: `半徑 $${r}$ 的扇形圓心角 $${angle}^{\\circ}$（$\\pi \\approx 3.14$），求弧長（1 位小數）`,
+              ans: `$${arcLen}$`,
+              opts,
+              hint: `弧長 $= \\frac{${angle}}{360} \\times 2\\pi r \\approx ${arcLen}$`,
+            };
+          }
+          const r = rand(2, 5);
+          const h = rand(3, 10);
+          const ans = Math.round(Math.PI * r * r * h);
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[r * r * h, 2 * Math.PI * r * h, ans + r, ans - h][i - 1]}$`);
+          return {
+            q: `圓柱底半徑 $${r}$、高 $${h}$（$\\pi \\approx 3.14$），求體積（整數）`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `$V = \\pi r^2 h \\approx 3.14 \\times ${r}^2 \\times ${h} \\approx ${ans}$`,
+          };
+        }),
+    },
+  ],
+  3: [
+    {
+      id: "g3_t6",
+      title: "6. 更多因式分解",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const a1 = dse ? [1, 1, 2][rand(0, 2)] : 1;
+          const a2 = 1;
+          let m = rand(dse ? -8 : -5, dse ? 8 : 5);
+          while (m === 0) m = rand(-5, 5);
+          let n = rand(dse ? -8 : -5, dse ? 8 : 5);
+          while (n === 0) n = rand(-5, 5);
+          const A = a1 * a2;
+          const B = a1 * n + a2 * m;
+          const C = m * n;
+          const polyStr = formatQuad(A, B, C);
+          const ansStr = `$${formatFactor(a1, m)}${formatFactor(a2, n)}$`;
+          const opts = createUniqueOpts(ansStr, i =>
+            [
+              `$${formatFactor(a1, -m)}${formatFactor(a2, n)}$`,
+              `$${formatFactor(a1, m)}${formatFactor(a2, -n)}$`,
+              `$${formatFactor(a1, m + 1)}${formatFactor(a2, n - 1)}$`,
+              `$${formatFactor(a1, -m)}${formatFactor(a2, -n)}$`,
+            ][i - 1],
+          );
+          return {
+            q: `因式分解：$${polyStr}$`,
+            ans: ansStr,
+            opts,
+            hint: `十字相乘：${ansStr}`,
+          };
+        }),
+    },
+    {
+      id: "g3_t7",
+      title: "7. 百分法 (II) 複利息",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const years = dse ? 3 : 2;
+          const P = rand(dse ? 5 : 2, dse ? 15 : 10) * (dse ? 1000 : 500);
+          const r = rand(2, dse ? 12 : 8);
+          const ans = Math.round(P * Math.pow(1 + r / 100, years));
+          const opts = createUniqueOpts(`$${ans}$`, i =>
+            [`$${P + (P * r * years) / 100}$`, `$${ans + 200}$`, `$${Math.round(P * Math.pow(1 + r / 100, years - 1))}$`, `$${ans - 150}$`][i - 1],
+          );
+          return {
+            q: `本金 $${P}$，年利率 $${r}\\%$，按年複利，${years} 年後本利和（取整）？`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `$A = P(1+r\\%)^${years} = ${P}(1+${r}\\%)^${years} \\approx ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g3_t8",
+      title: "8. 不等式",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const a = rand(2, dse ? 6 : 5);
+          const xAns = rand(3, dse ? 12 : 10);
+          if (dse) {
+            const b = rand(1, 12);
+            const rhs = a * xAns + b + rand(1, 5);
+            const correct = `$x < ${xAns}$`;
+            const opts = createUniqueOpts(correct, i =>
+              [`$x > ${xAns}$`, `$x \\geq ${xAns}$`, `$x < ${xAns - 1}$`, `$x > ${xAns + 1}$`][i - 1],
+            );
+            return {
+              q: `解不等式：$${a}x + ${b} < ${rhs}$`,
+              ans: correct,
+              opts,
+              hint: `$${a}x < ${rhs - b}$ \\implies x < ${xAns}$`,
+            };
+          }
+          const k = rand(1, a - 1 || 1);
+          const rhs = a * xAns - k;
+          const correct = `$x > ${xAns}$`;
+          const opts = createUniqueOpts(correct, i =>
+            [`$x < ${xAns}$`, `$x \\leq ${xAns}$`, `$x > ${xAns + 1}$`, `$x < ${xAns - 1}$`][i - 1],
+          );
+          return {
+            q: `解不等式：$${a}x > ${rhs}$`,
+            ans: correct,
+            opts,
+            hint: `$x > \\frac{${rhs}}{${a}} \\implies x > ${xAns}$`,
+          };
+        }),
+    },
+    {
+      id: "g3_t9",
+      title: "9. 有理數與無理數",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const surds = [
+              { n: 8, ans: "$2\\sqrt{2}$" },
+              { n: 12, ans: "$2\\sqrt{3}$" },
+              { n: 18, ans: "$3\\sqrt{2}$" },
+              { n: 20, ans: "$2\\sqrt{5}$" },
+              { n: 27, ans: "$3\\sqrt{3}$" },
+              { n: 45, ans: "$3\\sqrt{5}$" },
+              { n: 48, ans: "$4\\sqrt{3}$" },
+              { n: 50, ans: "$5\\sqrt{2}$" },
+            ];
+            const item = surds[rand(0, surds.length - 1)];
+            const simplified = item.ans;
+            const opts = createUniqueOpts(simplified, i =>
+              [`$\\sqrt{${item.n + 1}}$`, `$\\sqrt{${item.n - 1}}$`, `$${item.n}$`, `$\\sqrt{${item.n * 2}}$`][i - 1],
+            );
+            return {
+              q: `化簡：$\\sqrt{${item.n}}$`,
+              ans: simplified,
+              opts,
+              hint: `$\\sqrt{${item.n}} = ${simplified}$`,
+            };
+          }
+          const nums = [
+            { v: "0.75", type: "有理數" },
+            { v: "\\sqrt{4}", type: "有理數" },
+            { v: "\\pi", type: "無理數" },
+            { v: "\\sqrt{2}", type: "無理數" },
+          ];
+          const item = nums[rand(0, nums.length - 1)];
+          const opts = createUniqueOpts(item.type, i => ["有理數", "無理數", "整數", "自然數"].filter(t => t !== item.type)[i - 1] ?? "有理數");
+          return {
+            q: `$${item.v}$ 是有理數還是無理數？`,
+            ans: item.type,
+            opts,
+            hint: `$${item.v}$ 屬於${item.type}`,
+          };
+        }),
+    },
+    {
+      id: "g3_t10",
+      title: "10. 四邊形",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const angle2 = rand(100, 130);
+            const ans = 180 - angle2;
+            const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i =>
+              [`$${angle2}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ans + 10}^{\\circ}$`, `$${ans - 10}^{\\circ}$`][i - 1],
+            );
+            return {
+              q: `平行四邊形中，一內角為 $${angle2}^{\\circ}$，求鄰角`,
+              ans: `$${ans}^{\\circ}$`,
+              opts,
+              hint: `平行四邊形鄰角互補：$180 - ${angle2} = ${ans}^{\\circ}$`,
+            };
+          }
+          const ans = 360;
+          const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i => `$${[180, 270, 540, 90][i - 1]}^{\\circ}$`);
+          return {
+            q: `任意四邊形內角和是多少度？`,
+            ans: `$${ans}^{\\circ}$`,
+            opts,
+            hint: `四邊形內角和 $= 360^{\\circ}$`,
+          };
+        }),
+    },
+    {
+      id: "g3_t11",
+      title: "11. 三角學應用",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const dist = rand(50, 200);
+            const angle = rand(30, 60);
+            const height = Math.round(dist * Math.tan((angle * Math.PI) / 180));
+            const opts = createUniqueOpts(`$${height}\\text{ m}$`, i =>
+              [`$${height + 10}\\text{ m}$`, `$${dist}\\text{ m}$`, `$${height - 5}\\text{ m}$`, `$${Math.round(dist / 2)}\\text{ m}$`][i - 1],
+            );
+            return {
+              q: `地面距離 $${dist}$ m 處測得仰角 $${angle}^{\\circ}$（$\\tan ${angle}^{\\circ} \\approx ${roundTo(Math.tan((angle * Math.PI) / 180), 2)}$），求建築物高度（整數）`,
+              ans: `$${height}\\text{ m}$`,
+              opts,
+              hint: `$h = ${dist} \\tan ${angle}^{\\circ} \\approx ${height}$ m`,
+            };
+          }
+          const opp = rand(3, 8);
+          const adj = rand(4, 10);
+          const hyp = Math.round(Math.sqrt(opp * opp + adj * adj));
+          const opts = createUniqueOpts(`$${hyp}$`, i => `$${[opp + adj, hyp + 2, hyp - 1, opp * adj][i - 1]}$`);
+          return {
+            q: `直角三角形兩直角邊 $${opp}$ 和 $${adj}$，求斜邊`,
+            ans: `$${hyp}$`,
+            opts,
+            hint: `$c = \\sqrt{${opp}^2 + ${adj}^2} = ${hyp}$`,
+          };
+        }),
+    },
+    {
+      id: "g3_t12",
+      title: "12. 概率進階",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const red = rand(3, 5);
+            const blue = rand(2, 4);
+            const total = red + blue;
+            const ansNum = red * (red - 1);
+            const ansDen = total * (total - 1);
+            const g = gcd(ansNum, ansDen);
+            const ans = `$\\frac{${ansNum / g}}{${ansDen / g}}$`;
+            const opts = createUniqueOpts(ans, i =>
+              [`$\\frac{${red}}{${total}}$`, `$\\frac{${blue}}{${total}}$`, `$\\frac{${red - 1}}{${total - 1}}$`, `$\\frac{${red}}{${total - 1}}$`][i - 1],
+            );
+            return {
+              q: `袋中 $${red}$ 紅 $${blue}$ 藍，不放回抽 2 次，兩次皆紅的概率？`,
+              ans,
+              opts,
+              hint: `$\\frac{${red}}{${total}} \\times \\frac{${red - 1}}{${total - 1}} = ${ans}$`,
+            };
+          }
+          const red = rand(2, 5);
+          const blue = rand(3, 6);
+          const total = red + blue;
+          const ans = `$\\frac{${blue}}{${total}}$`;
+          const opts = createUniqueOpts(ans, i =>
+            [`$\\frac{${red}}{${total}}$`, `$\\frac{1}{${total}}$`, `$\\frac{${blue + 1}}{${total}}$`, `$\\frac{${blue}}{${red}}$`][i - 1],
+          );
+          return {
+            q: `袋中 $${red}$ 紅 $${blue}$ 藍，隨機抽一個是藍球的概率？`,
+            ans,
+            opts,
+            hint: `$P = \\frac{${blue}}{${red}+${blue}} = \\frac{${blue}}{${total}}$`,
+          };
+        }),
+    },
+  ],
+  4: [
+    {
+      id: "g4_t6",
+      title: "6. 判別式進階",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const a = rand(1, dse ? 3 : 2);
+          let xRoot = rand(-6, 6);
+          while (xRoot === 0) xRoot = rand(-6, 6);
+          const b = -2 * a * xRoot;
+          const k = a * xRoot * xRoot;
+          const poly = `${a === 1 ? "" : a}x^2 ${b >= 0 ? "+ " + b + "x" : "- " + Math.abs(b) + "x"} + k = 0`;
+          const opts = createUniqueOpts(`$k = ${k}$`, i => `$k = ${[k + 2, k - 3, -k, k + 5][i - 1]}$`);
+          return {
+            q: `若 $${poly}$ 有相等實根，求 $k$`,
+            ans: `$k = ${k}$`,
+            opts,
+            hint: `$\\Delta = 0 \\implies k = ${k}$`,
+          };
+        }),
+    },
+    {
+      id: "g4_t7",
+      title: "7. 餘式定理",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          let k = rand(dse ? -5 : -3, dse ? 5 : 3);
+          while (k === 0) k = rand(-3, 3);
+          const a = rand(1, dse ? 3 : 2);
+          const b = rand(-5, 5);
+          const c = rand(-8, 8);
+          const R = a * k * k + b * k + c;
+          const polyStr = formatQuad(a, b, c);
+          const divStr = k > 0 ? `(x - ${k})` : `(x + ${Math.abs(k)})`;
+          const opts = createUniqueOpts(`$R = ${R}$`, i => `$R = ${[R + 3, R - 2, -R, R + 5][i - 1]}$`);
+          return {
+            q: `$P(x) = ${polyStr}$ 除以 $${divStr}$ 的餘數 $R$？`,
+            ans: `$R = ${R}$`,
+            opts,
+            hint: `$R = P(${k}) = ${R}$`,
+          };
+        }),
+    },
+    {
+      id: "g4_t8",
+      title: "8. 變分",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const k = rand(2, 8);
+            const x = rand(2, 6);
+            const y = Math.round(k / x);
+            const opts = createUniqueOpts(`$y = ${y}$`, i => `$y = ${[y + 1, y - 1, k * x, k + x][i - 1]}$`);
+            return {
+              q: `已知 $y$ 與 $x$ 反變 ($y \\propto \\frac{1}{x}$)，$k = ${k}$，當 $x = ${x}$ 時求 $y$（取整）`,
+              ans: `$y = ${y}$`,
+              opts,
+              hint: `$y = \\frac{k}{x} = \\frac{${k}}{${x}} \\approx ${y}$`,
+            };
+          }
+          const k = rand(2, 7);
+          const x = rand(2, 9);
+          const y = k * x;
+          const opts = createUniqueOpts(`$y = ${y}$`, i => `$y = ${[y + 2, k + x, y - 3, y * 2][i - 1]}$`);
+          return {
+            q: `已知 $y \\propto x$，$k = ${k}$，當 $x = ${x}$ 時求 $y$`,
+            ans: `$y = ${y}$`,
+            opts,
+            hint: `$y = kx = ${k} \\times ${x} = ${y}$`,
+          };
+        }),
+    },
+    {
+      id: "g4_t9",
+      title: "9. 三角恆等式",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const pairs = dse
+            ? [
+                { q: "\\sin^2\\theta + \\cos^2\\theta", ans: "1", hint: "\\sin^2\\theta + \\cos^2\\theta = 1" },
+                { q: "2\\sin\\theta\\cos\\theta", ans: "\\sin 2\\theta", hint: "雙角公式" },
+                { q: "\\cos^2\\theta - \\sin^2\\theta", ans: "\\cos 2\\theta", hint: "雙角公式" },
+              ]
+            : [
+                { q: "\\sin^2\\theta + \\cos^2\\theta", ans: "1", hint: "畢氏恆等式" },
+                { q: "\\tan\\theta \\cdot \\cot\\theta", ans: "1", hint: "互餘關係" },
+                { q: "\\sec\\theta \\cdot \\cos\\theta", ans: "1", hint: "倒數關係" },
+              ];
+          const item = pairs[rand(0, pairs.length - 1)];
+          const wrong = dse
+            ? ["0", "\\sin\\theta", "\\cos\\theta", "2"]
+            : ["0", "\\sin\\theta", "\\tan\\theta", "2"];
+          const opts = createUniqueOpts(`$${item.ans}$`, i => `$${wrong.filter(w => w !== item.ans)[i - 1]}$`);
+          return {
+            q: `化簡：$${item.q}$`,
+            ans: `$${item.ans}$`,
+            opts,
+            hint: `$${item.hint}$`,
+          };
+        }),
+    },
+    {
+      id: "g4_t10",
+      title: "10. 圓的基本性質",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const centerAngle = rand(dse ? 6 : 4, dse ? 18 : 12) * 10;
+          const circumAngle = centerAngle / 2;
+          const opts = createUniqueOpts(`$${circumAngle}^{\\circ}$`, i =>
+            [`$${centerAngle}^{\\circ}$`, `$${180 - circumAngle}^{\\circ}$`, `$${circumAngle + 10}^{\\circ}$`, `$${circumAngle - 10}^{\\circ}$`][i - 1],
+          );
+          return {
+            q: `同弧圓心角 $${centerAngle}^{\\circ}$，求圓周角`,
+            ans: `$${circumAngle}^{\\circ}$`,
+            opts,
+            hint: `圓周角 $= \\frac{1}{2} \\times$ 圓心角 $= ${circumAngle}^{\\circ}$`,
+          };
+        }),
+    },
+    {
+      id: "g4_t11",
+      title: "11. 百分法進階",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const P = rand(5, dse ? 20 : 12) * 1000;
+          const r = rand(3, dse ? 10 : 6);
+          const years = dse ? 3 : 2;
+          const ans = Math.round(P * Math.pow(1 + r / 100, years));
+          const opts = createUniqueOpts(`$${ans}$`, i =>
+            [`$${P + (P * r * years) / 100}$`, `$${ans + 500}$`, `$${Math.round(P * (1 + r / 100))}$`, `$${ans - 300}$`][i - 1],
+          );
+          return {
+            q: `投資 $${P}$，年增長率 $${r}\\%$，${years} 年後總值（取整）？`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `$${P}(1+${r}\\%)^${years} \\approx ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g4_t12",
+      title: "12. 不等式基礎",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const a = rand(2, dse ? 5 : 4);
+          const xAns = rand(3, dse ? 12 : 10);
+          if (dse) {
+            const b = rand(1, 12);
+            const rhs = a * xAns + b + rand(1, 4);
+            const correct = `$x < ${xAns}$`;
+            const opts = createUniqueOpts(correct, i =>
+              [`$x > ${xAns}$`, `$x \\geq ${xAns}$`, `$x < ${xAns - 1}$`, `$x > ${xAns + 1}$`][i - 1],
+            );
+            return {
+              q: `解不等式：$${a}x + ${b} < ${rhs}$`,
+              ans: correct,
+              opts,
+              hint: `$${a}x < ${rhs - b}$ \\implies x < ${xAns}$`,
+            };
+          }
+          const k = rand(1, a - 1 || 1);
+          const rhs = a * xAns - k;
+          const correct = `$x > ${xAns}$`;
+          const opts = createUniqueOpts(correct, i =>
+            [`$x < ${xAns}$`, `$x \\leq ${xAns}$`, `$x > ${xAns + 1}$`, `$x < ${xAns - 1}$`][i - 1],
+          );
+          return {
+            q: `解不等式：$${a}x > ${rhs}$`,
+            ans: correct,
+            opts,
+            hint: `$x > \\frac{${rhs}}{${a}} \\implies x > ${xAns}$`,
+          };
+        }),
+    },
+  ],
+  5: [
+    {
+      id: "g5_t6",
+      title: "6. 等差求和",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const a = rand(1, dse ? 8 : 5);
+          const d = rand(2, dse ? 7 : 4);
+          const n = rand(dse ? 10 : 5, dse ? 20 : 12);
+          const ans = (n * (2 * a + (n - 1) * d)) / 2;
+          const opts = createUniqueOpts(`$S_{${n}} = ${ans}$`, i =>
+            [`$S_{${n}} = ${ans + d}$`, `$S_{${n}} = ${ans - 1}$`, `$S_{${n}} = ${a + n * d}$`, `$S_{${n}} = ${ans + n}$`][i - 1],
+          );
+          return {
+            q: `等差數列 $a=${a}, d=${d}$，求前 $${n}$ 項和 $S_{${n}}$`,
+            ans: `$S_{${n}} = ${ans}$`,
+            opts,
+            hint: `$S_n = \\frac{n}{2}[2a+(n-1)d] = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t7",
+      title: "7. 等比求和",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const a = rand(1, dse ? 4 : 3);
+          const r = 2;
+          const n = rand(dse ? 5 : 4, dse ? 8 : 6);
+          const ans = (a * (Math.pow(r, n) - 1)) / (r - 1);
+          const opts = createUniqueOpts(`$S_{${n}} = ${ans}$`, i =>
+            [`$S_{${n}} = ${ans * 2}$`, `$S_{${n}} = ${ans + a}$`, `$S_{${n}} = ${a * Math.pow(r, n)}$`, `$S_{${n}} = ${ans - 2}$`][i - 1],
+          );
+          return {
+            q: `等比數列 $a=${a}, r=${r}$，求前 $${n}$ 項和 $S_{${n}}$`,
+            ans: `$S_{${n}} = ${ans}$`,
+            opts,
+            hint: `$S_n = \\frac{a(r^n-1)}{r-1} = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t8",
+      title: "8. 二次不等式",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const r1 = rand(-6, -1);
+          const r2 = rand(1, 6);
+          const correct = dse ? `$x < ${r1}$ 或 $x > ${r2}$` : `$${r1} < x < ${r2}$`;
+          const wrong = dse
+            ? [`$${r1} < x < ${r2}$`, `$x > ${r2}$`, `$x < ${r1}$`, `$x > ${r1}$ 且 $x < ${r2}$`]
+            : [`$x < ${r1}$ 或 $x > ${r2}$`, `$x > ${r2}$`, `$x < ${r1}$`, `$x > ${r1}$`];
+          const opts = createUniqueOpts(correct, i => wrong[i - 1]);
+          const poly = `(x - ${r1})(x - ${r2})`;
+          return {
+            q: `解不等式：$${poly} ${dse ? "> 0" : "< 0"}$`,
+            ans: correct,
+            opts,
+            hint: `根為 $${r1}, ${r2}$，${dse ? "開區間外" : "兩根之間"} → ${correct}`,
+          };
+        }),
+    },
+    {
+      id: "g5_t9",
+      title: "9. 條件概率",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const red = rand(3, 5);
+          const blue = rand(2, 4);
+          const total = red + blue;
+          if (dse) {
+            const ansNum = red - 1;
+            const ansDen = total - 1;
+            const g = gcd(ansNum, ansDen);
+            const ans = `$\\frac{${ansNum / g}}{${ansDen / g}}$`;
+            const opts = createUniqueOpts(ans, i =>
+              [`$\\frac{${red}}{${total}}$`, `$\\frac{${blue}}{${total - 1}}$`, `$\\frac{${red}}{${total - 1}}$`, `$\\frac{1}{${total - 1}}$`][i - 1],
+            );
+            return {
+              q: `袋中 $${red}$ 紅 $${blue}$ 藍，已知第一次抽到紅球（不放回），求第二次仍抽紅的概率`,
+              ans,
+              opts,
+              hint: `$P = \\frac{${red - 1}}{${total - 1}}$`,
+            };
+          }
+          const ans = `$\\frac{${red}}{${total}}$`;
+          const opts = createUniqueOpts(ans, i =>
+            [`$\\frac{${blue}}{${total}}$`, `$\\frac{1}{${total}}$`, `$\\frac{${red + 1}}{${total}}$`, `$\\frac{${red}}{${blue}}$`][i - 1],
+          );
+          return {
+            q: `袋中 $${red}$ 紅 $${blue}$ 藍，已知抽到紅球，求此事件概率（即抽紅概率）`,
+            ans,
+            opts,
+            hint: `$P(\\text{紅}) = \\frac{${red}}{${total}}$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t10",
+      title: "10. 軌跡",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const r = rand(3, 8);
+            const ans = `$x^2 + y^2 = ${r * r}$`;
+            const opts = createUniqueOpts(ans, i =>
+              [`$x^2 + y^2 = ${r}$`, `$(x-${r})^2 + y^2 = 0$`, `$y = ${r}$`, `$x = ${r}$`][i - 1],
+            );
+            return {
+              q: `與定點 $(0,0)$ 距離恒為 $${r}$ 的點的軌跡方程？`,
+              ans,
+              opts,
+              hint: `圓心 $(0,0)$，半徑 $${r}$ → ${ans}`,
+            };
+          }
+          const ans = `$y = 0$`;
+          const opts = createUniqueOpts(ans, i => [`$x = 0$`, `$y = x$`, `$y = 1$`, `$x + y = 0`][i - 1]);
+          return {
+            q: `到 $x$ 軸距離恒為 $0$ 的點的軌跡？`,
+            ans,
+            opts,
+            hint: `在 $x$ 軸上 → $y = 0$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t11",
+      title: "11. 解三角形",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const triples = [
+            [3, 4, 5],
+            [5, 12, 13],
+            [8, 15, 17],
+            [7, 24, 25],
+          ];
+          const t = triples[rand(0, triples.length - 1)];
+          if (dse) {
+            const opts = createUniqueOpts(`$${t[2]}$`, i => `$${[t[2] + 2, t[0] + t[1], t[2] - 1, t[1] + 1][i - 1]}$`);
+            return {
+              q: `三角形兩邊 $${t[0]}$ 和 $${t[1]}$，夾角 $90^{\\circ}$，求第三邊`,
+              ans: `$${t[2]}$`,
+              opts,
+              hint: `畢氏定理：$c = \\sqrt{${t[0]}^2+${t[1]}^2} = ${t[2]}$`,
+            };
+          }
+          const opts = createUniqueOpts(`$${t[0]}$`, i => `$${[t[0] + 2, t[2] - t[1], t[0] - 1, t[1]][i - 1]}$`);
+          return {
+            q: `直角三角形斜邊 $${t[2]}$，直角邊 $${t[1]}$，求另一邊`,
+            ans: `$${t[0]}$`,
+            opts,
+            hint: `$a = \\sqrt{${t[2]}^2 - ${t[1]}^2} = ${t[0]}$`,
+          };
+        }),
+    },
+    {
+      id: "g5_t12",
+      title: "12. 標準差",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const nums = [2, 4, 4, 4, 5, 5, 7, 9];
+            const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
+            const variance = nums.reduce((s, x) => s + (x - mean) ** 2, 0) / nums.length;
+            const sd = roundTo(Math.sqrt(variance), 2);
+            const opts = createUniqueOpts(`$${sd}$`, i => `$${[roundTo(sd + 0.5, 2), roundTo(sd - 0.3, 2), mean, roundTo(variance, 2)][i - 1]}$`);
+            return {
+              q: `數據 $${nums.join(", ")}$ 的標準差（2 位小數）？`,
+              ans: `$${sd}$`,
+              opts,
+              hint: `先求平均數 $${mean}$，再求方差開方 → $${sd}$`,
+            };
+          }
+          const nums = [2, 4, 6, 8];
+          const mean = 5;
+          const variance = nums.reduce((s, x) => s + (x - mean) ** 2, 0) / nums.length;
+          const sd = Math.sqrt(variance);
+          const opts = createUniqueOpts(`$${sd}$`, i => `$${[sd + 1, mean, variance, sd - 1][i - 1]}$`);
+          return {
+            q: `數據 $${nums.join(", ")}$ 的標準差？`,
+            ans: `$${sd}$`,
+            opts,
+            hint: `平均數 $= 5$，標準差 $= \\sqrt{\\frac{9+1+1+9}{4}} = ${sd}$`,
+          };
+        }),
+    },
+  ],
+  6: [
+    {
+      id: "g6_t6",
+      title: "6. 線性規劃",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          if (dse) {
+            const x = rand(2, 5);
+            const y = rand(2, 5);
+            const maxVal = 3 * x + 2 * y;
+            const opts = createUniqueOpts(`$${maxVal}$`, i => `$${[maxVal + 2, maxVal - 1, 3 * x + y, x + 2 * y][i - 1]}$`);
+            return {
+              q: `在 $x \\geq 0, y \\geq 0, x + y \\leq ${x + y}$ 下，求 $P = 3x + 2y$ 的最大值（頂點 $(${x},0), (0,${y}), (${x},${y})$）`,
+              ans: `$${maxVal}$`,
+              opts,
+              hint: `代入 $(${x}, ${y})$：$P = 3(${x}) + 2(${y}) = ${maxVal}$`,
+            };
+          }
+          const x = rand(1, 4);
+          const y = rand(1, 4);
+          const val = x + y;
+          const opts = createUniqueOpts(`$${val}$`, i => `$${[val + 1, x * y, val - 1, x + y + 2][i - 1]}$`);
+          return {
+            q: `在 $x + y \\leq ${val}$ 且 $x, y \\geq 0$ 整數點中，$x + y$ 的最大值？`,
+            ans: `$${val}$`,
+            opts,
+            hint: `取 $x = ${x}, y = ${y}$ → 最大 $${val}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t7",
+      title: "7. 正態分佈",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const mean = rand(50, 80);
+          const sd = rand(5, 15);
+          const zInt = dse ? rand(1, 2) : 1;
+          const x = mean + sd * zInt;
+          const z = roundTo((x - mean) / sd, 1);
+          const opts = createUniqueOpts(`$z = ${z}$`, i => `$z = ${[z + 0.5, z - 0.3, z + 1, 0][i - 1]}$`);
+          return {
+            q: `平均數 $${mean}$，標準差 $${sd}$，求 $x = ${x}$ 的 $z$ 分數（1 位小數）`,
+            ans: `$z = ${z}$`,
+            opts,
+            hint: `$z = \\frac{x - \\mu}{\\sigma} = \\frac{${x} - ${mean}}{${sd}} = ${z}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t8",
+      title: "8. 抽樣",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const N = rand(dse ? 500 : 100, dse ? 2000 : 500);
+          const n = rand(dse ? 30 : 10, dse ? 80 : 40);
+          const ans = N - n;
+          const opts = createUniqueOpts(`$${ans}$`, i => `$${[N + n, n, N, N / n][i - 1]}$`);
+          return {
+            q: `總人口 $${N}$，隨機抽樣 $${n}$ 人，未入樣本多少人？`,
+            ans: `$${ans}$`,
+            opts,
+            hint: `$${N} - ${n} = ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t9",
+      title: "9. 微分基礎",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const n = rand(dse ? 3 : 2, dse ? 5 : 4);
+          const coeff = rand(1, dse ? 5 : 3);
+          const power = n - 1;
+          const ans = `$${n * coeff}x^{${power}}$`;
+          const wrong = [
+            `$${coeff}x^{${n}}$`,
+            `$${n * coeff}x^{${n}}$`,
+            `$${coeff}x^{${Math.max(power - 1, 0)}}$`,
+            `$${(n - 1) * coeff}x^{${power}}$`,
+          ];
+          const opts = createUniqueOpts(ans, i => wrong[i - 1]);
+          return {
+            q: `求 $\\frac{d}{dx}(${coeff}x^{${n}})$`,
+            ans,
+            opts,
+            hint: `$\\frac{d}{dx}(x^n) = nx^{n-1}$ → ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t10",
+      title: "10. 積分基礎",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const n = rand(dse ? 2 : 1, dse ? 4 : 3);
+          const coeff = rand(1, dse ? 6 : 4);
+          const newPow = n + 1;
+          const newCoeff = coeff / newPow;
+          const ans =
+            newCoeff % 1 === 0 ? `$${newCoeff}x^{${newPow}} + C$` : `$\\frac{${coeff}}{${newPow}}x^{${newPow}} + C$`;
+          const opts = createUniqueOpts(ans, i =>
+            [`$${coeff}x^{${n}} + C$`, `$${coeff}x^{${newPow}} + C$`, `$\\frac{${coeff}}{${n}}x^{${n}} + C$`, `$${newPow}x^{${coeff}} + C$`][i - 1],
+          );
+          return {
+            q: `求 $\\int ${coeff}x^{${n}} \\, dx$`,
+            ans,
+            opts,
+            hint: `$\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$ → ${ans}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t11",
+      title: "11. DSE 綜合 (代數)",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const type = rand(1, 2);
+          if (type === 1) {
+            const a = rand(1, 3);
+            const b = rand(-6, 6);
+            const c = rand(-8, 8);
+            const delta = b * b - 4 * a * c;
+            const poly = formatQuad(a, b, c);
+            const ans = delta > 0 ? "2 個相異實根" : delta === 0 ? "1 個重根" : "0 個實根";
+            const opts = createUniqueOpts(ans, i =>
+              ["2 個相異實根", "1 個重根", "0 個實根", "無限多個"].filter(x => x !== ans)[i - 1] ?? "2 個相異實根",
+            );
+            return {
+              q: `[DSE${dse ? "" : " 簡"}] $${poly} = 0$ 的實根數目？`,
+              ans,
+              opts,
+              hint: `$\\Delta = ${delta}$ → ${ans}`,
+            };
+          }
+          const x = rand(2, 10);
+          const a = rand(2, 5);
+          const b = rand(1, 20);
+          const rhs = a * x + b;
+          const opts = createUniqueOpts(`$x = ${x}$`, i => `$x = ${[x + 1, x - 1, x + 2, rhs][i - 1]}$`);
+          return {
+            q: `[DSE${dse ? "" : " 簡"}] 解 $${a}x + ${b} = ${rhs}$`,
+            ans: `$x = ${x}$`,
+            opts,
+            hint: `$x = ${x}$`,
+          };
+        }),
+    },
+    {
+      id: "g6_t12",
+      title: "12. DSE 綜合 (統計)",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => {
+          const dse = difficulty === "dse";
+          const nums = dse ? [12, 15, 18, 18, 20, 22, 25] : [4, 6, 8, 10];
+          const sorted = [...nums].sort((a, b) => a - b);
+          const median = dse
+            ? sorted[Math.floor(sorted.length / 2)]
+            : (sorted[1] + sorted[2]) / 2;
+          const medianStr = median % 1 === 0 ? `$${median}$` : `$${median}$`;
+          const opts = createUniqueOpts(medianStr, i =>
+            [`$${sorted[0]}$`, `$${sorted[sorted.length - 1]}$`, `$${median + 2}$`, `$${Math.round(nums.reduce((a, b) => a + b, 0) / nums.length)}$`][i - 1],
+          );
+          return {
+            q: `[DSE${dse ? "" : " 簡"}] 數據 $${nums.join(", ")}$ 的中位數？`,
+            ans: medianStr,
+            opts,
+            hint: `排序後取中間值 → ${medianStr}`,
+          };
+        }),
+    },
+  ],
+};
+
+function gcd(a, b) {
+  a = Math.abs(a);
+  b = Math.abs(b);
+  while (b) {
+    const t = b;
+    b = a % b;
+    a = t;
+  }
+  return a;
+}
+
+const curriculumGenerators = buildFullCurriculum();
+
+
+// ========== 經濟 & 稱號 ==========
+const ECONOMY = {
+  starsPerCorrect: { easy: 1, dse: 2 },
+  firstClearBonus: { easy: 10, dse: 20 },
+  perfectBonus: 5,
+  coinsPerCorrect: 10,
+  replayStarsPerCorrect: { easy: 1, dse: 1 },
+  gachaCostStars: 50,
+  pkWinStars: 8, pkLoseStars: 2, pkWinCoins: 50, pkLoseCoins: 10
+};
+const TITLE_TIERS = [
+  { id:'t0', name:'見習冒險者', min:0, emoji:'🌱' },
+  { id:'t1', name:'青銅劍士', min:50, emoji:'🥉' },
+  { id:'t2', name:'白銀騎士', min:150, emoji:'🥈' },
+  { id:'t3', name:'黃金法師', min:350, emoji:'🥇' },
+  { id:'t4', name:'白金賢者', min:700, emoji:'💎' },
+  { id:'t5', name:'鑽石龍騎士', min:1200, emoji:'🐉' },
+  { id:'t6', name:'傳說數學英雄', min:2000, emoji:'👑' }
+];
+function getTitle(stars) {
+  let t = TITLE_TIERS[0];
+  for (const x of TITLE_TIERS) if (stars >= x.min) t = x;
+  return t;
+}
+function calcRewards(diff, correct, total, first) {
+  const coins = correct * ECONOMY.coinsPerCorrect;
+  let stars = first
+    ? correct * ECONOMY.starsPerCorrect[diff] + ECONOMY.firstClearBonus[diff]
+    : correct * ECONOMY.replayStarsPerCorrect[diff];
+  if (correct === total && total >= 10) stars += ECONOMY.perfectBonus;
+  return { coins, stars };
+}
+
+const AVATARS = ['🧙‍♂️','🥷','🧝‍♀️','🤖','🦊','🐉'];
+const GRADE_NAMES = {1:'中一',2:'中二',3:'中三',4:'中四',5:'中五',6:'中六'};
+const SHOP = [
+  { id:'5050', name:'🌓 50/50 刪除卡', cost:30, type:'5050' },
+  { id:'skip', name:'⏭️ 跳過卡', cost:50, type:'skip' }
+];
+
+// ========== 用戶狀態 ==========
+let USER = null;
+let grade = 1, topicId = 'g1_t1', difficulty = 'easy';
+let quiz = { qs:[], idx:0, score:0, correct:0, hidden:[], used5050:false };
+
+function loadUser(name) {
+  const key = 'mh_' + name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g,'_');
+  const raw = localStorage.getItem(key);
+  if (raw) return JSON.parse(raw);
+  return {
+    name, avatar:'🧙‍♂️', coins:0, stars:0,
+    items5050:0, itemsSkip:0, coupons:[],
+    history:{}, pkWins:0, pkLosses:0
+  };
+}
+function saveUser() {
+  if (!USER) return;
+  const key = 'mh_' + USER.name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g,'_');
+  localStorage.setItem(key, JSON.stringify(USER));
+  saveLB();
+  updateHeader();
+}
+function saveLB() {
+  let lb = JSON.parse(localStorage.getItem('mh_lb') || '[]');
+  const i = lb.findIndex(x => x.name === USER.name);
+  const entry = { name:USER.name, avatar:USER.avatar, stars:USER.stars, coins:USER.coins,
+    pkWins:USER.pkWins||0, title:getTitle(USER.stars).name };
+  if (i >= 0) lb[i] = entry; else lb.push(entry);
+  lb.sort((a,b) => b.stars - a.stars);
+  localStorage.setItem('mh_lb', JSON.stringify(lb.slice(0,50)));
+}
+
+function updateHeader() {
+  if (!USER) return;
+  document.getElementById('hdrAv').textContent = USER.avatar;
+  document.getElementById('hdrName').textContent = USER.name;
+  document.getElementById('hdrTitle').textContent = getTitle(USER.stars).emoji + ' ' + getTitle(USER.stars).name;
+  document.getElementById('hdrCoins').textContent = USER.coins;
+  document.getElementById('hdrStars').textContent = USER.stars;
+  document.getElementById('cnt5050').textContent = USER.items5050 || 0;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'scrHome') renderTopics();
+  if (id === 'scrGacha') renderCoupons();
+  if (id === 'scrShop') renderShop();
+  if (id === 'scrLB') renderLB();
+}
+function nav(id, el) {
+  showScreen(id);
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
+  if (el) el.classList.add('on');
+}
+
+function renderMath(el) {
+  if (window.renderMathInElement && el) {
+    renderMathInElement(el, {
+      delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+      throwOnError: false
+    });
+  }
+}
+
+function doLogin() {
+  const name = document.getElementById('inpName').value.trim();
+  if (!name) { alert('請輸入姓名'); return; }
+  USER = loadUser(name);
+  USER.avatar = selectedAv || '🧙‍♂️';
+  saveUser();
+  document.getElementById('topBar').style.display = 'flex';
+  document.getElementById('navBar').style.display = 'flex';
+  showScreen('scrHome');
+}
+
+function initUI() {
+  const row = document.getElementById('avRow');
+  if (row && row.children.length === 0) {
+    AVATARS.forEach(a => {
+      const d = document.createElement('div');
+      d.className = 'av' + (a === selectedAv ? ' on' : '');
+      d.textContent = a;
+      d.onclick = () => { selectedAv = a; document.querySelectorAll('.av').forEach(x => x.classList.remove('on')); d.classList.add('on'); };
+      row.appendChild(d);
+    });
+  }
+  const gt = document.getElementById('gradeTabs');
+  for (let g = 1; g <= 6; g++) {
+    const b = document.createElement('button');
+    b.className = 'grade-tab' + (g === 1 ? ' on' : '');
+    b.textContent = GRADE_NAMES[g];
+    b.onclick = () => {
+      grade = g;
+      document.querySelectorAll('.grade-tab').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      topicId = (curriculumGenerators[g]||[])[0]?.id || 'g1_t1';
+      renderTopics();
+    };
+    gt.appendChild(b);
+  }
+  renderShop();
+}
+
+function setDiff(d) {
+  difficulty = d;
+  document.getElementById('btnEasy').className = 'diff-btn' + (d === 'easy' ? ' on-easy' : '');
+  document.getElementById('btnDse').className = 'diff-btn' + (d === 'dse' ? ' on-dse' : '');
+}
+
+function renderTopics() {
+  const list = document.getElementById('topicList');
+  list.innerHTML = '';
+  const topics = curriculumGenerators[grade] || [];
+  topics.forEach(t => {
+    const cleared = USER.history[t.id + '_' + difficulty];
+    const d = document.createElement('div');
+    d.className = 'topic-card' + (t.id === topicId ? ' on' : '');
+    d.innerHTML = '<span>' + t.title + (cleared ? ' ✅' : '') + '</span><span style="font-size:11px;color:#ff7675">GO</span>';
+    d.onclick = () => { topicId = t.id; renderTopics(); };
+    list.appendChild(d);
+  });
+}
+
+function getTopic() {
+  const topics = curriculumGenerators[grade] || curriculumGenerators[1];
+  return topics.find(t => t.id === topicId) || topics[0];
+}
+
+function startSingle() {
+  const topic = getTopic();
+  const qs = topic.generate(difficulty);
+  if (!qs.length) { alert('題目生成失敗'); return; }
+  quiz = { qs, idx:0, score:0, correct:0, hidden:[], used5050:false };
+  document.getElementById('qzTopic').textContent = GRADE_NAMES[grade] + ' · ' + topic.title;
+  showScreen('scrQuiz');
+  renderQuizQ();
+}
+
+function renderQuizQ() {
+  const q = quiz.qs[quiz.idx];
+  document.getElementById('qzProg').textContent = '第 ' + (quiz.idx+1) + ' / ' + quiz.qs.length + ' 題';
+  document.getElementById('qzBar').style.width = ((quiz.idx+1)/quiz.qs.length*100) + '%';
+  document.getElementById('qzScore').textContent = quiz.score;
+  document.getElementById('qzText').innerHTML = q.q;
+  document.getElementById('qzExplain').style.display = 'none';
+  document.getElementById('btnNext').style.display = 'none';
+  quiz.hidden = []; quiz.used5050 = false;
+  const og = document.getElementById('qzOpts');
+  og.innerHTML = '';
+  q.opts.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'opt-btn';
+    b.innerHTML = opt;
+    b.onclick = () => pickQuiz(opt, b);
+    og.appendChild(b);
+  });
+  renderMath(document.getElementById('qzText'));
+  renderMath(og);
+}
+
+function pickQuiz(opt, btn) {
+  const q = quiz.qs[quiz.idx];
+  const ok = opt === q.ans;
+  document.querySelectorAll('#qzOpts .opt-btn').forEach(b => {
+    b.disabled = true;
+    if (b.innerHTML === q.ans || b.textContent === q.ans) b.classList.add('ok');
+    else if (b === btn && !ok) b.classList.add('bad');
+  });
+  if (ok) { quiz.correct++; quiz.score += 100; }
+  const ex = document.getElementById('qzExplain');
+  ex.style.display = 'block';
+  ex.innerHTML = ok ? '✅ 答對！+100 分<br>' + q.hint
+    : '❌ 正確答案：<b>' + q.ans + '</b><br>' + q.hint;
+  renderMath(ex);
+  document.getElementById('btnNext').style.display = 'block';
+  document.getElementById('btnNext').textContent = quiz.idx >= quiz.qs.length-1 ? '查看成績 🏆' : '下一題 →';
+}
+
+function nextQuizQ() {
+  if (quiz.idx >= quiz.qs.length - 1) {
+    finishSingle();
+    return;
+  }
+  quiz.idx++;
+  renderQuizQ();
+}
+
+function use5050() {
+  if (quiz.used5050 || !USER.items5050) { alert('沒有 50/50 卡！'); return; }
+  USER.items5050--;
+  quiz.used5050 = true;
+  saveUser();
+  const q = quiz.qs[quiz.idx];
+  const wrongs = document.querySelectorAll('#qzOpts .opt-btn');
+  let n = 0;
+  wrongs.forEach(b => {
+    if (n < 2 && b.innerHTML !== q.ans) { b.classList.add('hide'); n++; }
+  });
+}
+
+function finishSingle() {
+  const key = topicId + '_' + difficulty;
+  const first = !USER.history[key];
+  const { coins, stars } = calcRewards(difficulty, quiz.correct, quiz.qs.length, first);
+  USER.coins += coins; USER.stars += stars;
+  if (first) USER.history[key] = true;
+  saveUser();
+  const acc = Math.round(quiz.correct / quiz.qs.length * 100);
+  document.getElementById('resEmoji').textContent = acc === 100 ? '🏆' : acc >= 70 ? '🌟' : '💪';
+  document.getElementById('resEval').textContent = acc === 100 ? '滿分！太厲害了！' : acc >= 70 ? '做得不錯！' : '再接再厲！';
+  document.getElementById('resScore').textContent = quiz.score + ' 分 · +' + stars + '⭐ +' + coins + '🪙';
+  document.getElementById('resDetail').textContent = (first ? '首次通關！' : '重玩') + ' 答對 ' + quiz.correct + '/' + quiz.qs.length;
+  showScreen('scrResult');
+}
+
+// ========== PK（MQTT 跨網絡 + BroadcastChannel 本機備援）==========
+const PK_ROUNDS = 5, PK_SEC = 30, PK_COUNTDOWN = 3;
+const MQTT_BROKERS = [
+  'wss://broker.emqx.io:8084/mqtt',
+  'wss://broker.hivemq.com:8884/mqtt'
+];
+let pk = null, mqttClient = null, bc = null;
+
+function mqttTopic(code) { return 'mathhero_pk/v1/' + code; }
+
+function randCode() {
+  let code = '';
+  for (let i = 0; i < 8; i++) code += 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 32)];
+  return code;
+}
+
+function pkEnsureUser() {
+  if (!USER) { alert('請先登入再進行 PK'); showScreen('scrLogin'); return false; }
+  return true;
+}
+
+function pkCreate() {
+  if (!pkEnsureUser()) return;
+  const code = randCode();
+  let qs;
+  try {
+    qs = genPKQuestions(code, grade, topicId, difficulty);
+  } catch (e) {
+    alert('目前課題無法生成 PK 題目，已改用預設課題。\n' + e.message);
+    topicId = (curriculumGenerators[grade] || curriculumGenerators[1])[0].id;
+    qs = genPKQuestions(code, grade, topicId, difficulty);
+  }
+  if (!qs.length) { alert('題目生成失敗，請換個課題再試'); return; }
+  pk = { code, role:'host', round:1, myWins:0, opWins:0, phase:'wait', selected:null, submitted:false, qs };
+  showScreen('scrPK');
+  document.getElementById('pkCodeDisp').textContent = code;
+  document.getElementById('pkMyAv').textContent = USER.avatar;
+  pkShowPhase('wait');
+  initPKNetwork(code, 'host');
+}
+
+function pkSendHello() {
+  sendPK({ type:'hello', name:USER.name, grade, topicId, difficulty });
+}
+
+function pkJoin() {
+  if (!pkEnsureUser()) return;
+  const code = document.getElementById('pkJoinCode').value.trim().toUpperCase();
+  if (code.length < 8) { alert('請輸入 8 位房間代碼'); return; }
+  pk = { code, role:'guest', round:1, myWins:0, opWins:0, phase:'wait', selected:null, submitted:false, qs:[] };
+  showScreen('scrPK');
+  document.getElementById('pkCodeDisp').textContent = code;
+  document.getElementById('pkMyAv').textContent = USER.avatar;
+  pkShowPhase('wait');
+  initPKNetwork(code, 'guest');
+  if (pk._helloTimer) clearInterval(pk._helloTimer);
+  pk._helloTimer = setInterval(() => {
+    if (!pk || pk.phase !== 'wait' || pk._started) { clearInterval(pk._helloTimer); return; }
+    if (pk.mqttReady) pkSendHello();
+  }, 2000);
+}
+
+function genPKQuestions(code, g, tid, diff) {
+  const topics = curriculumGenerators[g] || curriculumGenerators[1];
+  const topic = topics.find(t => t.id === tid) || topics[0];
+  const orig = Math.random;
+  Math.random = mulberry32(hashCode(code + diff + tid));
+  try {
+    let qs = topic.generate(diff);
+    let guard = 0;
+    while (qs.length < PK_ROUNDS && guard++ < 10) {
+      topic.generate(diff).forEach(q => { if (qs.length < PK_ROUNDS && !qs.some(x=>x.q===q.q)) qs.push(q); });
+    }
+    while (qs.length < PK_ROUNDS && qs.length) qs.push(qs[qs.length % qs.length]);
+    return qs.slice(0, PK_ROUNDS);
+  } finally { Math.random = orig; }
+}
+
+function pkShowPhase(p) {
+  pk.phase = p;
+  document.getElementById('pkWait').style.display = p === 'wait' ? 'block' : 'none';
+  document.getElementById('pkSync').style.display = (p === 'sync' || p === 'countdown') ? 'block' : 'none';
+  document.getElementById('pkBattle').style.display = (p === 'battle' || p === 'result') ? 'block' : 'none';
+  document.getElementById('pkMatchEnd').style.display = p === 'end' ? 'block' : 'none';
+}
+
+let mqttBrokerIdx = 0;
+
+function initPKNetwork(code, role) {
+  pk._seenIds = {};
+  pk.mqttReady = false;
+  try {
+    if (bc) bc.close();
+    bc = new BroadcastChannel('pk_' + code);
+    bc.onmessage = e => handlePKMsg(e.data);
+  } catch (e) { bc = null; }
+  mqttBrokerIdx = 0;
+  connectMqtt(code, role);
+  document.getElementById('pkWaitMsg').textContent = role === 'host'
+    ? '📡 正在建立跨網絡房間...'
+    : '📡 正在連線房間 ' + code + '...';
+}
+
+function connectMqtt(code, role) {
+  if (typeof mqtt === 'undefined') {
+    document.getElementById('pkWaitMsg').textContent = '⚠️ 無法載入連線模組，請刷新頁面';
+    return;
+  }
+  if (mqttClient) {
+    try { mqttClient.end(true); } catch (e) {}
+    mqttClient = null;
+  }
+  if (mqttBrokerIdx >= MQTT_BROKERS.length) {
+    document.getElementById('pkWaitMsg').textContent = '⚠️ 連線失敗，請檢查網絡後重試';
+    return;
+  }
+  const url = MQTT_BROKERS[mqttBrokerIdx];
+  if (pk._mqttTimer) clearTimeout(pk._mqttTimer);
+  pk._mqttTimer = setTimeout(() => {
+    if (pk && pk.code === code && !pk.mqttReady) {
+      mqttBrokerIdx++;
+      connectMqtt(code, role);
+    }
+  }, 12000);
+  mqttClient = mqtt.connect(url, {
+    clientId: 'mh_' + role + '_' + Math.random().toString(36).slice(2, 11),
+    clean: true,
+    reconnectPeriod: 5000,
+    connectTimeout: 10000
+  });
+  mqttClient.on('connect', () => {
+    if (pk._mqttTimer) clearTimeout(pk._mqttTimer);
+    pk.mqttReady = true;
+    mqttClient.subscribe(mqttTopic(code), { qos: 1 });
+    const el = document.getElementById('pkWaitMsg');
+    if (role === 'host') {
+      el.textContent = '✅ 房間 ' + code + ' 已建立（跨網絡），等待對手加入...';
+    } else {
+      el.textContent = '✅ 已連線，正在加入房間...';
+      pkSendHello();
+    }
+  });
+  mqttClient.on('message', (topic, payload) => {
+    try { handlePKMsg(JSON.parse(payload.toString())); } catch (e) {}
+  });
+}
+
+function sendPK(msg) {
+  if (!pk) return;
+  msg._from = pk.role;
+  msg._ts = Date.now();
+  msg._id = msg._from + '_' + msg.type + '_' + msg._ts + '_' + (msg.round || 0);
+  const data = JSON.stringify(msg);
+  if (mqttClient && mqttClient.connected) {
+    mqttClient.publish(mqttTopic(pk.code), data, { qos: 1 });
+  }
+  if (bc) bc.postMessage(msg);
+}
+
+function handlePKMsg(msg) {
+  if (!msg || !pk) return;
+  if (msg._from === pk.role) return;
+  const id = msg._id || (msg._from + ':' + msg.type + ':' + msg._ts);
+  if (!pk._seenIds) pk._seenIds = {};
+  if (pk._seenIds[id]) return;
+  pk._seenIds[id] = true;
+  if (msg.type === 'hello' && pk.role === 'host') {
+    if (pk._started) return;
+    if (!pk.qs.length) {
+      pk.qs = genPKQuestions(pk.code, msg.grade||grade, msg.topicId||topicId, msg.difficulty||difficulty);
+    }
+    document.getElementById('pkWaitMsg').textContent = (msg.name || '對手') + ' 已加入！準備開始...';
+    setTimeout(() => pkBeginMatch(), 1000);
+  }
+  if (msg.type === 'sync') {
+    if (pk._helloTimer) clearInterval(pk._helloTimer);
+    pk.round = msg.round;
+    pk.submitted = false; pk.selected = null; pk.opAnswer = null; pk.myAnswer = null;
+    pk.readyNext = false; pk.opReadyNext = false;
+    pk._doneRound = null;
+    pk._matchOver = false;
+    if (msg.qs && pk.role === 'guest') pk.qs = msg.qs;
+    pk.startAt = Date.now() + PK_COUNTDOWN * 1000;
+    const btn = document.getElementById('pkNextR');
+    btn.style.display = 'none'; btn.disabled = false; btn.textContent = '下一回合 →';
+    document.getElementById('pkRoundLbl').textContent = '第 ' + pk.round + '/' + PK_ROUNDS + ' 回合';
+    pkShowPhase('countdown');
+    pkRunCountdown(pk.startAt);
+  }
+  if (msg.type === 'answer' && msg.round === pk.round) {
+    pk.opAnswer = { isCorrect: msg.isCorrect, timeMs: msg.timeMs, answer: msg.answer };
+    if (pk.submitted && pk.role === 'host') pkJudgeRound();
+  }
+  if (msg.type === 'roundDone' && msg.round === pk.round) {
+    pkApplyRoundDone(msg);
+  }
+  if (msg.type === 'readyNext' && msg.round === pk.round) {
+    pk.opReadyNext = true;
+    pkTryAdvanceRound();
+  }
+}
+
+function pkBeginMatch() {
+  if (!pk || pk._started) return;
+  pk._started = true;
+  if (pk._helloTimer) clearInterval(pk._helloTimer);
+  pkStartRound();
+}
+
+function pkStartRound() {
+  pk.round = pk.round || 1;
+  if (pk._cdTimer) clearTimeout(pk._cdTimer);
+  pk.submitted = false; pk.selected = null; pk.opAnswer = null; pk.myAnswer = null;
+  pk.readyNext = false; pk.opReadyNext = false;
+  pk._doneRound = null;
+  pk._matchOver = false;
+  pk.startAt = Date.now() + PK_COUNTDOWN * 1000;
+  document.getElementById('pkRoundLbl').textContent = '第 ' + pk.round + '/' + PK_ROUNDS + ' 回合';
+  const btn = document.getElementById('pkNextR');
+  btn.style.display = 'none'; btn.disabled = false; btn.textContent = '下一回合 →';
+  if (pk.role === 'host') {
+    sendPK({ type:'sync', round:pk.round, startAt:pk.startAt, qs: pk.qs });
+  }
+  pkShowPhase('countdown');
+  pkRunCountdown(pk.startAt);
+}
+
+function pkRunCountdown(startAt) {
+  const tick = () => {
+    const left = Math.ceil((startAt - Date.now()) / 1000);
+    if (left > 0) {
+      document.getElementById('pkCountdown').textContent = left;
+      document.getElementById('pkSyncMsg').textContent = '準備！';
+      pk._cdTimer = setTimeout(tick, 200);
+    } else {
+      document.getElementById('pkCountdown').textContent = '⚔️';
+      pkShowPhase('battle');
+      pkRenderQ();
+      pkTimeLeft = PK_SEC;
+      pkTimerTick();
+    }
+  };
+  tick();
+}
+
+let pkTimeLeft = PK_SEC;
+function pkTimerTick() {
+  if (pk.phase !== 'battle' || pk.submitted) return;
+  document.getElementById('pkTimer').textContent = pkTimeLeft + 's';
+  if (pkTimeLeft <= 0) { pkSubmitAns(true); return; }
+  pkTimeLeft--;
+  setTimeout(pkTimerTick, 1000);
+}
+
+function pkRenderQ() {
+  const q = pk.qs[pk.round - 1];
+  if (!q) {
+    document.getElementById('pkQText').innerHTML = '⚠️ 題目載入失敗';
+    return;
+  }
+  document.getElementById('pkQText').innerHTML = q.q;
+  const og = document.getElementById('pkOpts');
+  og.innerHTML = '';
+  document.getElementById('pkSubmit').style.display = 'block';
+  document.getElementById('pkNextR').style.display = 'none';
+  document.getElementById('pkExplain').style.display = 'none';
+  q.opts.forEach(opt => {
+    const b = document.createElement('button');
+    b.className = 'opt-btn'; b.innerHTML = opt;
+    b.onclick = () => { pk.selected = opt; document.querySelectorAll('#pkOpts .opt-btn').forEach(x => x.style.outline='');
+      b.style.outline = '2px solid #f1c40f'; };
+    og.appendChild(b);
+  });
+  renderMath(document.getElementById('pkQText'));
+  renderMath(og);
+}
+
+function pkSubmitAns(timeout) {
+  if (pk.submitted) return;
+  pk.submitted = true;
+  const q = pk.qs[pk.round - 1];
+  const ans = timeout ? '' : (pk.selected || '');
+  const ok = ans === q.ans;
+  const timeMs = Date.now() - (pk.startAt || Date.now());
+  sendPK({ type:'answer', round:pk.round, answer:ans, isCorrect:ok, timeMs, role:pk.role });
+  pk.myAnswer = { answer:ans, isCorrect:ok, timeMs };
+  document.getElementById('pkSubmit').style.display = 'none';
+  document.getElementById('pkTimer').textContent = '⏳';
+  if (pk.opAnswer && pk.role === 'host') pkJudgeRound();
+}
+
+function pkUpdateScores(hostWins, guestWins) {
+  if (pk.role === 'host') { pk.myWins = hostWins; pk.opWins = guestWins; }
+  else { pk.myWins = guestWins; pk.opWins = hostWins; }
+  document.getElementById('pkMyWins').textContent = '勝 ' + pk.myWins;
+  document.getElementById('pkOpWins').textContent = '勝 ' + pk.opWins;
+}
+
+function pkShowRoundResult(msg) {
+  pkShowPhase('result');
+  document.getElementById('pkSubmit').style.display = 'none';
+  document.getElementById('pkExplain').style.display = 'block';
+  const iWon = msg.winner === 'draw' ? false
+    : (msg.winner === 'host' && pk.role === 'host') || (msg.winner === 'guest' && pk.role === 'guest');
+  const head = msg.winner === 'draw' ? '🤝 本回合平手' : (iWon ? '✅ 你贏這回合！' : '❌ 對手贏這回合');
+  document.getElementById('pkExplain').innerHTML = head + '<br>💡 ' + (msg.explain || '') + '<br>正確答案：<b>' + (msg.ans || '') + '</b>';
+  renderMath(document.getElementById('pkExplain'));
+  const matchOver = pk.myWins >= 3 || pk.opWins >= 3 || pk.round >= PK_ROUNDS;
+  const btn = document.getElementById('pkNextR');
+  if (matchOver) {
+    pk._matchOver = true;
+    btn.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '🏆 查看戰績';
+  } else {
+    pk._matchOver = false;
+    btn.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '下一回合 →';
+  }
+}
+
+function pkApplyRoundDone(msg) {
+  if (pk._doneRound === msg.round) return;
+  pk._doneRound = msg.round;
+  pkUpdateScores(msg.hostWins, msg.guestWins);
+  pkShowRoundResult(msg);
+}
+
+function pkJudgeRound() {
+  if (pk.role !== 'host' || pk._doneRound === pk.round) return;
+  if (!pk.myAnswer || !pk.opAnswer) return;
+  const q = pk.qs[pk.round - 1];
+  const mine = pk.myAnswer, op = pk.opAnswer;
+  let winner = 'draw';
+  if (mine.isCorrect && !op.isCorrect) winner = 'host';
+  else if (!mine.isCorrect && op.isCorrect) winner = 'guest';
+  else if (mine.isCorrect && op.isCorrect) winner = mine.timeMs <= op.timeMs ? 'host' : 'guest';
+  pk._doneRound = pk.round;
+  if (winner === 'host') pk.myWins++;
+  else if (winner === 'guest') pk.opWins++;
+  const payload = {
+    type: 'roundDone', round: pk.round, winner,
+    explain: q.hint, ans: q.ans,
+    hostWins: pk.myWins, guestWins: pk.opWins
+  };
+  sendPK(payload);
+  pkUpdateScores(pk.myWins, pk.opWins);
+  pkShowRoundResult(payload);
+}
+
+function pkNextRound() {
+  if (pk._matchOver) { pkEndMatch(); return; }
+  if (pk.phase !== 'result' || pk.readyNext) return;
+  pk.readyNext = true;
+  const btn = document.getElementById('pkNextR');
+  btn.textContent = '⏳ 等待對手...';
+  btn.disabled = true;
+  sendPK({ type: 'readyNext', round: pk.round });
+  pkTryAdvanceRound();
+}
+
+function pkTryAdvanceRound() {
+  if (!pk.readyNext || !pk.opReadyNext) return;
+  if (pk.role !== 'host') {
+    document.getElementById('pkNextR').textContent = '⏳ 雙方已準備，即將開始...';
+    return;
+  }
+  if (pk.round >= PK_ROUNDS) return;
+  pk.round++;
+  pk.readyNext = false;
+  pk.opReadyNext = false;
+  pkStartRound();
+}
+
+function pkEndMatch() {
+  const won = pk.myWins > pk.opWins;
+  USER.coins += won ? ECONOMY.pkWinCoins : ECONOMY.pkLoseCoins;
+  USER.stars += won ? ECONOMY.pkWinStars : ECONOMY.pkLoseStars;
+  if (won) USER.pkWins = (USER.pkWins||0)+1; else USER.pkLosses = (USER.pkLosses||0)+1;
+  saveUser();
+  pkShowPhase('end');
+  document.getElementById('pkEndEmoji').textContent = won ? '🏆' : '💪';
+  document.getElementById('pkEndTxt').textContent = (won ? '你贏了！' : '對手更強！') + ' ' + pk.myWins + ':' + pk.opWins;
+  if (mqttClient) { try { mqttClient.end(true); } catch (e) {} mqttClient = null; }
+}
+
+function pkExit() {
+  if (pk && pk._mqttTimer) clearTimeout(pk._mqttTimer);
+  if (mqttClient) { try { mqttClient.end(true); } catch (e) {} mqttClient = null; }
+  if (pk && pk._helloTimer) clearInterval(pk._helloTimer);
+  if (bc) { try { bc.close(); } catch (e) {} bc = null; }
+  pk = null;
+  showScreen('scrHome');
+}
+
+// ========== 抽卡 & 商店 ==========
+function drawGacha() {
+  if (USER.stars < ECONOMY.gachaCostStars) { alert('需要 50 ⭐'); return; }
+  USER.stars -= ECONOMY.gachaCostStars;
+  const r = Math.random() * 100;
+  let rarity, name, icon, desc;
+  if (r < 70) {
+    rarity = 'N';
+    if (Math.random() < 0.5) { USER.items5050++; name = '+1 50/50 刪除卡'; icon = '🌓'; desc = '答題刪除兩個錯選'; }
+    else { name = '🍬 小糖果兌換券'; icon = '🍬'; desc = '向老師兌換小糖果'; USER.coupons.push({ name, icon, desc, used:false }); }
+  } else if (r < 95) {
+    rarity = 'R'; name = '🧃 紙包飲品兌換券'; icon = '🧃'; desc = '向老師兌換紙包飲品';
+    USER.coupons.push({ name, icon, desc, used:false });
+  } else {
+    rarity = 'SSR'; name = '🍿 零食大禮包'; icon = '🍿'; desc = '超級大獎！';
+    USER.coupons.push({ name, icon, desc, used:false });
+  }
+  saveUser();
+  document.getElementById('gachaTier').textContent = rarity;
+  document.getElementById('gachaIcon').textContent = icon;
+  document.getElementById('gachaName').textContent = name;
+  document.getElementById('gachaDesc').textContent = desc;
+  document.getElementById('gachaModal').classList.add('show');
+}
+function closeGachaModal() { document.getElementById('gachaModal').classList.remove('show'); renderCoupons(); }
+function renderCoupons() {
+  const el = document.getElementById('couponList');
+  el.innerHTML = (USER?.coupons||[]).length ? '' : '<p style="color:#a29bfe;font-size:12px;text-align:center">尚無獎券</p>';
+  (USER?.coupons||[]).forEach((c,i) => {
+    el.innerHTML += '<div style="background:rgba(108,92,231,.2);border:1px dashed #f1c40f;border-radius:12px;padding:10px;margin-bottom:6px;font-size:12px">' +
+      c.icon + ' <b>' + c.name + '</b><br><span style="color:#a29bfe">' + c.desc + '</span></div>';
+  });
+}
+function renderShop() {
+  const el = document.getElementById('shopList');
+  if (!el) return;
+  el.innerHTML = SHOP.map(s =>
+    '<div style="background:rgba(255,255,255,.06);border-radius:14px;padding:14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">' +
+    '<span>' + s.name + '</span><button class="btn-sm btn gold" onclick="buyShop(\'' + s.id + '\',' + s.cost + ',\'' + s.type + '\')">' + s.cost + '🪙</button></div>'
+  ).join('');
+}
+function buyShop(id, cost, type) {
+  if (USER.coins < cost) { alert('金幣不足'); return; }
+  USER.coins -= cost;
+  if (type === '5050') USER.items5050++;
+  else USER.itemsSkip++;
+  saveUser(); alert('購買成功！'); renderShop();
+}
+function renderLB() {
+  const lb = JSON.parse(localStorage.getItem('mh_lb') || '[]');
+  document.getElementById('lbList').innerHTML = lb.map((x,i) =>
+    '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:6px">' +
+    '<b style="color:#f1c40f">#' + (i+1) + '</b><span style="font-size:22px">' + x.avatar + '</span>' +
+    '<div style="flex:1"><b>' + x.name + '</b><div style="font-size:10px;color:#a29bfe">' + x.title + '</div></div>' +
+    '<div style="text-align:right;font-size:12px">⭐' + x.stars + '<br>🪙' + x.coins + '</div></div>'
+  ).join('') || '<p style="color:#a29bfe;text-align:center">暂无</p>';
+}
+
+initUI();
+</script>
+</body>
+</html>
