@@ -4587,18 +4587,8 @@ function g3StatsHintEnd(s) {
   return `$${inner}$`;
 }
 
-/** 題幹用：橫向數據表 */
-function g3StatsDataTable(nums) {
-  const th = nums
-    .map(
-      (_, i) =>
-        `<th style="padding:4px 10px;border:1px solid #6c5ce7;background:rgba(108,92,231,.25);font-weight:600">${i + 1}</th>`,
-    )
-    .join("");
-  const td = nums
-    .map(n => `<td style="padding:4px 10px;border:1px solid #4a3e7d;text-align:center">${n}</td>`)
-    .join("");
-  return `<table style="margin:10px auto;border-collapse:collapse;font-size:15px;color:#dfe6e9"><thead><tr>${th}</tr></thead><tbody><tr>${td}</tr></tbody></table>`;
+function g3StatsDataList(nums) {
+  return `$${nums.join(", ")}$`;
 }
 
 function g3StatsShuffled(nums) {
@@ -4632,7 +4622,7 @@ function g3CentralTendencyEasy(fixedType) {
       [g3StatsNumAns(mean + 2), g3StatsNumAns(mean - 1), g3StatsNumAns(sum), g3StatsNumAns(Math.max(...nums))][i - 1],
     );
     return {
-      q: `求以下數據的<strong>平均數</strong><br>${g3StatsDataTable(nums)}`,
+      q: `求數據 ${g3StatsDataList(nums)} 的<strong>平均數</strong>`,
       ans: meanStr,
       opts,
       hint: `平均數 $= \\dfrac{${nums.join("+")}}{${n}}$，得 ${g3StatsHintEnd(meanStr)}`,
@@ -4652,7 +4642,7 @@ function g3CentralTendencyEasy(fixedType) {
       ],
     );
     return {
-      q: `求以下數據的<strong>中位數</strong>（已排序）<br>${g3StatsDataTable(sorted)}`,
+      q: `求數據 ${g3StatsDataList(sorted)} 的<strong>中位數</strong>（已排序）`,
       ans,
       opts,
       hint: `共 ${sorted.length} 個數據（奇數），中位數為正中央第 ${Math.ceil(sorted.length / 2)} 個 → ${g3StatsHintEnd(ans)}`,
@@ -4672,7 +4662,7 @@ function g3CentralTendencyEasy(fixedType) {
       ],
     );
     return {
-      q: `求以下數據的<strong>中位數</strong>（未排序，需先排列）<br>${g3StatsDataTable(shuffled)}`,
+      q: `求數據 ${g3StatsDataList(shuffled)} 的<strong>中位數</strong>（未排序，需先排列）`,
       ans,
       opts,
       hint: `先由小至大排列：$${sorted.join(",\\ ")}$，中位數為正中央 → ${g3StatsHintEnd(ans)}`,
@@ -4693,7 +4683,7 @@ function g3CentralTendencyEasy(fixedType) {
       ],
     );
     return {
-      q: `求以下數據的<strong>中位數</strong>（已排序，偶數個）<br>${g3StatsDataTable(sorted)}`,
+      q: `求數據 ${g3StatsDataList(sorted)} 的<strong>中位數</strong>（已排序，偶數個）`,
       ans,
       opts,
       hint: `偶數個數據，中位數 $= \\dfrac{${mid1}+${mid2}}{2}$，得 ${g3StatsHintEnd(ans)}`,
@@ -4715,7 +4705,7 @@ function g3CentralTendencyEasy(fixedType) {
       ],
     );
     return {
-      q: `求以下數據的<strong>中位數</strong>（未排序，偶數個）<br>${g3StatsDataTable(shuffled)}`,
+      q: `求數據 ${g3StatsDataList(shuffled)} 的<strong>中位數</strong>（未排序，偶數個）`,
       ans,
       opts,
       hint: `先排列：$${sorted.join(",\\ ")}$，再取中間兩數 $${mid1}$ 與 $${mid2}$ 的平均 → ${g3StatsHintEnd(ans)}`,
@@ -4734,7 +4724,7 @@ function g3CentralTendencyEasy(fixedType) {
       ],
     );
     return {
-      q: `求以下數據的<strong>眾數</strong><br>${g3StatsDataTable(shuffled)}`,
+      q: `求數據 ${g3StatsDataList(shuffled)} 的<strong>眾數</strong>`,
       ans,
       opts,
       hint: `$${modeVal}$ 出現 ${nums.filter(x => x === modeVal).length} 次，次數最多 → ${g3StatsHintEnd(ans)}`,
@@ -4755,7 +4745,7 @@ function g3CentralTendencyEasy(fixedType) {
       [g3StatsNumAns(lo), g3StatsNumAns(hi), g3StatsNumAns(mid), `$${lo}$、$${hi}$ 及 $${mid}$`][i - 1],
     );
     return {
-      q: `求以下數據的<strong>眾數</strong><br>${g3StatsDataTable(shuffled)}`,
+      q: `求數據 ${g3StatsDataList(shuffled)} 的<strong>眾數</strong>`,
       ans,
       opts,
       hint: `$${m1}$ 與 $${m2}$ 各出現 2 次（同為最多），眾數為 ${lo} 及 ${hi}`,
@@ -4771,7 +4761,7 @@ function g3CentralTendencyEasy(fixedType) {
     [g3StatsNumAns(base), g3StatsNumAns(base + 2), g3StatsNumAns(base + 5), "全部皆為眾數"][i - 1],
   );
   return {
-    q: `求以下數據的<strong>眾數</strong><br>${g3StatsDataTable(shuffled)}`,
+    q: `求數據 ${g3StatsDataList(shuffled)} 的<strong>眾數</strong>`,
     ans,
     opts,
     hint: `每個數值只出現 1 次，沒有出現次數最多的數值 → <strong>沒有眾數</strong>`,
