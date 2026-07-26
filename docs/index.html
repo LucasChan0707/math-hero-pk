@@ -68,7 +68,9 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;ba
 .countdown{font-size:48px;font-weight:900;color:#f1c40f;text-align:center;padding:30px}
 .title-main{font-size:22px;font-weight:900;color:#f1c40f;text-align:center;margin-bottom:4px}
 .sub{text-align:center;font-size:12px;color:#a29bfe;margin-bottom:12px}
-.avatar-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.q-fig{display:block;width:100%;text-align:center;line-height:0;margin:4px auto 6px}
+.q-fig svg{display:block!important;max-width:280px;width:100%;height:auto;margin:0 auto;visibility:visible!important;opacity:1!important}
+.q-text{font-weight:bold;line-height:1.5}
 .av{font-size:28px;padding:6px 10px;border:2px solid #4a3e7d;border-radius:14px;cursor:pointer}
 .av.on{border-color:#f1c40f;background:rgba(241,196,15,.2)}
 </style>
@@ -133,7 +135,7 @@ function pickAv(el){ selectedAv=el.dataset.av||el.textContent; document.querySel
   <div class="progress"><div id="qzBar" style="width:10%"></div></div>
   <div style="text-align:right;font-size:12px;color:#55efc4;margin-bottom:6px">得分：<b id="qzScore">0</b></div>
   <div style="background:rgba(255,255,255,.07);border-radius:16px;padding:14px;margin-bottom:8px">
-    <div id="qzText" style="font-size:16px;font-weight:bold;text-align:center;line-height:1.5"></div>
+    <div id="qzText" style="font-size:16px;text-align:center"></div>
   </div>
   <button class="btn-sm btn gold" id="btn5050" onclick="use5050()">🌓 50/50 卡 (<span id="cnt5050">0</span>)</button>
   <div class="opt-grid" id="qzOpts"></div>
@@ -482,9 +484,9 @@ ${trigLabelText(hypLabelX, hypLabelY, hypParts, "#ffeaa7", "middle")}
 </svg>`;
 }
 
-const G3_QUAD_SVG_STYLE = 'max-width:280px;width:100%;height:auto;display:block;margin:6px auto';
+const G3_QUAD_SVG_STYLE = 'max-width:280px;width:100%;height:auto;display:block;margin:0 auto';
 const G3_QUAD_LABEL_STYLE =
-  'font-size:13px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;fill:#dfe6e9';
+  'font-size:14px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;fill:#ffffff';
 
 function g3QuadPt(p) {
   return `${p[0]},${p[1]}`;
@@ -519,7 +521,7 @@ function g3QuadWrap(W, H, inner, label = "四邊形") {
 }
 
 function g3QuadQ(diagram, text) {
-  return `${diagram}<p style="margin-top:8px;text-align:center">${text}</p>`;
+  return `<div class="q-fig">${diagram}</div><p class="q-text" style="margin-top:8px;text-align:center">${text}</p>`;
 }
 
 /** DSE 常用：A 左上、D 右上、C 右下、B 左下 */
@@ -555,7 +557,7 @@ function g3QuadParaDiagram(opts = {}) {
   const O = g3QuadMid(A, C);
   const parts = [];
   parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(D)} ${g3QuadPt(C)} ${g3QuadPt(B)}" fill="rgba(108,92,231,0.18)" stroke="#a29bfe" stroke-width="2.4"/>`,
+    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(D)} ${g3QuadPt(C)} ${g3QuadPt(B)}" fill="rgba(108,92,231,0.28)" stroke="#d6d4ff" stroke-width="3"/>`,
   );
 
   let E = null;
@@ -623,7 +625,7 @@ function g3QuadRhombusDiagram(opts = {}) {
   const O = g3QuadMid(A, C);
   const parts = [];
   parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(C)} ${g3QuadPt(D)}" fill="rgba(108,92,231,0.18)" stroke="#a29bfe" stroke-width="2.4"/>`,
+    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(C)} ${g3QuadPt(D)}" fill="rgba(108,92,231,0.28)" stroke="#d6d4ff" stroke-width="3"/>`,
   );
 
   if (opts.diagonals) {
@@ -692,7 +694,7 @@ function g3QuadRectDiagram(opts = {}) {
   const { A, B, C, D } = g3QuadRectPoints();
   const parts = [];
   parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(D)} ${g3QuadPt(C)} ${g3QuadPt(B)}" fill="rgba(108,92,231,0.18)" stroke="#a29bfe" stroke-width="2.4"/>`,
+    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(D)} ${g3QuadPt(C)} ${g3QuadPt(B)}" fill="rgba(108,92,231,0.28)" stroke="#d6d4ff" stroke-width="3"/>`,
   );
   if (opts.diagonals) {
     parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.6" opacity="0.85"/>`);
@@ -2346,7 +2348,7 @@ const rawCurriculumGenerators = {
             ? trigDseHint(opp, adj, hyp, hideSide, spec.name, val)
             : `依三角比定義：$\\sin\\theta = \\frac{\\text{對邊}}{\\text{斜邊}}$，$\\cos\\theta = \\frac{\\text{鄰邊}}{\\text{斜邊}}$，$\\tan\\theta = \\frac{\\text{對邊}}{\\text{鄰邊}}$。故 $${spec.name} = ${val}$`;
           return {
-            q: `${diagram}<p style="margin-top:8px;text-align:center">${qSuffix}</p>`,
+            q: `<div class="q-fig">${diagram}</div><p class="q-text" style="margin-top:8px;text-align:center">${qSuffix}</p>`,
             ans: `$${val}$`,
             opts,
             hint,
@@ -4282,11 +4284,17 @@ function nav(id, el) {
 }
 
 function renderMath(el) {
-  if (window.renderMathInElement && el) {
-    renderMathInElement(el, {
-      delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
-      throwOnError: false
-    });
+  if (!window.renderMathInElement || !el) return;
+  const opts = {
+    delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],
+    throwOnError: false,
+    ignoredTags: ['script','noscript','style','textarea','pre','code','option','svg']
+  };
+  const textParts = el.querySelectorAll ? el.querySelectorAll('.q-text') : [];
+  if (textParts.length) {
+    textParts.forEach(t => renderMathInElement(t, opts));
+  } else {
+    renderMathInElement(el, opts);
   }
 }
 
