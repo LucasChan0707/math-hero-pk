@@ -4574,100 +4574,308 @@ function roundTo(n, dp) {
   return Math.round(n * f) / f;
 }
 
-/** 中三第 10 課：集中趨勢的量度（平均數、中位數、眾數） */
-function g3CentralTendencyQuestion(difficulty) {
-  const dse = difficulty === "dse";
-  const type = rand(1, dse ? 5 : 4);
+function shuffleArray<T>(arr: T[]): T[] {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
 
+function g3StatsNumAns(n) {
+  return n % 1 === 0 ? `$${n}$` : `$${roundTo(n, 1)}$`;
+}
+
+function g3StatsHintEnd(s) {
+  const inner = String(s).replace(/^\$|\$$/g, "");
+  return `$${inner}$`;
+}
+
+/** 題幹用：橫向數據表 */
+function g3StatsDataTable(nums) {
+  const th = nums
+    .map(
+      (_, i) =>
+        `<th style="padding:4px 10px;border:1px solid #6c5ce7;background:rgba(108,92,231,.25);font-weight:600">${i + 1}</th>`,
+    )
+    .join("");
+  const td = nums
+    .map(n => `<td style="padding:4px 10px;border:1px solid #4a3e7d;text-align:center">${n}</td>`)
+    .join("");
+  return `<table style="margin:10px auto;border-collapse:collapse;font-size:15px;color:#dfe6e9"><thead><tr>${th}</tr></thead><tbody><tr>${td}</tr></tbody></table>`;
+}
+
+function g3StatsShuffled(nums)[] {
+  const sorted = [...nums].sort((a, b) => a - b);
+  if (nums.length < 2) return [...nums];
+  let out = shuffleArray(nums);
+  let guard = 0;
+  while (out.every((v, i) => v === sorted[i]) && guard++ < 20) out = shuffleArray(nums);
+  return out;
+}
+
+function g3StatsMedian(sorted) {
+  const n = sorted.length;
+  if (n % 2 === 1) return sorted[Math.floor(n / 2)];
+  return (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+}
+
+/** 中三第 10 課簡單題：平均數、中位數、眾數（不分組數據） */
+function g3CentralTendencyEasy(fixedType) {
+  const type = fixedType != null ? fixedType : rand(1, 8);
+
+  // 1. 平均數
   if (type === 1) {
-    const n = rand(dse ? 5 : 3, dse ? 7 : 5);
+    const n = rand(4, 6);
     const nums = [];
-    for (let i = 0; i < n; i++) nums.push(rand(2, dse ? 30 : 20));
+    for (let i = 0; i < n; i++) nums.push(rand(1, 15));
     const sum = nums.reduce((a, b) => a + b, 0);
     const mean = sum / n;
-    const meanStr = mean % 1 === 0 ? `$${mean}$` : `$${roundTo(mean, 1)}$`;
+    const meanStr = g3StatsNumAns(mean);
     const opts = createUniqueOpts(meanStr, i =>
-      [`$${mean + 2}$`, `$${mean - 1}$`, `$${sum}$`, `$${Math.max(...nums)}$`][i - 1],
+      [g3StatsNumAns(mean + 2), g3StatsNumAns(mean - 1), g3StatsNumAns(sum), g3StatsNumAns(Math.max(...nums))][i - 1],
+    );
+    return {
+      q: `求以下數據的<strong>平均數</strong><br>${g3StatsDataTable(nums)}`,
+      ans: meanStr,
+      opts,
+      hint: `平均數 $= \\dfrac{${nums.join("+")}}{${n}}$，得 ${g3StatsHintEnd(meanStr)}`,
+    };
+  }
+
+  // 2. 中位數 — 已排序，奇數個
+  if (type === 2) {
+    const base = rand(2, 12);
+    const sorted = [base, base + 2, base + 4, base + 7, base + 9];
+    const median = g3StatsMedian(sorted);
+    const ans = g3StatsNumAns(median);
+    const mean = Math.round(sorted.reduce((a, b) => a + b, 0) / sorted.length);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(sorted[0]), g3StatsNumAns(sorted[sorted.length - 1]), g3StatsNumAns(median + 2), g3StatsNumAns(mean)][
+        i - 1
+      ],
+    );
+    return {
+      q: `求以下數據的<strong>中位數</strong>（已排序）<br>${g3StatsDataTable(sorted)}`,
+      ans,
+      opts,
+      hint: `共 ${sorted.length} 個數據（奇數），中位數為正中央第 ${Math.ceil(sorted.length / 2)} 個 → ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 3. 中位數 — 未排序，奇數個
+  if (type === 3) {
+    const base = rand(2, 10);
+    const sorted = [base, base + 3, base + 5, base + 8, base + 11];
+    const shuffled = g3StatsShuffled(sorted);
+    const median = g3StatsMedian(sorted);
+    const ans = g3StatsNumAns(median);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(sorted[0]), g3StatsNumAns(shuffled[0]), g3StatsNumAns(median + 3), g3StatsNumAns(sorted[sorted.length - 1])][
+        i - 1
+      ],
+    );
+    return {
+      q: `求以下數據的<strong>中位數</strong>（未排序，需先排列）<br>${g3StatsDataTable(shuffled)}`,
+      ans,
+      opts,
+      hint: `先由小至大排列：$${sorted.join(",\\ ")}$，中位數為正中央 → ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 4. 中位數 — 已排序，偶數個
+  if (type === 4) {
+    const base = rand(3, 14);
+    const sorted = [base, base + 2, base + 5, base + 7, base + 9, base + 12];
+    const mid1 = sorted[2];
+    const mid2 = sorted[3];
+    const median = g3StatsMedian(sorted);
+    const ans = g3StatsNumAns(median);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(mid1), g3StatsNumAns(mid2), g3StatsNumAns(sorted[0]), g3StatsNumAns(Math.round(sorted.reduce((a, b) => a + b, 0) / sorted.length))][
+        i - 1
+      ],
+    );
+    return {
+      q: `求以下數據的<strong>中位數</strong>（已排序，偶數個）<br>${g3StatsDataTable(sorted)}`,
+      ans,
+      opts,
+      hint: `偶數個數據，中位數 $= \\dfrac{${mid1}+${mid2}}{2}$，得 ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 5. 中位數 — 未排序，偶數個
+  if (type === 5) {
+    const base = rand(2, 10);
+    const sorted = [base, base + 2, base + 3, base + 7, base + 9, base + 10];
+    const shuffled = g3StatsShuffled(sorted);
+    const mid1 = sorted[2];
+    const mid2 = sorted[3];
+    const median = g3StatsMedian(sorted);
+    const ans = g3StatsNumAns(median);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(mid1), g3StatsNumAns(mid2), g3StatsNumAns(shuffled[0]), g3StatsNumAns(sorted[sorted.length - 1])][
+        i - 1
+      ],
+    );
+    return {
+      q: `求以下數據的<strong>中位數</strong>（未排序，偶數個）<br>${g3StatsDataTable(shuffled)}`,
+      ans,
+      opts,
+      hint: `先排列：$${sorted.join(",\\ ")}$，再取中間兩數 $${mid1}$ 與 $${mid2}$ 的平均 → ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 6. 眾數 — 單一
+  if (type === 6) {
+    const modeVal = rand(-5, 12);
+    const nums = [modeVal, modeVal, modeVal, modeVal + rand(2, 4), modeVal + rand(5, 8)];
+    const shuffled = g3StatsShuffled(nums);
+    const ans = g3StatsNumAns(modeVal);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(modeVal + 2), g3StatsNumAns(modeVal + 5), g3StatsNumAns(modeVal - 1), g3StatsNumAns(Math.max(...nums))][
+        i - 1
+      ],
+    );
+    return {
+      q: `求以下數據的<strong>眾數</strong><br>${g3StatsDataTable(shuffled)}`,
+      ans,
+      opts,
+      hint: `$${modeVal}$ 出現 ${nums.filter(x => x === modeVal).length} 次，次數最多 → ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 7. 眾數 — 多於一個
+  if (type === 7) {
+    const m1 = rand(-5, 3);
+    const m2 = m1 + rand(4, 9);
+    const mid = m1 + rand(1, m2 - m1 - 1);
+    const nums = [m1, m1, mid, m2, m2, m2 + rand(2, 5)];
+    const shuffled = g3StatsShuffled(nums);
+    const lo = Math.min(m1, m2);
+    const hi = Math.max(m1, m2);
+    const ans = `$${lo}$ 及 $${hi}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(lo), g3StatsNumAns(hi), g3StatsNumAns(mid), `$${lo}$、$${hi}$ 及 $${mid}$`][i - 1],
+    );
+    return {
+      q: `求以下數據的<strong>眾數</strong><br>${g3StatsDataTable(shuffled)}`,
+      ans,
+      opts,
+      hint: `$${m1}$ 與 $${m2}$ 各出現 2 次（同為最多），眾數為 ${lo} 及 ${hi}`,
+    };
+  }
+
+  // 8. 眾數 — 沒有
+  const base = rand(1, 8);
+  const nums = [base, base + 2, base + 5, base + 7, base + 11];
+  const shuffled = g3StatsShuffled(nums);
+  const ans = "沒有眾數";
+  const opts = createUniqueOpts(ans, i =>
+    [g3StatsNumAns(base), g3StatsNumAns(base + 2), g3StatsNumAns(base + 5), "全部皆為眾數"][i - 1],
+  );
+  return {
+    q: `求以下數據的<strong>眾數</strong><br>${g3StatsDataTable(shuffled)}`,
+    ans,
+    opts,
+    hint: `每個數值只出現 1 次，沒有出現次數最多的數值 → <strong>沒有眾數</strong>`,
+  };
+}
+
+function generateCentralTendencyEasyQuestions() {
+  const types = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8]);
+  while (types.length < 10) types.push(rand(1, 8));
+  return types.slice(0, 10).map(t => g3CentralTendencyEasy(t));
+}
+
+/** 中三第 10 課 DSE：含頻率表等進階題 */
+function g3CentralTendencyDse() {
+  const type = rand(1, 5);
+
+  if (type === 1) {
+    const n = rand(5, 7);
+    const nums = [];
+    for (let i = 0; i < n; i++) nums.push(rand(2, 30));
+    const sum = nums.reduce((a, b) => a + b, 0);
+    const mean = sum / n;
+    const meanStr = g3StatsNumAns(mean);
+    const opts = createUniqueOpts(meanStr, i =>
+      [g3StatsNumAns(mean + 2), g3StatsNumAns(mean - 1), g3StatsNumAns(sum), g3StatsNumAns(Math.max(...nums))][i - 1],
     );
     return {
       q: `求數據 $${nums.join(", ")}$ 的<strong>平均數</strong>`,
       ans: meanStr,
       opts,
-      hint: `平均數 $= \\dfrac{${nums.join("+")}}{${n}} = ${meanStr}$`,
+      hint: `平均數 $= \\dfrac{${nums.join("+")}}{${n}}$，得 ${g3StatsHintEnd(meanStr)}`,
     };
   }
 
   if (type === 2) {
-    const nums = dse
-      ? [rand(8, 14), rand(15, 18), rand(19, 22), rand(23, 26), rand(27, 30)].sort((a, b) => a - b)
-      : (() => {
-          const base = rand(3, 10);
-          return [base, base + 2, base + 5, base + 7, base + 9].sort((a, b) => a - b);
-        })();
-    const median = nums[Math.floor(nums.length / 2)];
-    const ans = `$${median}$`;
+    const nums = [rand(8, 14), rand(15, 18), rand(19, 22), rand(23, 26), rand(27, 30)].sort((a, b) => a - b);
+    const median = g3StatsMedian(nums);
+    const ans = g3StatsNumAns(median);
     const opts = createUniqueOpts(ans, i =>
-      [`$${nums[0]}$`, `$${nums[nums.length - 1]}$`, `$${median + 2}$`, `$${Math.round(nums.reduce((a, b) => a + b, 0) / nums.length)}$`][i - 1],
+      [g3StatsNumAns(nums[0]), g3StatsNumAns(nums[nums.length - 1]), g3StatsNumAns(median + 2), g3StatsNumAns(Math.round(nums.reduce((a, b) => a + b, 0) / nums.length))][
+        i - 1
+      ],
     );
     return {
       q: `求數據 $${nums.join(", ")}$ 的<strong>中位數</strong>（已排序）`,
       ans,
       opts,
-      hint: `共 ${nums.length} 個數據，中位數為排序後中間位置的值 → $${median}$`,
+      hint: `共 ${nums.length} 個數據，中位數為排序後中間位置的值 → ${g3StatsHintEnd(ans)}`,
     };
   }
 
   if (type === 3) {
     const modeVal = rand(3, 12);
-    const nums = dse
-      ? [modeVal, modeVal, modeVal, modeVal + 2, modeVal + 4, modeVal + 5]
-      : [modeVal, modeVal, modeVal, modeVal + 3, modeVal + 5];
-    const shuffled = [...nums].sort(() => Math.random() - 0.5);
-    const ans = `$${modeVal}$`;
+    const nums = [modeVal, modeVal, modeVal, modeVal + 2, modeVal + 4, modeVal + 5];
+    const shuffled = g3StatsShuffled(nums);
+    const ans = g3StatsNumAns(modeVal);
     const opts = createUniqueOpts(ans, i =>
-      [`$${modeVal + 2}$`, `$${modeVal + 5}$`, `$${modeVal - 1}$`, `$${Math.max(...nums)}$`][i - 1],
+      [g3StatsNumAns(modeVal + 2), g3StatsNumAns(modeVal + 5), g3StatsNumAns(modeVal - 1), g3StatsNumAns(Math.max(...nums))][
+        i - 1
+      ],
     );
     return {
       q: `求數據 $${shuffled.join(", ")}$ 的<strong>眾數</strong>`,
       ans,
       opts,
-      hint: `出現次數最多的值為 $${modeVal}$（出現 ${nums.filter(x => x === modeVal).length} 次）`,
+      hint: `出現次數最多的值為 ${g3StatsHintEnd(ans)}（出現 ${nums.filter(x => x === modeVal).length} 次）`,
     };
   }
 
   if (type === 4) {
-    const f1 = rand(2, dse ? 6 : 4);
-    const f2 = rand(2, dse ? 5 : 4);
-    const f3 = rand(1, dse ? 4 : 3);
+    const f1 = rand(2, 6);
+    const f2 = rand(2, 5);
+    const f3 = rand(1, 4);
     const v1 = rand(1, 4);
     const v2 = v1 + rand(2, 4);
     const v3 = v2 + rand(2, 4);
     const total = f1 + f2 + f3;
     const sum = f1 * v1 + f2 * v2 + f3 * v3;
     const mean = sum / total;
-    const meanStr = mean % 1 === 0 ? `$${mean}$` : `$${roundTo(mean, 1)}$`;
+    const meanStr = g3StatsNumAns(mean);
     const opts = createUniqueOpts(meanStr, i =>
-      [`$${mean + 1}$`, `$${mean - 1}$`, `$${v2}$`, `$${sum}$`][i - 1],
+      [g3StatsNumAns(mean + 1), g3StatsNumAns(mean - 1), g3StatsNumAns(v2), g3StatsNumAns(sum)][i - 1],
     );
     return {
       q: `頻率表：值 $${v1}$ 出現 $${f1}$ 次，$${v2}$ 出現 $${f2}$ 次，$${v3}$ 出現 $${f3}$ 次，求<strong>平均數</strong>`,
       ans: meanStr,
       opts,
-      hint: `平均數 $= \\dfrac{${f1}\\times${v1} + ${f2}\\times${v2} + ${f3}\\times${v3}}{${total}} = ${meanStr}$`,
+      hint: `平均數 $= \\dfrac{${f1}\\times${v1} + ${f2}\\times${v2} + ${f3}\\times${v3}}{${total}}$，得 ${g3StatsHintEnd(meanStr)}`,
     };
   }
 
   const nums = [rand(10, 16), rand(17, 20), rand(21, 24), rand(25, 28)].sort((a, b) => a - b);
   const median = (nums[1] + nums[2]) / 2;
-  const ans = median % 1 === 0 ? `$${median}$` : `$${roundTo(median, 1)}$`;
+  const ans = g3StatsNumAns(median);
   const opts = createUniqueOpts(ans, i =>
-    [`$${nums[1]}$`, `$${nums[2]}$`, `$${nums[0]}$`, `$${Math.round(nums.reduce((a, b) => a + b, 0) / nums.length)}$`][i - 1],
+    [g3StatsNumAns(nums[1]), g3StatsNumAns(nums[2]), g3StatsNumAns(nums[0]), g3StatsNumAns(Math.round(nums.reduce((a, b) => a + b, 0) / nums.length))][
+      i - 1
+    ],
   );
   return {
     q: `求數據 $${nums.join(", ")}$ 的<strong>中位數</strong>（共 4 個數據）`,
     ans,
     opts,
-    hint: `4 個數據的中位數 $= \\dfrac{${nums[1]} + ${nums[2]}}{2} = ${ans}$`,
+    hint: `4 個數據的中位數 $= \\dfrac{${nums[1]} + ${nums[2]}}{2}$，得 ${g3StatsHintEnd(ans)}`,
   };
 }
 
@@ -5262,7 +5470,9 @@ const extraTopicsByGrade = {
       id: "g3_t10",
       title: "10. 集中趨勢的量度",
       generate: (difficulty = "easy") =>
-        generate10Unique(() => g3CentralTendencyQuestion(difficulty)),
+        difficulty === "dse"
+          ? generate10Unique(() => g3CentralTendencyDse())
+          : generateCentralTendencyEasyQuestions(),
     },
     {
       id: "g3_t11",
