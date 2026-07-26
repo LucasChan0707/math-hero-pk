@@ -281,33 +281,33 @@ function generate10Unique(builderFn) {
   const qList = [];
   const qSet = new Set();
   let attempts = 0;
-  let stale = 0;
 
-  while (qList.length < 10 && attempts < 100 && stale < 20) {
+  while (qList.length < 10 && attempts < 80) {
     attempts++;
-    const qData = builderFn();
-    if (qData && new Set(qData.opts).size === 4) {
-      const key = qData.q + "\0" + qData.ans;
-      if (!qSet.has(key)) {
-        qSet.add(key);
-        qList.push(qData);
-        stale = 0;
-      } else {
-        stale++;
-      }
-    } else {
-      stale++;
+    let qData = null;
+    try {
+      qData = builderFn();
+    } catch {
+      continue;
     }
+    if (!qData?.q || !qData.ans || !Array.isArray(qData.opts) || qData.opts.length !== 4) continue;
+    if (new Set(qData.opts).size !== 4 || !qData.opts.includes(qData.ans)) continue;
+    const key = qData.ans + "\0" + qData.q.length;
+    if (qSet.has(key) && qList.length >= 6) continue;
+    qSet.add(key);
+    qList.push(qData);
   }
 
-  if (qList.length >= 5) {
-    let i = 0;
-    while (qList.length < 10) {
-      qList.push({ ...qList[i % qList.length] });
-      i++;
-    }
+  if (qList.length === 0) return [];
+  let i = 0;
+  while (qList.length < 10) {
+    qList.push({ ...qList[i++ % qList.length] });
   }
   return qList;
+}
+
+function shuffleOpts(opts) {
+  return [...opts].sort(() => Math.random() - 0.5);
 }
 
 function formatQuad(a, b, c) {
@@ -863,6 +863,58 @@ function g3QuadSquareInParaDiagram(variant = 0) {
   parts.push(g3QuadLabel(X[0] - 10, X[1], "X", "end"));
   parts.push(g3QuadLabel(Y[0] + 10, Y[1], "Y", "start"));
   return g3QuadWrap(268, 148, parts.join(""), "平行四邊形內正方形");
+}
+
+/** 三角形（A 頂點、B/C 底角） */
+function g3QuadTrianglePoints() {
+  return { A: [130, 30], B: [42, 118], C: [218, 118] };
+}
+
+/** 中點定理：D、E 分別為 AB、AC 的中點 */
+function g3QuadMidpointDiagram(opts: { bcLabel?: string; deLabel?: string } = {}) {
+  const { A, B, C } = g3QuadTrianglePoints();
+  const D = g3QuadMid(A, B);
+  const E = g3QuadMid(A, C);
+  const parts = [];
+  parts.push(
+    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(C)}" fill="rgba(108,92,231,0.22)" stroke="#d6d4ff" stroke-width="2.5"/>`,
+  );
+  parts.push(`<line x1="${D[0]}" y1="${D[1]}" x2="${E[0]}" y2="${E[1]}" stroke="#55efc4" stroke-width="2.8"/>`);
+  parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#888" stroke-width="1.2" stroke-dasharray="5 3" opacity="0.5"/>`);
+  parts.push(`<circle cx="${D[0]}" cy="${D[1]}" r="3.5" fill="#ffeaa7"/>`);
+  parts.push(`<circle cx="${E[0]}" cy="${E[1]}" r="3.5" fill="#ffeaa7"/>`);
+  parts.push(g3QuadLabel(A[0], A[1] - 12, "A", "middle"));
+  parts.push(g3QuadLabel(B[0] - 10, B[1] + 12, "B", "end"));
+  parts.push(g3QuadLabel(C[0] + 10, C[1] + 12, "C", "start"));
+  parts.push(g3QuadLabel(D[0] - 12, D[1] + 4, "D", "end"));
+  parts.push(g3QuadLabel(E[0] + 12, E[1] + 4, "E", "start"));
+  if (opts.bcLabel != null) parts.push(g3QuadLabel((B[0] + C[0]) / 2, B[1] + 16, opts.bcLabel, "middle"));
+  if (opts.deLabel != null) parts.push(g3QuadLabel((D[0] + E[0]) / 2 - 16, (D[1] + E[1]) / 2, opts.deLabel, "end"));
+  return g3QuadWrap(260, 148, parts.join(""), "中點定理");
+}
+
+/** 截線定理：D∈AB、E∈AC，DE // BC，AD:DB = m:n */
+function g3QuadInterceptDiagram(m = 2, n = 3, labels: { de?: string; bc?: string } = {}) {
+  const { A, B, C } = g3QuadTrianglePoints();
+  const D = g3QuadOnSeg(A, B, m, n);
+  const E = g3QuadOnSeg(A, C, m, n);
+  const parts = [];
+  parts.push(
+    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(C)}" fill="rgba(108,92,231,0.22)" stroke="#d6d4ff" stroke-width="2.5"/>`,
+  );
+  parts.push(`<line x1="${D[0]}" y1="${D[1]}" x2="${E[0]}" y2="${E[1]}" stroke="#55efc4" stroke-width="2.8"/>`);
+  parts.push(`<circle cx="${D[0]}" cy="${D[1]}" r="3.5" fill="#ffeaa7"/>`);
+  parts.push(`<circle cx="${E[0]}" cy="${E[1]}" r="3.5" fill="#ffeaa7"/>`);
+  parts.push(g3QuadLabel(A[0], A[1] - 12, "A", "middle"));
+  parts.push(g3QuadLabel(B[0] - 10, B[1] + 12, "B", "end"));
+  parts.push(g3QuadLabel(C[0] + 10, C[1] + 12, "C", "start"));
+  parts.push(g3QuadLabel(D[0] - 12, D[1] + 4, "D", "end"));
+  parts.push(g3QuadLabel(E[0] + 12, E[1] + 4, "E", "start"));
+  parts.push(g3QuadLabel((A[0] + D[0]) / 2 - 8, (A[1] + D[1]) / 2, String(m), "end"));
+  parts.push(g3QuadLabel((D[0] + B[0]) / 2, (D[1] + B[1]) / 2 + 12, String(n), "middle"));
+  if (labels.de != null) parts.push(g3QuadLabel((D[0] + E[0]) / 2 - 16, (D[1] + E[1]) / 2, labels.de, "end"));
+  if (labels.bc != null) parts.push(g3QuadLabel((B[0] + C[0]) / 2, B[1] + 16, labels.bc, "middle"));
+  return g3QuadWrap(260, 148, parts.join(""), "截線定理");
 }
 
 function trigDseHint(opp, adj, hyp, hideSide, ratioName, val) {
@@ -1434,8 +1486,8 @@ function g3QuadMcHint(correct, pool, mode) {
   return `正確：「${correct}」——${okItem.why}。其餘選項均為平行四邊形判別的充分條件`;
 }
 
-function g3QuadrilateralEasy() {
-  const type = rand(1, 10);
+function g3QuadrilateralEasy(fixedType?: number) {
+  const type = fixedType ?? rand(1, 10);
 
   if (type === 1) {
     const ab = rand(5, 12);
@@ -1534,9 +1586,12 @@ function g3QuadrilateralEasy() {
     const distractors = insufficient.slice(0, 3).map(p => p.text);
     while (distractors.length < 3) distractors.push(insufficient[distractors.length % insufficient.length].text);
     const ans = pick.text;
-    const opts = createUniqueOpts(ans, i => distractors[i - 1]);
+    const opts = shuffleOpts([ans, distractors[0], distractors[1], distractors[2]]);
     return {
-      q: g3QuadQ(g3QuadParaDiagram({ slant: rand(-8, 8) }), `下列哪一項<strong>足以</strong>判別四邊形 $ABCD$ 為平行四邊形？`),
+      q: g3QuadQ(
+        g3QuadParaDiagram({ slant: rand(-8, 8) }),
+        `下列哪一項<strong>足以</strong>判別四邊形 $ABCD$ 為平行四邊形？`,
+      ),
       ans,
       opts,
       hint: g3QuadMcHint(ans, G3_PARALLELOGRAM_PROOFS, "sufficient"),
@@ -1549,7 +1604,7 @@ function g3QuadrilateralEasy() {
     const pick = insufficient[rand(0, insufficient.length - 1)];
     const distractors = sufficient.slice(0, 3).map(p => p.text);
     const ans = pick.text;
-    const opts = createUniqueOpts(ans, i => distractors[i - 1]);
+    const opts = shuffleOpts([ans, distractors[0], distractors[1], distractors[2]]);
     const useRect = rand(0, 1) === 0;
     return {
       q: g3QuadQ(
@@ -1624,6 +1679,58 @@ function g3QuadrilateralEasy() {
     ans,
     opts,
     hint: `菱形對角線平分內角，故 $\\angle BAC = \\dfrac{${fullAngle}^{\\circ}}{2} = ${half}^{\\circ}$。誤選 $${fullAngle}^{\\circ}$ 是未運用「平分」條件`,
+  };
+}
+
+/** 簡單模式：10 種題型各出 1 題，唔使隨機重試 */
+function generateQuadEasyQuestions() {
+  const order = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].sort(() => Math.random() - 0.5);
+  return order.map(t => g3QuadrilateralEasy(t));
+}
+
+function g3QuadDseMidpointTheorem() {
+  const bc = rand(10, 24) * 2;
+  const de = bc / 2;
+  const ans = `$${de}\\text{ cm}$`;
+  const opts = createUniqueOpts(ans, i =>
+    [`$${bc}\\text{ cm}$`, `$${de + 2}\\text{ cm}$`, `$${Math.max(4, de - 2)}\\text{ cm}$`, `$${bc / 4}\\text{ cm}$`][i - 1],
+  );
+  return {
+    q: g3QuadQ(
+      g3QuadMidpointDiagram({ bcLabel: String(bc), deLabel: "?" }),
+      `圖中，$D$、$E$ 分別為 $\\triangle ABC$ 的 $AB$、$AC$ 的中點。若 $BC = ${bc}$ cm，求 $DE$ 的長度。`,
+    ),
+    ans,
+    opts,
+    hint: `中點定理：$DE \\parallel BC$ 且 $DE = \\dfrac{1}{2}BC = \\dfrac{${bc}}{2} = ${de}$ cm。誤選 $${bc}$ cm 是把 $BC$ 當 $DE$`,
+  };
+}
+
+function g3QuadDseInterceptTheorem() {
+  const templates = [
+    { m: 2, n: 3, de: 8, bc: 20 },
+    { m: 3, n: 2, de: 9, bc: 15 },
+    { m: 1, n: 4, de: 3, bc: 15 },
+    { m: 3, n: 1, de: 12, bc: 16 },
+  ];
+  const c = templates[rand(0, templates.length - 1)];
+  const ans = `$${c.bc}\\text{ cm}$`;
+  const opts = createUniqueOpts(ans, i =>
+    [
+      `$${c.de}\\text{ cm}$`,
+      `$${c.bc + 4}\\text{ cm}$`,
+      `$${Math.round(c.bc * 0.6)}\\text{ cm}$`,
+      `$${Math.round(c.bc * (c.m / (c.m + c.n)))}\\text{ cm}$`,
+    ][i - 1],
+  );
+  return {
+    q: g3QuadQ(
+      g3QuadInterceptDiagram(c.m, c.n, { de: String(c.de), bc: "?" }),
+      `圖中，$D$ 在 $AB$ 上、$E$ 在 $AC$ 上，且 $DE \\parallel BC$。若 $AD : DB = ${c.m} : ${c.n}$、$DE = ${c.de}$ cm，求 $BC$ 的長度。`,
+    ),
+    ans,
+    opts,
+    hint: `截線定理：$\\dfrac{DE}{BC} = \\dfrac{AD}{AB} = \\dfrac{${c.m}}{${c.m + c.n}}$，故 $BC = ${c.de} \\times \\dfrac{${c.m + c.n}}{${c.m}} = ${c.bc}$ cm。誤選 $${c.de}$ cm 是把 $DE$ 當 $BC$`,
   };
 }
 
@@ -1793,7 +1900,7 @@ function g3QuadDseStatement() {
 }
 
 function g3QuadrilateralDse() {
-  const type = rand(1, 7);
+  const type = rand(1, 9);
 
   if (type === 1) {
     const befChoices = [48, 52, 56, 60, 64];
@@ -1804,6 +1911,8 @@ function g3QuadrilateralDse() {
   if (type === 4) return g3QuadDseStatement();
   if (type === 5) return g3QuadDseAreaNested2017();
   if (type === 6) return g3QuadDseAreaSquare2019();
+  if (type === 7) return g3QuadDseMidpointTheorem();
+  if (type === 8) return g3QuadDseInterceptTheorem();
   const ao = rand(5, 9);
   const ac = ao * 2;
   const ans = `$${ac}$`;
@@ -2447,7 +2556,9 @@ const rawCurriculumGenerators = {
       id: "g3_t5",
       title: "5. 四邊形",
       generate: (difficulty = "easy") =>
-        generate10Unique(() => g3QuadrilateralQuestion(difficulty)),
+        difficulty === "dse"
+          ? generate10Unique(() => g3QuadrilateralDse())
+          : generateQuadEasyQuestions(),
     },
     {
       id: "g3_t6",
@@ -4541,20 +4652,25 @@ function startSingle() {
   const btn = document.getElementById('btnStartSingle');
   startingSingle = true;
   if (btn) { btn.disabled = true; btn.textContent = '⚔️ 準備題目中...'; }
-  setTimeout(function() {
-    try {
-      const topic = getTopic();
-      const qs = topic.generate(difficulty);
-      if (!qs.length) { alert('題目生成失敗，請再試一次'); return; }
-      quiz = { qs, idx:0, score:0, correct:0, hidden:[], used5050:false };
-      document.getElementById('qzTopic').textContent = GRADE_NAMES[grade] + ' · ' + topic.title;
-      showScreen('scrQuiz');
-      renderQuizQ();
-    } finally {
-      startingSingle = false;
-      if (btn) { btn.disabled = false; btn.textContent = '⚔️ 單人挑戰（10 題）'; }
-    }
-  }, 30);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      try {
+        const topic = getTopic();
+        const qs = topic.generate(difficulty);
+        if (!qs || !qs.length) { alert('題目生成失敗，請再試一次'); return; }
+        quiz = { qs, idx:0, score:0, correct:0, hidden:[], used5050:false };
+        document.getElementById('qzTopic').textContent = GRADE_NAMES[grade] + ' · ' + topic.title;
+        showScreen('scrQuiz');
+        renderQuizQ();
+      } catch (e) {
+        console.error(e);
+        alert('題目生成出錯，請再試一次');
+      } finally {
+        startingSingle = false;
+        if (btn) { btn.disabled = false; btn.textContent = '⚔️ 單人挑戰（10 題）'; }
+      }
+    });
+  });
 }
 
 function renderQuizQ() {
