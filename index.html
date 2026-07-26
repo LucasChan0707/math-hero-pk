@@ -147,6 +147,46 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(108,9
 .av-emoji{font-size:32px;line-height:1;pointer-events:none}
 .av-slot{display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px;vertical-align:middle}
 .btn:disabled{opacity:.65;cursor:wait;transform:none}
+.daily-panel{background:linear-gradient(180deg,rgba(85,239,196,.08),rgba(10,8,22,.88));
+  border:1px solid rgba(85,239,196,.35);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.daily-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.daily-streak{font-size:11px;font-weight:900;color:#f1c40f;background:rgba(241,196,15,.12);
+  padding:4px 8px;border-radius:99px;border:1px solid rgba(241,196,15,.3)}
+.daily-quest{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.daily-quest:last-child{border-bottom:none;padding-bottom:0}
+.daily-quest.done{opacity:.75}
+.daily-quest-icon{font-size:20px;flex:0 0 28px;text-align:center}
+.daily-quest-body{flex:1;min-width:0}
+.daily-quest-name{font-size:12px;font-weight:800;color:#fff}
+.daily-quest-prog{font-size:10px;color:#a29bfe;margin-top:2px}
+.daily-quest-btn{flex:0 0 auto;font-size:10px;font-weight:900;padding:6px 10px;border-radius:8px;border:none;
+  cursor:pointer;background:linear-gradient(180deg,#00b894,#55efc4);color:#000}
+.daily-quest-btn.claimed{background:rgba(255,255,255,.1);color:#666;cursor:default}
+.companion-strip{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:10px;
+  background:linear-gradient(90deg,rgba(108,92,231,.15),rgba(241,196,15,.08));
+  border:1px solid rgba(201,162,39,.35);border-radius:14px;cursor:pointer}
+.companion-strip-emoji{font-size:36px;line-height:1;flex:0 0 44px;text-align:center}
+.companion-strip-body{flex:1;min-width:0}
+.companion-strip-name{font-size:13px;font-weight:900;color:#fff}
+.companion-strip-meta{font-size:10px;color:#a29bfe;margin-top:2px}
+.companion-exp{height:6px;background:rgba(0,0,0,.4);border-radius:99px;margin-top:6px;overflow:hidden}
+.companion-exp>div{height:100%;background:linear-gradient(90deg,#6c5ce7,#f1c40f);transition:width .3s}
+.companion-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.companion-card{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(0,0,0,.3);cursor:pointer;text-align:center;transition:border-color .15s,transform .15s}
+.companion-card.on{border-color:#f1c40f;background:rgba(241,196,15,.1);box-shadow:0 0 12px rgba(241,196,15,.2)}
+.companion-card-emoji{font-size:40px;line-height:1;margin-bottom:6px}
+.companion-card-name{font-size:12px;font-weight:900;color:#fff}
+.companion-card-tag{font-size:9px;color:#8be9fd;margin-top:2px}
+.companion-card-lv{font-size:10px;color:#a29bfe;margin-top:4px}
+.companion-hero{text-align:center;padding:16px 12px;margin-bottom:12px;border-radius:16px;
+  background:linear-gradient(180deg,rgba(108,92,231,.2),rgba(0,0,0,.25));border:1px solid rgba(201,162,39,.3)}
+.companion-hero-emoji{font-size:64px;line-height:1;margin-bottom:8px}
+.loot-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:300;
+  background:linear-gradient(135deg,#4a3bb5,#251b4d);border:1px solid #f1c40f;border-radius:14px;
+  padding:10px 16px;font-size:12px;font-weight:800;color:#ffeaa7;box-shadow:0 8px 24px rgba(0,0,0,.6);
+  animation:lootPop .4s ease;pointer-events:none;max-width:90%}
+@keyframes lootPop{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 </style>
 </head>
 <body>
@@ -208,14 +248,26 @@ function loadUser(name) {
     try {
       var u = JSON.parse(raw);
       if (!u.avatar || String(u.avatar).indexOf('http') === 0) u.avatar = LOGIN_AVATARS[0];
-      return u;
+      return migrateUser(u);
     } catch (e) {}
   }
   return {
     name: name, avatar: LOGIN_AVATARS[0], coins: 0, stars: 0,
     items5050: 0, itemsSkip: 0, coupons: [], history: {},
-    pkWins: 0, pkLosses: 0
+    pkWins: 0, pkLosses: 0,
+    companionId: null, companions: {}, streak: 0, lastLoginDate: null,
+    daily: null, lifetimeCorrect: 0
   };
+}
+
+function migrateUser(u) {
+  if (!u.companions) u.companions = {};
+  if (!u.daily) u.daily = null;
+  if (u.companionId == null) u.companionId = null;
+  if (u.streak == null) u.streak = 0;
+  if (u.lastLoginDate == null) u.lastLoginDate = null;
+  if (u.lifetimeCorrect == null) u.lifetimeCorrect = 0;
+  return u;
 }
 
 function doLogin() {
@@ -234,6 +286,7 @@ function doLogin() {
     if (btn) { btn.disabled = true; btn.textContent = '登入中...'; }
     USER = loadUser(name);
     USER.avatar = selectedAv || LOGIN_AVATARS[0];
+    USER = migrateUser(USER);
     if (typeof saveUser === 'function') saveUser();
     else localStorage.setItem('mh_' + name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g, '_'), JSON.stringify(USER));
     var topBar = document.getElementById('topBar');
@@ -260,6 +313,23 @@ function doLogin() {
 
 <!-- 主選單 -->
 <div class="screen" id="scrHome">
+  <div class="companion-strip" id="companionStrip" onclick="showScreen('scrCompanion')">
+    <div class="companion-strip-emoji" id="homeCompanionEmoji">🥚</div>
+    <div class="companion-strip-body">
+      <div class="companion-strip-name" id="homeCompanionName">選擇育成夥伴</div>
+      <div class="companion-strip-meta" id="homeCompanionMeta">點擊選擇你嘅夥伴</div>
+      <div class="companion-exp"><div id="homeCompanionExpBar" style="width:0%"></div></div>
+    </div>
+    <div style="font-size:11px;color:#f1c40f;font-weight:900">›</div>
+  </div>
+  <div class="daily-panel" id="dailyPanel">
+    <div class="daily-head">
+      <span class="panel-title" style="font-size:12px">📋 每日委託</span>
+      <span class="daily-streak" id="dailyStreak">🔥 連續 0 日</span>
+    </div>
+    <div id="dailyQuestList"></div>
+    <button class="btn-sm btn gold" id="btnDailyQuest" onclick="startDailyQuest()" style="margin-top:8px">⚡ 每日快打（3 題）</button>
+  </div>
   <div class="game-panel" style="padding:10px 12px">
     <div class="panel-head">
       <span class="panel-title">🗺️ 課題地圖</span>
@@ -279,6 +349,24 @@ function doLogin() {
   <div class="quest-map" id="topicList"></div>
   <button class="btn gold" id="btnStartSingle" onclick="startSingle()">⚔️ 開始單人挑戰（10 題）</button>
   <button class="btn sec" onclick="showScreen('scrPKLobby')">🔥 PK 對戰（5 回合）</button>
+</div>
+
+<!-- 育成夥伴 -->
+<div class="screen" id="scrCompanion">
+  <p class="title-main" style="margin-top:4px">🐾 育成夥伴</p>
+  <p class="sub">揀一個你鍾意嘅夥伴 · 答啱題目幫佢升級</p>
+  <div class="companion-hero" id="companionHero">
+    <div class="companion-hero-emoji" id="compHeroEmoji">🥚</div>
+    <div id="compHeroName" style="font-size:16px;font-weight:900;color:#fff">未選擇</div>
+    <div id="compHeroLv" style="font-size:12px;color:#a29bfe;margin-top:4px">Lv.1 · 0 EXP</div>
+    <div class="companion-exp" style="height:8px;margin-top:10px;max-width:240px;margin-left:auto;margin-right:auto">
+      <div id="compHeroExpBar" style="width:0%"></div>
+    </div>
+    <p id="compHeroDesc" style="font-size:11px;color:#8be9fd;margin-top:10px;line-height:1.5">完成每日 3 題可餵食夥伴</p>
+  </div>
+  <div class="panel-head" style="margin-bottom:6px"><span class="panel-title">選擇夥伴</span><span class="panel-tag">8 款</span></div>
+  <div class="companion-grid" id="companionGrid"></div>
+  <button class="btn sec" onclick="showScreen('scrHome')">← 返回主選單</button>
 </div>
 
 <!-- 單人答題 -->
@@ -380,9 +468,21 @@ function doLogin() {
 
 <div class="nav" id="navBar" style="display:none">
   <div class="nav-item on" onclick="nav('scrHome',this)"><div style="font-size:18px">⚔️</div>挑戰</div>
+  <div class="nav-item" onclick="nav('scrCompanion',this)"><div style="font-size:18px">🐾</div>夥伴</div>
   <div class="nav-item" onclick="nav('scrGacha',this)"><div style="font-size:18px">🎴</div>抽卡</div>
   <div class="nav-item" onclick="nav('scrShop',this)"><div style="font-size:18px">🎁</div>商店</div>
   <div class="nav-item" onclick="nav('scrLB',this)"><div style="font-size:18px">🏆</div>榜</div>
+</div>
+
+<div class="modal" id="companionPickModal">
+  <div class="modal-card" style="max-width:340px;text-align:left">
+    <div style="text-align:center;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:900;color:#f1c40f">🐾 選擇你的育成夥伴</div>
+      <p style="font-size:11px;color:#a29bfe;margin-top:6px">男女同學都有唔同喜好 · 隨時可以換夥伴（各自獨立等級）</p>
+    </div>
+    <div class="companion-grid" id="companionPickGrid" style="max-height:320px;overflow-y:auto"></div>
+    <button class="btn sec btn-sm" onclick="closeCompanionPickModal()" style="margin-top:10px">稍後再選</button>
+  </div>
 </div>
 
 <div class="modal" id="gachaModal">
@@ -6530,9 +6630,252 @@ const SHOP = [
   { id:'skip', name:'⏭️ 跳過卡', cost:50, type:'skip' }
 ];
 
-// USER / selectedAv / loadUser / doLogin / pickAv 由登入模組定義
+const SHOP = [
+  { id:'5050', name:'🌓 50/50 刪除卡', cost:30, type:'5050' },
+  { id:'skip', name:'⏭️ 跳過卡', cost:50, type:'skip' }
+];
+
+// ========== 育成夥伴 & 每日委託 ==========
+const COMPANIONS = [
+  { id:'dragon', name:'小數龍', emoji:'🐉', tag:'熱血', desc:'火焰系夥伴，答啱題目會噴火慶祝' },
+  { id:'cat', name:'幾何貓', emoji:'🐱', tag:'可愛', desc:'軟綿綿嘅幾何專家，最啱鍾意治癒風格' },
+  { id:'robot', name:'代數機械人', emoji:'🤖', tag:'科幻', desc:'精準計算型 AI，邏輯型學生最愛' },
+  { id:'fairy', name:'統計精靈', emoji:'🧚', tag:'魔法', desc:'用魔法整理數據，夢幻風格' },
+  { id:'wolf', name:'方程狼', emoji:'🐺', tag:'型格', desc:'孤高解題高手， cool 路線' },
+  { id:'panda', name:'概率熊貓', emoji:'🐼', tag:'治癒', desc:'慢慢嚟都會變強，零壓力育成' },
+  { id:'phoenix', name:'函數鳳凰', emoji:'🔥', tag:'帥氣', desc:'從錯誤中重生，越戰越強' },
+  { id:'unicorn', name:'立體獨角獸', emoji:'🦄', tag:'夢幻', desc:'立體幾何守護者，夢幻獨角系' }
+];
+const COMPANION_EXP_LEVELS = [0, 15, 40, 80, 150, 250, 400, 600];
+const COMPANION_STAGE = ['初見', '幼年期', '成長期', '覺醒期', '成熟期', '完全體', '傳說', '神話'];
+const DAILY_TARGET = 3;
+const DAILY_SIGNIN_STARS = 3;
+const DAILY_PRACTICE_STARS = 5;
+const DAILY_FEED_STARS = 3;
+
+function todayKey() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function yesterdayKey() {
+  var d = new Date(); d.setDate(d.getDate()-1);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function getCompanionDef(id) {
+  for (var i = 0; i < COMPANIONS.length; i++) if (COMPANIONS[i].id === id) return COMPANIONS[i];
+  return COMPANIONS[0];
+}
+function ensureCompanionData(id) {
+  if (!USER.companions) USER.companions = {};
+  if (!USER.companions[id]) USER.companions[id] = { exp: 0, level: 1, fedToday: false };
+  return USER.companions[id];
+}
+function companionLevelFromExp(exp) {
+  var lv = 1;
+  for (var i = 1; i < COMPANION_EXP_LEVELS.length; i++) {
+    if (exp >= COMPANION_EXP_LEVELS[i]) lv = i + 1; else break;
+  }
+  return Math.min(lv, COMPANION_EXP_LEVELS.length);
+}
+function companionExpProgress(exp, level) {
+  var cur = COMPANION_EXP_LEVELS[level - 1] || 0;
+  var nxt = COMPANION_EXP_LEVELS[level] || (cur + 100);
+  if (nxt <= cur) return 100;
+  return Math.min(100, Math.round((exp - cur) / (nxt - cur) * 100));
+}
+function ensureDailyState() {
+  if (!USER) return null;
+  var tk = todayKey();
+  if (!USER.daily || USER.daily.date !== tk) {
+    USER.daily = { date: tk, questionsDone: 0, claimedSignin: false, claimedPractice: false, claimedFeed: false };
+    if (USER.companions) {
+      for (var k in USER.companions) if (USER.companions[k]) USER.companions[k].fedToday = false;
+    }
+  }
+  return USER.daily;
+}
+function processDailyLogin() {
+  if (!USER) return;
+  migrateUser(USER);
+  var tk = todayKey();
+  var yk = yesterdayKey();
+  if (USER.lastLoginDate === tk) { ensureDailyState(); return; }
+  if (USER.lastLoginDate === yk) USER.streak = (USER.streak || 0) + 1;
+  else if (USER.lastLoginDate && USER.lastLoginDate !== tk) USER.streak = 1;
+  else if (!USER.lastLoginDate) USER.streak = 1;
+  USER.lastLoginDate = tk;
+  ensureDailyState();
+  if (!USER.daily.claimedSignin) {
+    var bonus = DAILY_SIGNIN_STARS;
+    if (USER.streak >= 7) bonus += 10;
+    else if (USER.streak >= 3) bonus += 5;
+    USER.stars += bonus;
+    USER.daily.claimedSignin = true;
+    saveUser();
+    showLootToast('📋 每日簽到 +' + bonus + '⭐' + (USER.streak >= 3 ? ' （連續 ' + USER.streak + ' 日）' : ''));
+    if (USER.streak === 7 && !USER.daily.streak7Bonus) {
+      USER.items5050 = (USER.items5050 || 0) + 1;
+      USER.daily.streak7Bonus = true;
+      setTimeout(function() { showLootToast('🔥 連續 7 日！獎勵 50/50 卡 ×1'); }, 1200);
+    }
+  }
+}
+function addCompanionExp(amount) {
+  if (!USER || !USER.companionId || amount <= 0) return;
+  var c = ensureCompanionData(USER.companionId);
+  c.exp = (c.exp || 0) + amount;
+  var newLv = companionLevelFromExp(c.exp);
+  var leveled = newLv > (c.level || 1);
+  c.level = newLv;
+  if (leveled) showLootToast(getCompanionDef(USER.companionId).emoji + ' ' + getCompanionDef(USER.companionId).name + ' 升級 Lv.' + newLv + '！');
+}
+function recordDailyQuestion(wasCorrect) {
+  if (!USER) return;
+  var daily = ensureDailyState();
+  daily.questionsDone = (daily.questionsDone || 0) + 1;
+  if (wasCorrect) {
+    USER.lifetimeCorrect = (USER.lifetimeCorrect || 0) + 1;
+    addCompanionExp(1);
+  }
+  checkDailyQuestRewards();
+  saveUser();
+  renderDailyPanel();
+  renderCompanionHome();
+}
+function rollDailyLoot() {
+  var r = Math.random();
+  if (r < 0.05) { USER.items5050 = (USER.items5050 || 0) + 1; return '🌓 50/50 卡 ×1'; }
+  if (r < 0.25) { var s = 2 + Math.floor(Math.random() * 2); USER.stars += s; return '⭐ +' + s; }
+  var e = 3 + Math.floor(Math.random() * 3);
+  addCompanionExp(e);
+  return getCompanionDef(USER.companionId || 'dragon').emoji + ' 夥伴 EXP +' + e;
+}
+function checkDailyQuestRewards() {
+  if (!USER) return;
+  var daily = ensureDailyState();
+  if (daily.questionsDone >= DAILY_TARGET && !daily.claimedPractice) {
+    daily.claimedPractice = true;
+    USER.stars += DAILY_PRACTICE_STARS;
+    var loot = rollDailyLoot();
+    showLootToast('📋 每日練習完成！+' + DAILY_PRACTICE_STARS + '⭐ · ' + loot);
+  }
+  if (daily.questionsDone >= DAILY_TARGET && !daily.claimedFeed && USER.companionId) {
+    daily.claimedFeed = true;
+    var c = ensureCompanionData(USER.companionId);
+    if (!c.fedToday) {
+      c.fedToday = true;
+      USER.stars += DAILY_FEED_STARS;
+      addCompanionExp(5);
+      showLootToast('🍖 餵食 ' + getCompanionDef(USER.companionId).name + '！+' + DAILY_FEED_STARS + '⭐ · EXP +5');
+    }
+  }
+}
+function showLootToast(msg) {
+  var old = document.getElementById('lootToast');
+  if (old) old.remove();
+  var el = document.createElement('div');
+  el.id = 'lootToast'; el.className = 'loot-toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function() { if (el.parentNode) el.remove(); }, 2800);
+}
+function renderDailyPanel() {
+  if (!USER) return;
+  var daily = ensureDailyState();
+  var streakEl = document.getElementById('dailyStreak');
+  if (streakEl) streakEl.textContent = '🔥 連續 ' + (USER.streak || 0) + ' 日';
+  var list = document.getElementById('dailyQuestList');
+  if (!list) return;
+  var qDone = daily.questionsDone || 0;
+  var quests = [
+    { icon:'📅', name:'每日簽到', prog: daily.claimedSignin ? '已完成' : '登入即可', done: daily.claimedSignin },
+    { icon:'✏️', name:'每日練習（' + DAILY_TARGET + ' 題）', prog: qDone + '/' + DAILY_TARGET + ' 題', done: daily.claimedPractice },
+    { icon:'🍖', name:'餵食夥伴', prog: USER.companionId ? (daily.claimedFeed ? '已餵食' : qDone + '/' + DAILY_TARGET + ' 題') : '請先選夥伴', done: daily.claimedFeed }
+  ];
+  list.innerHTML = '';
+  quests.forEach(function(q) {
+    var row = document.createElement('div');
+    row.className = 'daily-quest' + (q.done ? ' done' : '');
+    row.innerHTML = '<div class="daily-quest-icon">' + q.icon + '</div>' +
+      '<div class="daily-quest-body"><div class="daily-quest-name">' + q.name + '</div>' +
+      '<div class="daily-quest-prog">' + q.prog + '</div></div>' +
+      (q.done ? '<span class="daily-quest-btn claimed">✓</span>' : '');
+    list.appendChild(row);
+  });
+}
+function renderCompanionHome() {
+  if (!USER) return;
+  var emojiEl = document.getElementById('homeCompanionEmoji');
+  var nameEl = document.getElementById('homeCompanionName');
+  var metaEl = document.getElementById('homeCompanionMeta');
+  var barEl = document.getElementById('homeCompanionExpBar');
+  if (!emojiEl) return;
+  if (!USER.companionId) {
+    emojiEl.textContent = '🥚';
+    nameEl.textContent = '選擇育成夥伴';
+    metaEl.textContent = '8 款夥伴任你揀 · 點擊開始';
+    if (barEl) barEl.style.width = '0%';
+    return;
+  }
+  var def = getCompanionDef(USER.companionId);
+  var c = ensureCompanionData(USER.companionId);
+  var stage = COMPANION_STAGE[(c.level || 1) - 1] || '初見';
+  emojiEl.textContent = def.emoji;
+  nameEl.textContent = def.name + ' Lv.' + (c.level || 1);
+  metaEl.textContent = stage + ' · EXP ' + (c.exp || 0) + (c.fedToday ? ' · 今日已餵食' : '');
+  if (barEl) barEl.style.width = companionExpProgress(c.exp || 0, c.level || 1) + '%';
+}
+function renderCompanionScreen() {
+  if (!USER) return;
+  renderCompanionGrid('companionGrid', true);
+  var def = USER.companionId ? getCompanionDef(USER.companionId) : null;
+  var c = USER.companionId ? ensureCompanionData(USER.companionId) : null;
+  document.getElementById('compHeroEmoji').textContent = def ? def.emoji : '🥚';
+  document.getElementById('compHeroName').textContent = def ? def.name : '未選擇夥伴';
+  document.getElementById('compHeroLv').textContent = def ? ('Lv.' + (c.level||1) + ' · ' + (COMPANION_STAGE[(c.level||1)-1]||'') + ' · EXP ' + (c.exp||0)) : '揀一個夥伴開始育成';
+  document.getElementById('compHeroExpBar').style.width = def ? (companionExpProgress(c.exp||0, c.level||1) + '%') : '0%';
+  document.getElementById('compHeroDesc').textContent = def ? def.desc : '男女同學都有唔同喜好 · 每個夥伴獨立等級';
+}
+function renderCompanionGrid(containerId, showLevel) {
+  var grid = document.getElementById(containerId);
+  if (!grid || !USER) return;
+  grid.innerHTML = '';
+  COMPANIONS.forEach(function(def) {
+    var c = ensureCompanionData(def.id);
+    var card = document.createElement('div');
+    card.className = 'companion-card' + (USER.companionId === def.id ? ' on' : '');
+    card.innerHTML = '<div class="companion-card-emoji">' + def.emoji + '</div>' +
+      '<div class="companion-card-name">' + def.name + '</div>' +
+      '<div class="companion-card-tag">' + def.tag + '</div>' +
+      (showLevel ? '<div class="companion-card-lv">Lv.' + (c.level||1) + '</div>' : '');
+    card.onclick = function() { pickCompanion(def.id); };
+    grid.appendChild(card);
+  });
+}
+function pickCompanion(id) {
+  if (!USER) return;
+  USER.companionId = id;
+  ensureCompanionData(id);
+  saveUser();
+  renderCompanionHome();
+  renderCompanionScreen();
+  renderCompanionGrid('companionPickGrid', true);
+  closeCompanionPickModal();
+  showLootToast(getCompanionDef(id).emoji + ' ' + getCompanionDef(id).name + ' 加入你的冒險！');
+}
+function showCompanionPickModal() {
+  renderCompanionGrid('companionPickGrid', true);
+  document.getElementById('companionPickModal').classList.add('show');
+}
+function closeCompanionPickModal() {
+  document.getElementById('companionPickModal').classList.remove('show');
+}
+function maybeShowCompanionPick() {
+  if (USER && !USER.companionId) setTimeout(showCompanionPickModal, 400);
+}
+
+// USER / selectedAv / loadUser / doLogin / pickAv / migrateUser 由登入模組定義
 let grade = 1, topicId = 'g1_t1', difficulty = 'easy';
-let quiz = { qs:[], idx:0, score:0, correct:0, hidden:[], used5050:false };
+let quiz = { qs:[], idx:0, score:0, correct:0, hidden:[], used5050:false, mode:'single' };
 
 function saveUser() {
   if (!USER) return;
@@ -6577,7 +6920,8 @@ function updateHeader() {
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if (id === 'scrHome') renderTopics();
+  if (id === 'scrHome') { renderTopics(); renderDailyPanel(); renderCompanionHome(); }
+  if (id === 'scrCompanion') renderCompanionScreen();
   if (id === 'scrGacha') renderCoupons();
   if (id === 'scrShop') renderShop();
   if (id === 'scrLB') renderLB();
@@ -6606,12 +6950,14 @@ function renderMath(el) {
 function enterGameHome() {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById('scrHome').classList.add('active');
+  try { processDailyLogin(); } catch (e) { console.error(e); }
   try { updateHeader(); } catch (e) { console.error(e); }
-  try { renderTopics(); } catch (e) {
+  try { renderTopics(); renderDailyPanel(); renderCompanionHome(); } catch (e) {
     console.error(e);
     var list = document.getElementById('topicList');
     if (list) list.innerHTML = '<p style="color:#ff7675;text-align:center;padding:12px">課題載入失敗，請重新整理頁面</p>';
   }
+  try { maybeShowCompanionPick(); } catch (e) { console.error(e); }
 }
 
 function initUI() {
@@ -6701,6 +7047,38 @@ function getTopic() {
   return topics.find(t => t.id === topicId) || topics[0];
 }
 
+function startDailyQuest() {
+  if (startingSingle) return;
+  if (!USER) { alert('請先登入'); return; }
+  if (!USER.companionId) { showCompanionPickModal(); return; }
+  startingSingle = true;
+  var btn = document.getElementById('btnDailyQuest');
+  var topic = getTopic();
+  if (btn) { btn.disabled = true; btn.textContent = '⚡ 準備中...'; }
+  document.getElementById('qzTopic').textContent = '📋 每日委託 · ' + topic.title;
+  document.getElementById('qzText').innerHTML = '<p style="color:#f1c40f;padding:24px;text-align:center">⚡ 準備每日題目...</p>';
+  document.getElementById('qzOpts').innerHTML = '';
+  document.getElementById('qzExplain').style.display = 'none';
+  document.getElementById('btnNext').style.display = 'none';
+  showScreen('scrQuiz');
+  setTimeout(function() {
+    try {
+      var all = topic.generate(difficulty);
+      if (!all || !all.length) { alert('題目生成失敗'); showScreen('scrHome'); return; }
+      var qs = all.slice(0, Math.min(3, all.length));
+      quiz = { qs: qs, idx: 0, score: 0, correct: 0, hidden: [], used5050: false, mode: 'daily' };
+      renderQuizQ();
+    } catch (e) {
+      console.error(e);
+      alert('題目生成出錯：' + (e.message || String(e)));
+      showScreen('scrHome');
+    } finally {
+      startingSingle = false;
+      if (btn) { btn.disabled = false; btn.textContent = '⚡ 每日快打（3 題）'; }
+    }
+  }, 30);
+}
+
 function startSingle() {
   if (startingSingle) return;
   startingSingle = true;
@@ -6721,7 +7099,7 @@ function startSingle() {
         showScreen('scrHome');
         return;
       }
-      quiz = { qs: qs, idx: 0, score: 0, correct: 0, hidden: [], used5050: false };
+      quiz = { qs: qs, idx: 0, score: 0, correct: 0, hidden: [], used5050: false, mode: 'single' };
       renderQuizQ();
     } catch (e) {
       console.error(e);
@@ -6774,6 +7152,7 @@ function pickQuiz(opt, btn) {
     else if (b === btn && !ok) b.classList.add('bad');
   });
   if (ok) { quiz.correct++; quiz.score += 100; }
+  recordDailyQuestion(ok);
   const ex = document.getElementById('qzExplain');
   ex.style.display = 'block';
   ex.innerHTML = ok ? '✅ 答對！+100 分<br>' + q.hint
@@ -6806,17 +7185,29 @@ function use5050() {
 }
 
 function finishSingle() {
+  const isDaily = quiz.mode === 'daily';
   const key = topicId + '_' + difficulty;
-  const first = !USER.history[key];
-  const { coins, stars } = calcRewards(difficulty, quiz.correct, quiz.qs.length, first);
+  const first = !isDaily && !USER.history[key];
+  var coins, stars;
+  if (isDaily) {
+    coins = quiz.correct * ECONOMY.coinsPerCorrect;
+    stars = quiz.correct * ECONOMY.starsPerCorrect[difficulty];
+  } else {
+    var r = calcRewards(difficulty, quiz.correct, quiz.qs.length, first);
+    coins = r.coins; stars = r.stars;
+  }
   USER.coins += coins; USER.stars += stars;
   if (first) USER.history[key] = true;
   saveUser();
   const acc = Math.round(quiz.correct / quiz.qs.length * 100);
   document.getElementById('resEmoji').textContent = acc === 100 ? '🏆' : acc >= 70 ? '🌟' : '💪';
-  document.getElementById('resEval').textContent = acc === 100 ? '滿分！太厲害了！' : acc >= 70 ? '做得不錯！' : '再接再厲！';
+  document.getElementById('resEval').textContent = isDaily
+    ? (acc === 100 ? '每日委託完美！' : '每日練習完成！')
+    : (acc === 100 ? '滿分！太厲害了！' : acc >= 70 ? '做得不錯！' : '再接再厲！');
   document.getElementById('resScore').textContent = quiz.score + ' 分 · +' + stars + '⭐ +' + coins + '🪙';
-  document.getElementById('resDetail').textContent = (first ? '首次通關！' : '重玩') + ' 答對 ' + quiz.correct + '/' + quiz.qs.length;
+  var detail = isDaily ? ('每日快打 ' + quiz.correct + '/' + quiz.qs.length + ' 題') : ((first ? '首次通關！' : '重玩') + ' 答對 ' + quiz.correct + '/' + quiz.qs.length);
+  if (USER.companionId) detail += ' · ' + getCompanionDef(USER.companionId).emoji + ' 夥伴 EXP 已更新';
+  document.getElementById('resDetail').textContent = detail;
   showScreen('scrResult');
 }
 
