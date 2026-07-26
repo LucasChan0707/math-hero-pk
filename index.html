@@ -68,18 +68,22 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;ba
 .countdown{font-size:48px;font-weight:900;color:#f1c40f;text-align:center;padding:30px}
 .title-main{font-size:22px;font-weight:900;color:#f1c40f;text-align:center;margin-bottom:4px}
 .sub{text-align:center;font-size:12px;color:#a29bfe;margin-bottom:12px}
-.q-fig{display:block;width:100%;text-align:center;line-height:0;margin:4px auto 6px}
-.q-fig svg{display:block!important;max-width:280px;width:100%;height:auto;margin:0 auto;visibility:visible!important;opacity:1!important}
+.q-fig{display:block;width:100%;text-align:center;line-height:0;margin:2px auto 4px}
+.q-fig svg{display:block!important;max-width:200px;width:100%;height:auto;margin:0 auto;visibility:visible!important;opacity:1!important}
 .q-text{font-weight:bold;line-height:1.5}
-.av{font-size:28px;padding:6px 10px;border:2px solid #4a3e7d;border-radius:14px;cursor:pointer}
-.av.on{border-color:#f1c40f;background:rgba(241,196,15,.2)}
+.avatar-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 14px}
+.av{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;max-height:72px;padding:6px;border:2px solid #4a3e7d;border-radius:16px;cursor:pointer;background:rgba(0,0,0,.25);touch-action:manipulation}
+.av.on{border-color:#f1c40f;background:rgba(241,196,15,.18);box-shadow:0 0 0 2px rgba(241,196,15,.35)}
+.av-img{width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;pointer-events:none}
+.av-slot{display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px;vertical-align:middle}
+.btn:disabled{opacity:.65;cursor:wait;transform:none}
 </style>
 </head>
 <body>
 <div class="app" id="app">
 <div class="top-bar" id="topBar" style="display:none">
   <div style="display:flex;align-items:center;gap:8px">
-    <span id="hdrAv" style="font-size:28px">🧙‍♂️</span>
+    <span id="hdrAv" class="av-slot" style="width:36px;height:36px"></span>
     <div><div id="hdrName" style="font-size:13px;font-weight:bold">勇者</div>
     <div id="hdrTitle" style="font-size:9px;color:#f1c40f">見習冒險者</div></div>
   </div>
@@ -95,18 +99,7 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;ba
     <p class="sub">單檔完整版 · 含 PK 對戰 · 中一至中六</p>
   </div>
   <label style="font-size:13px;color:#a29bfe;font-weight:bold">選擇角色：</label>
-  <div class="avatar-row" id="avRow">
-    <div class="av on" data-av="🧙‍♂️" onclick="pickAv(this)">🧙‍♂️</div>
-    <div class="av" data-av="🥷" onclick="pickAv(this)">🥷</div>
-    <div class="av" data-av="🧝‍♀️" onclick="pickAv(this)">🧝‍♀️</div>
-    <div class="av" data-av="🤖" onclick="pickAv(this)">🤖</div>
-    <div class="av" data-av="🦊" onclick="pickAv(this)">🦊</div>
-    <div class="av" data-av="🐉" onclick="pickAv(this)">🐉</div>
-  </div>
-<script>
-let selectedAv='🧙‍♂️';
-function pickAv(el){ selectedAv=el.dataset.av||el.textContent; document.querySelectorAll('#avRow .av').forEach(x=>x.classList.remove('on')); el.classList.add('on'); }
-</script>
+  <div class="avatar-row" id="avRow"></div>
   <label style="font-size:13px;color:#a29bfe;font-weight:bold">姓名 / 學號：</label>
   <input class="inp" id="inpName" placeholder="例如：陳大文 2B-12">
   <button class="btn" onclick="doLogin()">進入數學王國 ⚔️</button>
@@ -122,7 +115,7 @@ function pickAv(el){ selectedAv=el.dataset.av||el.textContent; document.querySel
     <button class="diff-btn" id="btnDse" onclick="setDiff('dse')">🔥 DSE (+2⭐/題)</button>
   </div>
   <div id="topicList" style="max-height:340px;overflow-y:auto;flex:1"></div>
-  <button class="btn" onclick="startSingle()">⚔️ 單人挑戰（10 題）</button>
+  <button class="btn" id="btnStartSingle" onclick="startSingle()">⚔️ 單人挑戰（10 題）</button>
   <button class="btn sec" onclick="showScreen('scrPKLobby')">🔥 PK 對戰（5 回合）</button>
 </div>
 
@@ -169,7 +162,7 @@ function pickAv(el){ selectedAv=el.dataset.av||el.textContent; document.querySel
 <!-- PK 等候 / 對戰 -->
 <div class="screen" id="scrPK">
   <div class="pk-score">
-    <div><div style="font-size:28px" id="pkMyAv">🧙‍♂️</div><b>我</b><div id="pkMyWins" style="color:#55efc4">勝 0</div></div>
+    <div><div class="av-slot" id="pkMyAv" style="width:40px;height:40px;margin:0 auto 4px"></div><b>我</b><div id="pkMyWins" style="color:#55efc4">勝 0</div></div>
     <div><div id="pkRoundLbl" style="font-size:11px;color:#a29bfe">第 1/5 回合</div>
     <div id="pkTimer" style="font-size:28px;font-weight:900;color:#f1c40f">--</div></div>
     <div><div style="font-size:28px">👾</div><b>對手</b><div id="pkOpWins" style="color:#ff7675">勝 0</div></div>
@@ -288,15 +281,30 @@ function generate10Unique(builderFn) {
   const qList = [];
   const qSet = new Set();
   let attempts = 0;
+  let stale = 0;
 
-  while (qList.length < 10 && attempts < 300) {
+  while (qList.length < 10 && attempts < 100 && stale < 20) {
     attempts++;
     const qData = builderFn();
-    if (qData && !qSet.has(qData.q)) {
-      if (new Set(qData.opts).size === 4) {
-        qSet.add(qData.q);
+    if (qData && new Set(qData.opts).size === 4) {
+      const key = qData.q + "\0" + qData.ans;
+      if (!qSet.has(key)) {
+        qSet.add(key);
         qList.push(qData);
+        stale = 0;
+      } else {
+        stale++;
       }
+    } else {
+      stale++;
+    }
+  }
+
+  if (qList.length >= 5) {
+    let i = 0;
+    while (qList.length < 10) {
+      qList.push({ ...qList[i % qList.length] });
+      i++;
     }
   }
   return qList;
@@ -474,7 +482,7 @@ function trigTriangleSvg(opp, adj, hyp, showSideNames = true, hideSide = null) {
   const thetaStyle =
     'font-size:13px;font-weight:700;font-family:system-ui,-apple-system,sans-serif';
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="直角三角形" style="max-width:260px;width:100%;height:auto;display:block;margin:6px auto">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="直角三角形" style="max-width:200px;width:100%;height:auto;display:block;margin:4px auto">
 <polygon points="${x0},${y1} ${x1},${y1} ${x0},${y0}" fill="rgba(108,92,231,0.18)" stroke="#a29bfe" stroke-width="2.5"/>
 <polyline points="${x0},${y1} ${x0 + ra},${y1} ${x0 + ra},${y1 - ra} ${x0},${y1 - ra}" fill="none" stroke="#f1c40f" stroke-width="1.8"/>
 ${trigLabelText(leftPad - 4, oppMidY, oppParts, "#ff7675", "end")}
@@ -484,7 +492,7 @@ ${trigLabelText(hypLabelX, hypLabelY, hypParts, "#ffeaa7", "middle")}
 </svg>`;
 }
 
-const G3_QUAD_SVG_STYLE = 'max-width:300px;width:100%;height:auto;display:block;margin:0 auto';
+const G3_QUAD_SVG_STYLE = 'max-width:210px;width:100%;height:auto;display:block;margin:0 auto';
 const G3_QUAD_LABEL_STYLE =
   'font-size:14px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;fill:#ffffff';
 
@@ -4348,7 +4356,16 @@ function calcRewards(diff, correct, total, first) {
   return { coins, stars };
 }
 
-const AVATARS = ['🧙‍♂️','🥷','🧝‍♀️','🤖','🦊','🐉'];
+const AVATARS = [
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero1&backgroundColor=b6e3f4',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero2&backgroundColor=c0aede',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero3&backgroundColor=ffd5dc',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero4&backgroundColor=d1f4d1',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero5&backgroundColor=ffdfbf',
+  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero6&backgroundColor=e8d5ff',
+];
+let selectedAv = AVATARS[0];
+let startingSingle = false;
 const GRADE_NAMES = {1:'中一',2:'中二',3:'中三',4:'中四',5:'中五',6:'中六'};
 const SHOP = [
   { id:'5050', name:'🌓 50/50 刪除卡', cost:30, type:'5050' },
@@ -4363,9 +4380,13 @@ let quiz = { qs:[], idx:0, score:0, correct:0, hidden:[], used5050:false };
 function loadUser(name) {
   const key = 'mh_' + name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g,'_');
   const raw = localStorage.getItem(key);
-  if (raw) return JSON.parse(raw);
+  if (raw) {
+    const u = JSON.parse(raw);
+    if (!u.avatar || String(u.avatar).indexOf('http') !== 0) u.avatar = AVATARS[0];
+    return u;
+  }
   return {
-    name, avatar:'🧙‍♂️', coins:0, stars:0,
+    name, avatar: AVATARS[0], coins:0, stars:0,
     items5050:0, itemsSkip:0, coupons:[],
     history:{}, pkWins:0, pkLosses:0
   };
@@ -4387,9 +4408,43 @@ function saveLB() {
   localStorage.setItem('mh_lb', JSON.stringify(lb.slice(0,50)));
 }
 
+function avatarHtml(av, size) {
+  size = size || 36;
+  if (av && String(av).indexOf('http') === 0) {
+    return '<img src="' + av + '" width="' + size + '" height="' + size + '" class="av-img" alt="" style="width:' + size + 'px;height:' + size + 'px">';
+  }
+  return '<span style="font-size:' + size + 'px;line-height:1">' + (av || '🧙') + '</span>';
+}
+
+function setAvatarEl(el, av, size) {
+  if (!el) return;
+  el.innerHTML = avatarHtml(av, size);
+}
+
+function pickAv(el) {
+  selectedAv = el.dataset.av || AVATARS[0];
+  document.querySelectorAll('#avRow .av').forEach(x => x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function initAvatars() {
+  const row = document.getElementById('avRow');
+  if (!row) return;
+  row.innerHTML = '';
+  AVATARS.forEach(a => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'av' + (a === selectedAv ? ' on' : '');
+    b.dataset.av = a;
+    b.innerHTML = avatarHtml(a, 52);
+    b.onclick = () => pickAv(b);
+    row.appendChild(b);
+  });
+}
+
 function updateHeader() {
   if (!USER) return;
-  document.getElementById('hdrAv').textContent = USER.avatar;
+  setAvatarEl(document.getElementById('hdrAv'), USER.avatar, 36);
   document.getElementById('hdrName').textContent = USER.name;
   document.getElementById('hdrTitle').textContent = getTitle(USER.stars).emoji + ' ' + getTitle(USER.stars).name;
   document.getElementById('hdrCoins').textContent = USER.coins;
@@ -4430,7 +4485,7 @@ function doLogin() {
   const name = document.getElementById('inpName').value.trim();
   if (!name) { alert('請輸入姓名'); return; }
   USER = loadUser(name);
-  USER.avatar = selectedAv || '🧙‍♂️';
+  USER.avatar = selectedAv || AVATARS[0];
   saveUser();
   document.getElementById('topBar').style.display = 'flex';
   document.getElementById('navBar').style.display = 'flex';
@@ -4438,16 +4493,7 @@ function doLogin() {
 }
 
 function initUI() {
-  const row = document.getElementById('avRow');
-  if (row && row.children.length === 0) {
-    AVATARS.forEach(a => {
-      const d = document.createElement('div');
-      d.className = 'av' + (a === selectedAv ? ' on' : '');
-      d.textContent = a;
-      d.onclick = () => { selectedAv = a; document.querySelectorAll('.av').forEach(x => x.classList.remove('on')); d.classList.add('on'); };
-      row.appendChild(d);
-    });
-  }
+  initAvatars();
   const gt = document.getElementById('gradeTabs');
   for (let g = 1; g <= 6; g++) {
     const b = document.createElement('button');
@@ -4491,13 +4537,24 @@ function getTopic() {
 }
 
 function startSingle() {
-  const topic = getTopic();
-  const qs = topic.generate(difficulty);
-  if (!qs.length) { alert('題目生成失敗'); return; }
-  quiz = { qs, idx:0, score:0, correct:0, hidden:[], used5050:false };
-  document.getElementById('qzTopic').textContent = GRADE_NAMES[grade] + ' · ' + topic.title;
-  showScreen('scrQuiz');
-  renderQuizQ();
+  if (startingSingle) return;
+  const btn = document.getElementById('btnStartSingle');
+  startingSingle = true;
+  if (btn) { btn.disabled = true; btn.textContent = '⚔️ 準備題目中...'; }
+  setTimeout(function() {
+    try {
+      const topic = getTopic();
+      const qs = topic.generate(difficulty);
+      if (!qs.length) { alert('題目生成失敗，請再試一次'); return; }
+      quiz = { qs, idx:0, score:0, correct:0, hidden:[], used5050:false };
+      document.getElementById('qzTopic').textContent = GRADE_NAMES[grade] + ' · ' + topic.title;
+      showScreen('scrQuiz');
+      renderQuizQ();
+    } finally {
+      startingSingle = false;
+      if (btn) { btn.disabled = false; btn.textContent = '⚔️ 單人挑戰（10 題）'; }
+    }
+  }, 30);
 }
 
 function renderQuizQ() {
@@ -4613,7 +4670,7 @@ function pkCreate() {
   pk = { code, role:'host', round:1, myWins:0, opWins:0, phase:'wait', selected:null, submitted:false, qs };
   showScreen('scrPK');
   document.getElementById('pkCodeDisp').textContent = code;
-  document.getElementById('pkMyAv').textContent = USER.avatar;
+  setAvatarEl(document.getElementById('pkMyAv'), USER.avatar, 40);
   pkShowPhase('wait');
   initPKNetwork(code, 'host');
 }
@@ -4629,7 +4686,7 @@ function pkJoin() {
   pk = { code, role:'guest', round:1, myWins:0, opWins:0, phase:'wait', selected:null, submitted:false, qs:[] };
   showScreen('scrPK');
   document.getElementById('pkCodeDisp').textContent = code;
-  document.getElementById('pkMyAv').textContent = USER.avatar;
+  setAvatarEl(document.getElementById('pkMyAv'), USER.avatar, 40);
   pkShowPhase('wait');
   initPKNetwork(code, 'guest');
   if (pk._helloTimer) clearInterval(pk._helloTimer);
@@ -5025,7 +5082,7 @@ function renderLB() {
   const lb = JSON.parse(localStorage.getItem('mh_lb') || '[]');
   document.getElementById('lbList').innerHTML = lb.map((x,i) =>
     '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:6px">' +
-    '<b style="color:#f1c40f">#' + (i+1) + '</b><span style="font-size:22px">' + x.avatar + '</span>' +
+    '<b style="color:#f1c40f">#' + (i+1) + '</b><span class="av-slot" style="width:28px;height:28px;display:inline-flex">' + avatarHtml(x.avatar, 28) + '</span>' +
     '<div style="flex:1"><b>' + x.name + '</b><div style="font-size:10px;color:#a29bfe">' + x.title + '</div></div>' +
     '<div style="text-align:right;font-size:12px">⭐' + x.stars + '<br>🪙' + x.coins + '</div></div>'
   ).join('') || '<p style="color:#a29bfe;text-align:center">暂无</p>';
