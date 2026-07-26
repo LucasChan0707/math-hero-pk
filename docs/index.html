@@ -750,12 +750,12 @@ function g3QuadParaDiagram(opts = {}) {
   const angleVert = opts.angleAt || "A";
   if (opts.angleVal != null) {
     const vMap = {
-      A: [D, B],
-      B: [A, C],
-      C: [B, D],
-      D: [C, A],
+      A: ["D", "B"],
+      B: ["A", "C"],
+      C: ["B", "D"],
+      D: ["C", "A"],
     };
-    const [p1, p2] = vMap[angleVert];
+    const [p1, p2] = vMap[angleVert] || ["D", "B"];
     parts.push(g3QuadAngleMark(pts[angleVert], pts[p1], pts[p2], opts.angleVal, angleVert === "A" || angleVert === "C" ? 26 : 22));
   }
 
@@ -1760,10 +1760,43 @@ function g3QuadrilateralEasy(fixedType) {
   };
 }
 
+function isValidQuestion(q) {
+  return (
+    q &&
+    q.q &&
+    q.ans &&
+    q.hint &&
+    Array.isArray(q.opts) &&
+    q.opts.length === 4 &&
+    new Set(q.opts).size === 4 &&
+    q.opts.includes(q.ans)
+  );
+}
+
+function makeQuadEasyFallback(type) {
+  const side = 5 + (type % 6);
+  const ans = `$${side}$`;
+  return {
+    q: `<p class="q-text">平行四邊形 $ABCD$ 中，$AB = ${side}$，求 $CD$ 的長度</p>`,
+    ans,
+    opts: [`$${side}$`, `$${side + 2}$`, `$${Math.max(2, side - 1)}$`, `$${side * 2}$`],
+    hint: `平行四邊形對邊相等，故 $CD = AB = ${side}$`,
+  };
+}
+
 /** 簡單模式：10 種題型各出 1 題，唔使隨機重試 */
 function generateQuadEasyQuestions() {
-  const order = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].sort(() => Math.random() - 0.5);
-  return order.map(t => g3QuadrilateralEasy(t));
+  const qs = [];
+  for (let t = 1; t <= 10; t++) {
+    try {
+      const q = g3QuadrilateralEasy(t);
+      if (isValidQuestion(q)) qs.push(q);
+      else qs.push(makeQuadEasyFallback(t));
+    } catch (_err) {
+      qs.push(makeQuadEasyFallback(t));
+    }
+  }
+  return qs;
 }
 
 function g3QuadDseMidpointTheorem() {
@@ -4694,32 +4727,44 @@ function getTopic() {
 
 function startSingle() {
   if (startingSingle) return;
-  const btn = document.getElementById('btnStartSingle');
   startingSingle = true;
+  const btn = document.getElementById('btnStartSingle');
+  const topic = getTopic();
   if (btn) { btn.disabled = true; btn.textContent = '⚔️ 準備題目中...'; }
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      try {
-        const topic = getTopic();
-        const qs = topic.generate(difficulty);
-        if (!qs || !qs.length) { alert('題目生成失敗，請再試一次'); return; }
-        quiz = { qs, idx:0, score:0, correct:0, hidden:[], used5050:false };
-        document.getElementById('qzTopic').textContent = GRADE_NAMES[grade] + ' · ' + topic.title;
-        showScreen('scrQuiz');
-        renderQuizQ();
-      } catch (e) {
-        console.error(e);
-        alert('題目生成出錯，請再試一次');
-      } finally {
-        startingSingle = false;
-        if (btn) { btn.disabled = false; btn.textContent = '⚔️ 單人挑戰（10 題）'; }
+  document.getElementById('qzTopic').textContent = GRADE_NAMES[grade] + ' · ' + topic.title;
+  document.getElementById('qzText').innerHTML = '<p style="color:#f1c40f;padding:24px;text-align:center">⚔️ 準備題目中...</p>';
+  document.getElementById('qzOpts').innerHTML = '';
+  document.getElementById('qzExplain').style.display = 'none';
+  document.getElementById('btnNext').style.display = 'none';
+  showScreen('scrQuiz');
+  setTimeout(function() {
+    try {
+      var qs = topic.generate(difficulty);
+      if (!qs || !qs.length) {
+        alert('題目生成失敗（' + topic.title + '）');
+        showScreen('scrHome');
+        return;
       }
-    });
-  });
+      quiz = { qs: qs, idx: 0, score: 0, correct: 0, hidden: [], used5050: false };
+      renderQuizQ();
+    } catch (e) {
+      console.error(e);
+      alert('題目生成出錯：' + (e.message || String(e)));
+      showScreen('scrHome');
+    } finally {
+      startingSingle = false;
+      if (btn) { btn.disabled = false; btn.textContent = '⚔️ 單人挑戰（10 題）'; }
+    }
+  }, 30);
 }
 
 function renderQuizQ() {
   const q = quiz.qs[quiz.idx];
+  if (!q || !q.q || !q.opts) {
+    alert('題目資料不完整');
+    showScreen('scrHome');
+    return;
+  }
   document.getElementById('qzProg').textContent = '第 ' + (quiz.idx+1) + ' / ' + quiz.qs.length + ' 題';
   document.getElementById('qzBar').style.width = ((quiz.idx+1)/quiz.qs.length*100) + '%';
   document.getElementById('qzScore').textContent = quiz.score;
@@ -4729,23 +4774,27 @@ function renderQuizQ() {
   quiz.hidden = []; quiz.used5050 = false;
   const og = document.getElementById('qzOpts');
   og.innerHTML = '';
-  q.opts.forEach(opt => {
+  q.opts.forEach(function(opt) {
     const b = document.createElement('button');
     b.className = 'opt-btn';
-    b.innerHTML = opt;
-    b.onclick = () => pickQuiz(opt, b);
+    b.setAttribute('data-opt', opt);
+    if (opt.indexOf('$') >= 0 || opt.indexOf('<') >= 0) b.innerHTML = opt;
+    else b.textContent = opt;
+    b.onclick = function() { pickQuiz(opt, b); };
     og.appendChild(b);
   });
-  renderMath(document.getElementById('qzText'));
-  renderMath(og);
+  try { renderMath(document.getElementById('qzText')); } catch (e) { console.error(e); }
+  try { renderMath(og); } catch (e) { console.error(e); }
 }
 
 function pickQuiz(opt, btn) {
   const q = quiz.qs[quiz.idx];
-  const ok = opt === q.ans;
-  document.querySelectorAll('#qzOpts .opt-btn').forEach(b => {
+  const ans = String(q.ans);
+  const ok = String(opt) === ans;
+  document.querySelectorAll('#qzOpts .opt-btn').forEach(function(b) {
     b.disabled = true;
-    if (b.innerHTML === q.ans || b.textContent === q.ans) b.classList.add('ok');
+    const v = b.getAttribute('data-opt') || b.textContent;
+    if (v === ans) b.classList.add('ok');
     else if (b === btn && !ok) b.classList.add('bad');
   });
   if (ok) { quiz.correct++; quiz.score += 100; }
