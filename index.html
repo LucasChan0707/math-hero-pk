@@ -11,71 +11,139 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;
   font-family:'PingFang HK','Microsoft JhengHei',-apple-system,sans-serif;user-select:none}
-body{background:#0b091a;color:#fff;min-height:100vh;display:flex;justify-content:center;padding:10px}
-.app{width:100%;max-width:520px;background:linear-gradient(180deg,#181331,#0c081d);
-  border:3px solid #5a499a;border-radius:24px;padding:16px;min-height:720px;
-  box-shadow:0 12px 40px rgba(0,0,0,.9),0 0 25px rgba(120,80,255,.3);position:relative}
-.screen{display:none;flex-direction:column;flex:1;animation:fadeIn .25s ease}
+body{background:#05040f;color:#fff;min-height:100vh;display:flex;justify-content:center;padding:10px;
+  background-image:radial-gradient(ellipse at 50% 0%,rgba(88,60,180,.35),transparent 55%),
+    radial-gradient(circle at 10% 80%,rgba(0,180,160,.12),transparent 40%),
+    radial-gradient(circle at 90% 70%,rgba(241,196,15,.08),transparent 35%)}
+.app{width:100%;max-width:520px;background:linear-gradient(180deg,#141028 0%,#0a0718 45%,#06050f 100%);
+  border:2px solid #c9a227;border-radius:20px;padding:14px;min-height:720px;
+  box-shadow:0 0 0 1px rgba(201,162,39,.35),0 18px 50px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.06);
+  position:relative;overflow:hidden}
+.app::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.03),transparent 40%);
+  pointer-events:none;border-radius:18px}
+.app>*{position:relative;z-index:1}
+.screen{display:none;flex-direction:column;flex:1;min-height:0;animation:fadeIn .25s ease}
 .screen.active{display:flex}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.top-bar{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.07);
-  padding:10px 14px;border-radius:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,.12)}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 8px rgba(241,196,15,.25)}50%{box-shadow:0 0 16px rgba(241,196,15,.5)}}
+.top-bar{display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(180deg,rgba(30,24,55,.95),rgba(15,12,30,.92));
+  padding:8px 12px;border-radius:14px;margin-bottom:10px;
+  border:1px solid rgba(201,162,39,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 .coin-badge{background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#2d3436;padding:4px 10px;
-  border-radius:20px;font-weight:900;font-size:12px}
+  border-radius:20px;font-weight:900;font-size:11px;border:1px solid rgba(0,0,0,.15)}
 .star-badge{background:linear-gradient(135deg,#ff7675,#d63031);color:#fff;padding:4px 10px;
-  border-radius:20px;font-weight:900;font-size:12px;margin-left:6px}
-.btn{width:100%;border:none;padding:14px 18px;font-size:16px;font-weight:bold;border-radius:50px;
-  cursor:pointer;margin-top:8px;touch-action:manipulation;color:#fff;
-  background:linear-gradient(180deg,#ff7675,#d63031);box-shadow:0 5px 0 #b22222}
-.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b22222}
-.btn.sec{background:linear-gradient(180deg,#6c5ce7,#341f97);box-shadow:0 5px 0 #1b1464}
-.btn.gold{background:linear-gradient(180deg,#f1c40f,#e67e22);color:#000;box-shadow:0 5px 0 #d35400}
-.btn-sm{padding:10px;font-size:13px;border-radius:14px;box-shadow:none;margin-top:4px}
-.grade-tabs{display:flex;gap:4px;overflow-x:auto;margin-bottom:10px}
-.grade-tab{flex:1;min-width:52px;padding:8px 4px;border:none;border-radius:10px;font-weight:bold;
-  font-size:11px;background:rgba(255,255,255,.08);color:#a29bfe;cursor:pointer}
-.grade-tab.on{background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff}
-.topic-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);padding:12px;
-  border-radius:14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
-.topic-card.on{border-color:#f1c40f;background:rgba(241,196,15,.12)}
-.diff-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
-.diff-btn{padding:12px;border-radius:12px;border:2px solid #4a3e7d;background:rgba(0,0,0,.3);
-  color:#a29bfe;font-weight:bold;cursor:pointer;font-size:13px}
-.diff-btn.on-easy{border-color:#55efc4;background:rgba(85,239,196,.15);color:#55efc4}
-.diff-btn.on-dse{border-color:#ff7675;background:rgba(255,118,117,.15);color:#ff7675}
+  border-radius:20px;font-weight:900;font-size:11px;margin-left:6px}
+.btn{width:100%;border:none;padding:14px 18px;font-size:15px;font-weight:900;border-radius:14px;
+  cursor:pointer;margin-top:8px;touch-action:manipulation;color:#fff;letter-spacing:.02em;
+  background:linear-gradient(180deg,#e74c3c,#c0392b);border:1px solid #922b21;
+  box-shadow:0 4px 0 #7b241c,0 6px 16px rgba(0,0,0,.35)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #7b241c}
+.btn.sec{background:linear-gradient(180deg,#7c6cf0,#4a3bb5);border-color:#3d2f9e;box-shadow:0 4px 0 #2e2478,0 6px 16px rgba(0,0,0,.35)}
+.btn.sec:active{box-shadow:0 1px 0 #2e2478}
+.btn.gold{background:linear-gradient(180deg,#f1c40f,#d68910);color:#1a1200;border-color:#b9770e;
+  box-shadow:0 4px 0 #9a6508,0 6px 16px rgba(0,0,0,.35)}
+.btn-sm{padding:10px;font-size:12px;border-radius:12px;box-shadow:0 3px 0 rgba(0,0,0,.35);margin-top:4px}
+.game-panel{background:linear-gradient(180deg,rgba(22,18,40,.92),rgba(10,8,22,.88));
+  border:1px solid rgba(108,92,231,.35);border-radius:16px;padding:12px;margin-bottom:10px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.panel-title{font-size:13px;font-weight:900;color:#f1c40f;letter-spacing:.04em}
+.panel-tag{font-size:10px;color:#8be9fd;background:rgba(139,233,253,.12);padding:3px 8px;border-radius:99px;
+  border:1px solid rgba(139,233,253,.25)}
+.grade-tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;padding-bottom:2px}
+.grade-tab{flex:1;min-width:54px;padding:9px 6px;border:none;border-radius:10px;font-weight:900;
+  font-size:11px;background:rgba(0,0,0,.35);color:#a29bfe;cursor:pointer;
+  border:1px solid rgba(108,92,231,.25)}
+.grade-tab.on{background:linear-gradient(180deg,#6c5ce7,#4834a8);color:#fff;
+  border-color:#f1c40f;box-shadow:0 0 12px rgba(108,92,231,.35)}
+.quest-map{max-height:300px;overflow-y:auto;flex:1;padding:4px 2px;margin:0 -2px;
+  scrollbar-width:thin;scrollbar-color:#6c5ce7 transparent}
+.quest-node{position:relative;display:flex;align-items:stretch;gap:10px;padding:10px 10px 10px 8px;
+  margin-bottom:10px;border-radius:14px;cursor:pointer;
+  background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.1);transition:border-color .15s,transform .15s}
+.quest-node::before{content:'';position:absolute;left:19px;top:100%;width:2px;height:10px;
+  background:linear-gradient(180deg,rgba(241,196,15,.35),transparent);pointer-events:none}
+.quest-node:last-child::before{display:none}
+.quest-node.on{border-color:#f1c40f;background:linear-gradient(90deg,rgba(241,196,15,.14),rgba(108,92,231,.08));
+  animation:pulseGlow 2s ease infinite}
+.quest-node.cleared{border-color:rgba(85,239,196,.35)}
+.quest-node-badge{flex:0 0 42px;height:42px;border-radius:12px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;font-weight:900;font-size:11px;line-height:1.1;
+  background:linear-gradient(180deg,#3d2f7a,#251b4d);border:1px solid rgba(201,162,39,.4);color:#ffeaa7}
+.quest-node-badge span{font-size:16px;line-height:1}
+.quest-node-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.quest-node-title{font-size:13px;font-weight:800;color:#fff;line-height:1.35;word-break:break-word}
+.quest-node-meta{font-size:10px;color:#a29bfe}
+.quest-node-action{align-self:center;font-size:11px;font-weight:900;color:#fff;
+  background:linear-gradient(180deg,#e74c3c,#c0392b);padding:8px 10px;border-radius:10px;
+  border:1px solid #922b21;box-shadow:0 2px 0 #7b241c}
+.quest-node.on .quest-node-action{background:linear-gradient(180deg,#f1c40f,#d68910);color:#1a1200;border-color:#b9770e;box-shadow:0 2px 0 #9a6508}
+.selected-quest{background:linear-gradient(180deg,rgba(241,196,15,.12),rgba(108,92,231,.1));
+  border:1px solid rgba(241,196,15,.45);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.selected-quest-label{font-size:10px;color:#8be9fd;font-weight:700;margin-bottom:4px}
+.selected-quest-title{font-size:14px;font-weight:900;color:#fff;line-height:1.35}
+.selected-quest-sub{font-size:11px;color:#a29bfe;margin-top:4px}
+.diff-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.diff-btn{padding:11px;border-radius:12px;border:1px solid #4a3e7d;background:rgba(0,0,0,.35);
+  color:#a29bfe;font-weight:900;cursor:pointer;font-size:12px}
+.diff-btn.on-easy{border-color:#55efc4;background:rgba(85,239,196,.12);color:#55efc4;
+  box-shadow:0 0 10px rgba(85,239,196,.15)}
+.diff-btn.on-dse{border-color:#ff7675;background:rgba(255,118,117,.12);color:#ff7675;
+  box-shadow:0 0 10px rgba(255,118,117,.15)}
+.battle-hud{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px}
+.battle-quest{flex:1;font-size:11px;font-weight:800;color:#8be9fd;line-height:1.4}
+.battle-stats{text-align:right;font-size:11px;color:#f1c40f;font-weight:800;white-space:nowrap}
+.battle-panel{background:linear-gradient(180deg,rgba(15,12,28,.95),rgba(8,6,18,.9));
+  border:1px solid rgba(108,92,231,.4);border-radius:16px;padding:14px;margin-bottom:8px;
+  box-shadow:inset 0 0 24px rgba(108,92,231,.08)}
+.battle-panel-label{font-size:10px;font-weight:900;color:#f1c40f;margin-bottom:8px;letter-spacing:.08em}
 .opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
-.opt-btn{background:linear-gradient(180deg,#341f97,#2e86de);border:none;color:#fff;padding:14px 10px;
-  min-height:52px;border-radius:12px;font-weight:bold;font-size:14px;cursor:pointer;touch-action:manipulation}
-.opt-btn.ok{background:linear-gradient(180deg,#00b894,#55efc4)!important;color:#000}
-.opt-btn.bad{background:linear-gradient(180deg,#d63031,#ff7675)!important;opacity:.6}
+.opt-btn{background:linear-gradient(180deg,#3d2f7a,#2e86de);border:1px solid rgba(139,233,253,.25);
+  color:#fff;padding:14px 10px;min-height:52px;border-radius:12px;font-weight:800;font-size:14px;
+  cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+.opt-btn.ok{background:linear-gradient(180deg,#00b894,#55efc4)!important;color:#000!important;border-color:#55efc4}
+.opt-btn.bad{background:linear-gradient(180deg,#d63031,#ff7675)!important;opacity:.65}
 .opt-btn.hide{opacity:.12;pointer-events:none}
-.explain{background:rgba(241,196,15,.12);border:1px solid #f1c40f;color:#ffeaa7;padding:10px;
-  border-radius:12px;font-size:13px;line-height:1.5;margin-top:8px;display:none}
-.progress{height:8px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden;margin:8px 0}
-.progress>div{height:100%;background:linear-gradient(90deg,#6c5ce7,#f1c40f);transition:width .3s}
-.nav{display:flex;justify-content:space-around;background:rgba(0,0,0,.5);padding:8px;border-radius:16px;margin-top:10px}
-.nav-item{text-align:center;font-size:10px;color:#a29bfe;cursor:pointer;padding:4px 8px}
-.nav-item.on{color:#f1c40f;font-weight:bold}
+.explain{background:rgba(241,196,15,.1);border:1px solid rgba(241,196,15,.45);color:#ffeaa7;padding:12px;
+  border-radius:12px;font-size:13px;line-height:1.55;margin-top:8px;display:none}
+.progress{height:10px;background:rgba(0,0,0,.45);border-radius:99px;overflow:hidden;margin:6px 0 8px;
+  border:1px solid rgba(255,255,255,.08)}
+.progress>div{height:100%;background:linear-gradient(90deg,#55efc4,#f1c40f,#ff7675);transition:width .35s;
+  box-shadow:0 0 10px rgba(241,196,15,.35)}
+.nav{display:flex;justify-content:space-around;background:linear-gradient(180deg,rgba(10,8,20,.95),rgba(5,4,12,.98));
+  padding:8px 4px;border-radius:14px;margin-top:10px;border:1px solid rgba(201,162,39,.25)}
+.nav-item{text-align:center;font-size:10px;color:#a29bfe;cursor:pointer;padding:6px 8px;border-radius:10px;min-width:56px}
+.nav-item.on{color:#f1c40f;font-weight:900;background:rgba(241,196,15,.1);border:1px solid rgba(241,196,15,.25)}
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;
-  justify-content:center;z-index:200;padding:20px;border-radius:24px}
+  justify-content:center;z-index:200;padding:20px;border-radius:20px}
 .modal.show{display:flex}
-.modal-card{background:linear-gradient(135deg,#6c5ce7,#341f97);border-radius:20px;padding:24px;
-  text-align:center;max-width:300px;width:90%;animation:popIn .4s ease}
+.modal-card{background:linear-gradient(135deg,#4a3bb5,#251b4d);border-radius:20px;padding:24px;
+  text-align:center;max-width:300px;width:90%;animation:popIn .4s ease;border:1px solid #c9a227}
 @keyframes popIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
-input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;background:rgba(0,0,0,.4);
-  color:#fff;font-size:15px;margin:8px 0}
+input.inp{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(108,92,231,.45);
+  background:rgba(0,0,0,.45);color:#fff;font-size:15px;margin:8px 0}
 .pk-score{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;margin-bottom:10px;text-align:center}
 .countdown{font-size:48px;font-weight:900;color:#f1c40f;text-align:center;padding:30px}
-.title-main{font-size:22px;font-weight:900;color:#f1c40f;text-align:center;margin-bottom:4px}
-.sub{text-align:center;font-size:12px;color:#a29bfe;margin-bottom:12px}
+.title-main{font-size:22px;font-weight:900;color:#f1c40f;text-align:center;margin-bottom:4px;
+  text-shadow:0 2px 8px rgba(241,196,15,.25)}
+.sub{text-align:center;font-size:12px;color:#a29bfe;margin-bottom:12px;line-height:1.5}
+.login-hero{text-align:center;margin:16px 0 20px;padding:16px 12px;border-radius:16px;
+  background:linear-gradient(180deg,rgba(108,92,231,.15),rgba(0,0,0,.2));
+  border:1px solid rgba(201,162,39,.3)}
+.login-logo{font-size:52px;line-height:1;margin-bottom:8px}
+.server-tag{display:inline-block;font-size:10px;font-weight:900;color:#8be9fd;
+  background:rgba(139,233,253,.1);border:1px solid rgba(139,233,253,.3);padding:4px 10px;border-radius:99px;margin-top:8px}
 .q-fig{display:block;width:100%;text-align:center;line-height:0;margin:2px auto 4px}
 .q-fig svg{display:block!important;max-width:200px;width:100%;height:auto;margin:0 auto;visibility:visible!important;opacity:1!important}
 .q-fig-trig{display:flex;justify-content:center;align-items:center;min-height:148px;margin:4px auto 6px}
 .q-fig-trig svg{max-width:220px!important;width:100%!important;height:auto!important;min-height:0!important}
-.q-text{font-weight:bold;line-height:1.5}
+.q-text{font-weight:bold;line-height:1.55;color:#fff;font-size:15px;text-align:center}
 .avatar-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 14px}
-.av{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;max-height:72px;padding:6px;border:2px solid #4a3e7d;border-radius:16px;cursor:pointer;background:rgba(0,0,0,.25);touch-action:manipulation;font-size:32px;line-height:1}
-.av.on{border-color:#f1c40f;background:rgba(241,196,15,.18);box-shadow:0 0 0 2px rgba(241,196,15,.35)}
+.av{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;max-height:72px;padding:6px;
+  border:2px solid rgba(108,92,231,.35);border-radius:16px;cursor:pointer;background:rgba(0,0,0,.35);touch-action:manipulation;font-size:32px;line-height:1}
+.av.on{border-color:#f1c40f;background:rgba(241,196,15,.15);box-shadow:0 0 14px rgba(241,196,15,.25)}
 .av-emoji{font-size:32px;line-height:1;pointer-events:none}
 .av-slot{display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px;vertical-align:middle}
 .btn:disabled{opacity:.65;cursor:wait;transform:none}
@@ -95,25 +163,29 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;ba
 
 <!-- 登入 -->
 <div class="screen active" id="scrLogin">
-  <div style="text-align:center;margin-top:20px">
-    <div style="font-size:48px">🏰📐</div>
+  <div class="login-hero">
+    <div class="login-logo">🏰📐</div>
     <div class="title-main">數學勇者地城</div>
-    <p class="sub">單檔完整版 · 含 PK 對戰 · 中一至中六</p>
+    <p class="sub">Online Quest · PK 對戰 · 中一至中六<br>跟課本課題順序逐關挑戰</p>
+    <span class="server-tag">🌐 本機存檔 · 隨時繼續冒險</span>
   </div>
-  <label style="font-size:13px;color:#a29bfe;font-weight:bold">選擇角色：</label>
-  <div class="avatar-row" id="avRow">
-    <button type="button" class="av on" data-av="🧑‍🎓" onclick="pickAv(this)"><span class="av-emoji">🧑‍🎓</span></button>
-    <button type="button" class="av" data-av="👦" onclick="pickAv(this)"><span class="av-emoji">👦</span></button>
-    <button type="button" class="av" data-av="👧" onclick="pickAv(this)"><span class="av-emoji">👧</span></button>
-    <button type="button" class="av" data-av="🦸" onclick="pickAv(this)"><span class="av-emoji">🦸</span></button>
-    <button type="button" class="av" data-av="🧙" onclick="pickAv(this)"><span class="av-emoji">🧙</span></button>
-    <button type="button" class="av" data-av="🐱" onclick="pickAv(this)"><span class="av-emoji">🐱</span></button>
+  <div class="game-panel">
+    <div class="panel-head"><span class="panel-title">⚔️ 創建冒險者</span><span class="panel-tag">STEP 1</span></div>
+    <label style="font-size:12px;color:#a29bfe;font-weight:800">選擇角色</label>
+    <div class="avatar-row" id="avRow">
+      <button type="button" class="av on" data-av="🧑‍🎓" onclick="pickAv(this)"><span class="av-emoji">🧑‍🎓</span></button>
+      <button type="button" class="av" data-av="👦" onclick="pickAv(this)"><span class="av-emoji">👦</span></button>
+      <button type="button" class="av" data-av="👧" onclick="pickAv(this)"><span class="av-emoji">👧</span></button>
+      <button type="button" class="av" data-av="🦸" onclick="pickAv(this)"><span class="av-emoji">🦸</span></button>
+      <button type="button" class="av" data-av="🧙" onclick="pickAv(this)"><span class="av-emoji">🧙</span></button>
+      <button type="button" class="av" data-av="🐱" onclick="pickAv(this)"><span class="av-emoji">🐱</span></button>
+    </div>
+    <label style="font-size:12px;color:#a29bfe;font-weight:800;margin-top:6px;display:block">姓名 / 學號</label>
+    <input class="inp" id="inpName" placeholder="例如：陳大文 2B-12" autocomplete="name">
   </div>
-  <label style="font-size:13px;color:#a29bfe;font-weight:bold">姓名 / 學號：</label>
-  <input class="inp" id="inpName" placeholder="例如：陳大文 2B-12" autocomplete="name">
-  <button type="button" class="btn" id="btnLogin" onclick="doLogin()">進入數學王國 ⚔️</button>
+  <button type="button" class="btn gold" id="btnLogin" onclick="doLogin()">🎮 開始冒險</button>
   <p id="loginMsg" style="font-size:11px;color:#ff7675;text-align:center;margin-top:8px;min-height:16px"></p>
-  <p style="font-size:10px;color:#666;text-align:center;margin-top:6px">資料儲存於本機 · PK 需兩位玩家連線</p>
+  <p style="font-size:10px;color:#666;text-align:center;margin-top:6px">PK 對戰需兩位玩家連線</p>
 </div>
 
 <script>
@@ -181,34 +253,44 @@ function doLogin() {
     alert('登入失敗：' + (e.message || e));
   } finally {
     var btn2 = document.getElementById('btnLogin');
-    if (btn2) { btn2.disabled = false; btn2.textContent = '進入數學王國 ⚔️'; }
+    if (btn2) { btn2.disabled = false; btn2.textContent = '🎮 開始冒險'; }
   }
 }
 </script>
 
 <!-- 主選單 -->
 <div class="screen" id="scrHome">
-  <p class="title-main" style="margin-top:8px">🎯 選擇挑戰</p>
-  <div class="grade-tabs" id="gradeTabs"></div>
-  <div class="diff-row">
-    <button class="diff-btn on-easy" id="btnEasy" onclick="setDiff('easy')">🌱 簡單 (+1⭐/題)</button>
-    <button class="diff-btn" id="btnDse" onclick="setDiff('dse')">🔥 DSE (+2⭐/題)</button>
+  <div class="game-panel" style="padding:10px 12px">
+    <div class="panel-head">
+      <span class="panel-title">🗺️ 課題地圖</span>
+      <span class="panel-tag" id="homeGradeTag">中一</span>
+    </div>
+    <div class="grade-tabs" id="gradeTabs"></div>
+    <div class="diff-row">
+      <button class="diff-btn on-easy" id="btnEasy" onclick="setDiff('easy')">🌱 簡單 (+1⭐/題)</button>
+      <button class="diff-btn" id="btnDse" onclick="setDiff('dse')">🔥 DSE (+2⭐/題)</button>
+    </div>
   </div>
-  <div id="topicList" style="max-height:340px;overflow-y:auto;flex:1"></div>
-  <button class="btn" id="btnStartSingle" onclick="startSingle()">⚔️ 單人挑戰（10 題）</button>
+  <div class="selected-quest" id="selectedQuestPanel">
+    <div class="selected-quest-label">📌 目前選擇</div>
+    <div class="selected-quest-title" id="selectedQuestTitle">—</div>
+    <div class="selected-quest-sub" id="selectedQuestSub">選擇一課開始挑戰</div>
+  </div>
+  <div class="quest-map" id="topicList"></div>
+  <button class="btn gold" id="btnStartSingle" onclick="startSingle()">⚔️ 開始單人挑戰（10 題）</button>
   <button class="btn sec" onclick="showScreen('scrPKLobby')">🔥 PK 對戰（5 回合）</button>
 </div>
 
 <!-- 單人答題 -->
 <div class="screen" id="scrQuiz">
-  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
-    <span id="qzTopic" style="color:#a29bfe"></span>
-    <span id="qzProg" style="color:#f1c40f;font-weight:bold"></span>
+  <div class="battle-hud">
+    <div class="battle-quest" id="qzTopic">—</div>
+    <div class="battle-stats"><span id="qzProg">第 1 / 10 題</span><br>得分 <b id="qzScore">0</b></div>
   </div>
   <div class="progress"><div id="qzBar" style="width:10%"></div></div>
-  <div style="text-align:right;font-size:12px;color:#55efc4;margin-bottom:6px">得分：<b id="qzScore">0</b></div>
-  <div style="background:rgba(255,255,255,.07);border-radius:16px;padding:14px;margin-bottom:8px">
-    <div id="qzText" style="font-size:16px;text-align:center"></div>
+  <div class="battle-panel">
+    <div class="battle-panel-label">⚔️ BOSS 出題</div>
+    <div id="qzText" class="q-text"></div>
   </div>
   <button class="btn-sm btn gold" id="btn5050" onclick="use5050()">🌓 50/50 卡 (<span id="cnt5050">0</span>)</button>
   <div class="opt-grid" id="qzOpts"></div>
@@ -6557,6 +6639,30 @@ function setDiff(d) {
   difficulty = d;
   document.getElementById('btnEasy').className = 'diff-btn' + (d === 'easy' ? ' on-easy' : '');
   document.getElementById('btnDse').className = 'diff-btn' + (d === 'dse' ? ' on-dse' : '');
+  renderTopics();
+}
+
+function questLessonNum(title) {
+  var m = String(title || '').match(/^(\d+)\./);
+  return m ? m[1] : '·';
+}
+
+function updateSelectedQuestPanel() {
+  var titleEl = document.getElementById('selectedQuestTitle');
+  var subEl = document.getElementById('selectedQuestSub');
+  var gradeTag = document.getElementById('homeGradeTag');
+  if (gradeTag) gradeTag.textContent = GRADE_NAMES[grade] || ('中' + grade);
+  if (!titleEl || !subEl) return;
+  var topic = getTopic();
+  if (!topic) {
+    titleEl.textContent = '—';
+    subEl.textContent = '選擇一課開始挑戰';
+    return;
+  }
+  titleEl.textContent = topic.title;
+  var cleared = USER && (USER.history || {})[topic.id + '_' + difficulty];
+  var diffLabel = difficulty === 'dse' ? 'DSE 難度' : '簡單難度';
+  subEl.textContent = (GRADE_NAMES[grade] || '') + ' · ' + diffLabel + (cleared ? ' · ✅ 已通關' : ' · 未挑戰');
 }
 
 function renderTopics() {
@@ -6574,12 +6680,20 @@ function renderTopics() {
   const topics = curriculumGenerators[grade] || curriculumGenerators[1] || [];
   topics.forEach(t => {
     const cleared = (USER.history || {})[t.id + '_' + difficulty];
+    const selected = t.id === topicId;
     const d = document.createElement('div');
-    d.className = 'topic-card' + (t.id === topicId ? ' on' : '');
-    d.innerHTML = '<span>' + t.title + (cleared ? ' ✅' : '') + '</span><span style="font-size:11px;color:#ff7675">GO</span>';
+    d.className = 'quest-node' + (selected ? ' on' : '') + (cleared ? ' cleared' : '');
+    d.innerHTML =
+      '<div class="quest-node-badge"><span>' + questLessonNum(t.title) + '</span>課</div>' +
+      '<div class="quest-node-body">' +
+        '<div class="quest-node-title">' + t.title + '</div>' +
+        '<div class="quest-node-meta">' + (cleared ? '✅ 已通關' : '🔒 未挑戰') + ' · ' + (difficulty === 'dse' ? 'DSE' : '簡單') + '</div>' +
+      '</div>' +
+      '<div class="quest-node-action">' + (selected ? '出發' : '選') + '</div>';
     d.onclick = () => { topicId = t.id; renderTopics(); };
     list.appendChild(d);
   });
+  updateSelectedQuestPanel();
 }
 
 function getTopic() {
@@ -6593,7 +6707,7 @@ function startSingle() {
   const btn = document.getElementById('btnStartSingle');
   const topic = getTopic();
   if (btn) { btn.disabled = true; btn.textContent = '⚔️ 準備題目中...'; }
-  document.getElementById('qzTopic').textContent = GRADE_NAMES[grade] + ' · ' + topic.title;
+  document.getElementById('qzTopic').textContent = '⚔️ ' + GRADE_NAMES[grade] + ' · ' + topic.title;
   document.getElementById('qzText').innerHTML = '<p style="color:#f1c40f;padding:24px;text-align:center">⚔️ 準備題目中...</p>';
   document.getElementById('qzOpts').innerHTML = '';
   document.getElementById('qzExplain').style.display = 'none';
