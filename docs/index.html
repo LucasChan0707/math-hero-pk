@@ -4790,9 +4790,43 @@ function g3StatsMedianDiscrete(values, freqs) {
   return (v1 + v2) / 2;
 }
 
-function g3StatsFreqDesc(title, rows) {
-  const lines = rows.map(r => `• ${r.label} $${r.val}$：頻數 $${r.f}$`).join("<br>");
-  return `<strong>${title}</strong><br>${lines}`;
+function g3StatsClassRange(lo, hi) {
+  return `${lo}–${hi}`;
+}
+
+function g3StatsFreqTable(title, colLabel, rows) {
+  const th =
+    "padding:6px 12px;border:1px solid #6c5ce7;background:rgba(108,92,231,.28);font-weight:600;text-align:center";
+  const td = "padding:6px 12px;border:1px solid #4a3e7d;text-align:center";
+  const tdLabel = td + ";font-weight:600;background:rgba(108,92,231,.12)";
+  const heads = rows.map(r => `<th style="${th}">${r.val}</th>`).join("");
+  const freqs = rows.map(r => `<td style="${td}">${r.f}</td>`).join("");
+  return (
+    `<div style="margin:10px auto;text-align:center">` +
+    `<div style="font-weight:700;margin-bottom:8px;color:#f1c40f">${title}</div>` +
+    `<table style="margin:0 auto;border-collapse:collapse;font-size:14px;color:#dfe6e9">` +
+    `<tr><th style="${th}">${colLabel}</th>${heads}</tr>` +
+    `<tr><td style="${tdLabel}">頻數</td>${freqs}</tr>` +
+    `</table></div>`
+  );
+}
+
+function g3StatsWeightTable(scores, weights) {
+  const th =
+    "padding:6px 12px;border:1px solid #6c5ce7;background:rgba(108,92,231,.28);font-weight:600;text-align:center";
+  const td = "padding:6px 12px;border:1px solid #4a3e7d;text-align:center";
+  const tdLabel = td + ";font-weight:600;background:rgba(108,92,231,.12)";
+  const cols = scores.map((_, i) => `<th style="${th}">試卷 ${i + 1}</th>`).join("");
+  const scoreRow = scores.map(s => `<td style="${td}">${s}</td>`).join("");
+  const weightRow = weights.map(w => `<td style="${td}">${w}</td>`).join("");
+  return (
+    `<div style="margin:10px auto;text-align:center">` +
+    `<table style="margin:0 auto;border-collapse:collapse;font-size:14px;color:#dfe6e9">` +
+    `<tr><th style="${th}"></th>${cols}</tr>` +
+    `<tr><td style="${tdLabel}">分數</td>${scoreRow}</tr>` +
+    `<tr><td style="${tdLabel}">權</td>${weightRow}</tr>` +
+    `</table></div>`
+  );
 }
 
 function g3StatsClassMark(lo, hi) {
@@ -4885,7 +4919,7 @@ function g3CentralTendencyDse(fixedType, variant) {
     );
     const numPart = values.map((x, i) => `${x}\\times${freqs[i]}`).join("+");
     return {
-      q: `${g3StatsFreqDesc("糖果重量（g，準確至最接近的 g）", values.map((x, i) => ({ label: "重量", val: x, f: freqs[i] })))}<br>求<strong>平均重量</strong>`,
+      q: `${g3StatsFreqTable("糖果重量（g，準確至最接近的 g）", "重量 (g)", values.map((x, i) => ({ val: String(x), f: freqs[i] })))}<br>求<strong>平均重量</strong>`,
       ans: meanStr,
       opts,
       hint: `$\\bar{x}=\\dfrac{${numPart}}{${total}}$，得 ${g3StatsHintEnd(meanStr)}`,
@@ -4908,14 +4942,10 @@ function g3CentralTendencyDse(fixedType, variant) {
     const opts = createUniqueOpts(meanStr, i =>
       [g3StatsNumAns(mean + 0.2), g3StatsNumAns(marks[1]), g3StatsNumAns(mean - 0.2), g3StatsNumAns(3.5)][i - 1],
     );
-    const rows = classes.map((c, i) => ({
-      label: "時間",
-      val: `${c.lo}\\\\text{–}${c.hi}`,
-      f: freqs[i],
-    }));
+    const rows = classes.map(c => ({ val: g3StatsClassRange(c.lo, c.hi), f: c.f }));
     const numPart = marks.map((m, i) => `${m}\\times${freqs[i]}`).join("+");
     return {
-      q: `${g3StatsFreqDesc("學生溫習時間（小時，準確至最接近的小時）", rows)}<br>用<strong>組中點</strong>求平均時間`,
+      q: `${g3StatsFreqTable("學生溫習時間（小時，準確至最接近的小時）", "時間 (小時)", rows)}<br>用<strong>組中點</strong>求平均時間`,
       ans: meanStr,
       opts,
       hint: `組中點 $${marks.join(",\\ ")}$，$\\bar{x}=\\dfrac{${numPart}}{${total}}$，得 ${g3StatsHintEnd(meanStr)}`,
@@ -4934,7 +4964,7 @@ function g3CentralTendencyDse(fixedType, variant) {
       [g3StatsNumAns(13), g3StatsNumAns(14), g3StatsNumAns(12.5), g3StatsNumAns(values[2])][i - 1],
     );
     return {
-      q: `${g3StatsFreqDesc("糖果重量（g）", values.map((x, i) => ({ label: "重量", val: x, f: freqs[i] })))}<br>求<strong>中位數</strong>`,
+      q: `${g3StatsFreqTable("糖果重量（g）", "重量 (g)", values.map((x, i) => ({ val: String(x), f: freqs[i] })))}<br>求<strong>中位數</strong>`,
       ans,
       opts,
       hint: `總頻數 $${total}$（奇數），中位數為第 $${midPos}$ 個數據；首 $${freqs[0]}$ 個皆為 $${values[0]}$ → ${g3StatsHintEnd(ans)}`,
@@ -4952,7 +4982,7 @@ function g3CentralTendencyDse(fixedType, variant) {
       [g3StatsNumAns(10), g3StatsNumAns(12), g3StatsNumAns(11), g3StatsNumAns(12.5)][i - 1],
     );
     return {
-      q: `${g3StatsFreqDesc("測驗分數", values.map((x, i) => ({ label: "分數", val: x, f: freqs[i] })))}<br>求<strong>中位數</strong>`,
+      q: `${g3StatsFreqTable("測驗分數", "分數", values.map((x, i) => ({ val: String(x), f: freqs[i] })))}<br>求<strong>中位數</strong>`,
       ans,
       opts,
       hint: `總頻數 $${total}$（偶數），中位數為第 $${total / 2}$ 及第 $${total / 2 + 1}$ 個數據的平均 → ${g3StatsHintEnd(ans)}`,
@@ -4972,7 +5002,7 @@ function g3CentralTendencyDse(fixedType, variant) {
       ],
     );
     return {
-      q: `${g3StatsFreqDesc("糖果重量（g）", values.map((x, i) => ({ label: "重量", val: x, f: freqs[i] })))}<br>求<strong>眾數</strong>`,
+      q: `${g3StatsFreqTable("糖果重量（g）", "重量 (g)", values.map((x, i) => ({ val: String(x), f: freqs[i] })))}<br>求<strong>眾數</strong>`,
       ans,
       opts,
       hint: `頻數最大的是 $${maxF}$（對應 $${values[modeIdx]}$ g）→ ${g3StatsHintEnd(ans)}`,
@@ -4988,22 +5018,21 @@ function g3CentralTendencyDse(fixedType, variant) {
     ];
     const maxIdx = 1;
     const c = classes[maxIdx];
-    const ans = `$${c.lo}\\\\text{–}${c.hi}$ 小時`;
+    const ans = `${g3StatsClassRange(c.lo, c.hi)} 小時`;
     const opts = createUniqueOpts(ans, i =>
-      [`$${classes[0].lo}\\\\text{–}${classes[0].hi}$ 小時`, `$${classes[2].lo}\\\\text{–}${classes[2].hi}$ 小時`, `$${c.lo}$ 小時`, `$3$ 小時`][
-        i - 1
-      ],
+      [
+        `${g3StatsClassRange(classes[0].lo, classes[0].hi)} 小時`,
+        `${g3StatsClassRange(classes[2].lo, classes[2].hi)} 小時`,
+        `${c.lo} 小時`,
+        `3 小時`,
+      ][i - 1],
     );
-    const rows = classes.map(cl => ({
-      label: "時間",
-      val: `${cl.lo}\\\\text{–}${cl.hi}`,
-      f: cl.f,
-    }));
+    const rows = classes.map(cl => ({ val: g3StatsClassRange(cl.lo, cl.hi), f: cl.f }));
     return {
-      q: `${g3StatsFreqDesc("學生溫習時間（小時）", rows)}<br>求<strong>眾數組</strong>`,
+      q: `${g3StatsFreqTable("學生溫習時間（小時）", "時間 (小時)", rows)}<br>求<strong>眾數組</strong>`,
       ans,
       opts,
-      hint: `最高頻數為 $${c.f}$，對應組別 $${c.lo}\\text{–}${c.hi}$ 小時`,
+      hint: `最高頻數為 $${c.f}$，對應組別 ${g3StatsClassRange(c.lo, c.hi)} 小時`,
     };
   }
 
@@ -5038,9 +5067,8 @@ function g3CentralTendencyDse(fixedType, variant) {
       [g3StatsNumAns(mean + 2), g3StatsNumAns(mean - 2), g3StatsNumAns(scores[0]), g3StatsNumAns((scores[0] + scores[1]) / 2)][i - 1],
     );
     const parts = scores.map((s, i) => `(${s}\\times${weights[i]})`).join("+");
-    const desc = scores.map((s, i) => `• 分數 $${s}$：權 $${weights[i]}$`).join("<br>");
     return {
-      q: `學生測驗加權平均：<br>${desc}<br>求<strong>加權平均數</strong>`,
+      q: `學生測驗加權平均：<br>${g3StatsWeightTable(scores, weights)}<br>求<strong>加權平均數</strong>`,
       ans: meanStr,
       opts,
       hint: `$\\dfrac{${parts}}{${wTotal}}$，得 ${g3StatsHintEnd(meanStr)}`,
@@ -5087,13 +5115,13 @@ function g3CentralTendencyDse(fixedType, variant) {
     {
       ans: "中位數",
       q: "對於<strong>不分組數據</strong>，哪一項量度在計算前<strong>須先排列</strong>數據？",
-      pool: ["平均數", "眾數", "加權平均數"],
+      pool: ["平均數", "眾數", "以上皆是"],
       hint: "中位數須找中間位置，故須先由小至大（或大至小）排列",
     },
     {
       ans: "眾數",
       q: "對於<strong>不分組數據</strong>，哪一項量度的值<strong>必定是其中一個數據</strong>？",
-      pool: ["平均數", "中位數", "加權平均數"],
+      pool: ["平均數", "中位數", "以上皆是"],
       hint: "眾數是出現次數最多的「原有數據」；平均數、中位數可以是計算值",
     },
     {
@@ -5105,7 +5133,7 @@ function g3CentralTendencyDse(fixedType, variant) {
     {
       ans: "眾數",
       q: "下列哪一項量度<strong>不一定存在</strong>？",
-      pool: ["平均數", "中位數", "加權平均數"],
+      pool: ["平均數", "中位數", "以上皆是"],
       hint: "若各數值出現次數相同，可能沒有眾數；平均數、中位數必定存在",
     },
   ];
