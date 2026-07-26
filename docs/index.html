@@ -2354,6 +2354,27 @@ function g3TrigScaleHorizVert(horizM, vertM, maxW, maxH) {
   return { drawW: h * scale, drawH: v * scale };
 }
 
+/** 由 N 順時針畫方位角弧（順時針、可標 θ） */
+function g3TrigBearingArcFromNorth(cx, cy, bearingDeg, radius, labelText) {
+  const start = -Math.PI / 2;
+  const span = (bearingDeg * Math.PI) / 180;
+  const end = start + span;
+  const sx = cx + radius * Math.cos(start);
+  const sy = cy + radius * Math.sin(start);
+  const ex = cx + radius * Math.cos(end);
+  const ey = cy + radius * Math.sin(end);
+  const large = bearingDeg > 180 ? 1 : 0;
+  const mid = start + span / 2;
+  const lx = cx + (radius + 12) * Math.cos(mid);
+  const ly = cy + (radius + 12) * Math.sin(mid);
+  const path = `<path d="M ${sx} ${sy} A ${radius} ${radius} 0 ${large} 1 ${ex} ${ey}" fill="none" stroke="#ff7675" stroke-width="2.4"/>`;
+  if (labelText == null || labelText === false) return path;
+  const txt = String(labelText) === "θ" ? "θ" : `${labelText}°`;
+  return path + g3TrigLabel(lx, ly, txt, "middle");
+}
+
+const G3_TRIG_OBTUSE_BEARINGS = [120, 135, 150, 200, 210, 225, 240, 250, 280];
+
 /** 內角弧；arcDeg 決定弧段，displayText 為標籤（可 "θ"） */
 function g3TrigAngleMark(vertex, p1, p2, arcDeg, radius, showLabel, displayText) {
   const v1 = g3QuadVNorm(g3QuadVSub(p1, vertex));
@@ -2456,9 +2477,8 @@ function g3TrigTrueBearingDiagram(bearing, arcMode) {
   const [rx, ry] = g3TrigBearingRay(cx, cy, r - 5, bearing);
   let arc = "";
   if (mode !== "none") {
-    const pN = [cx, cy - 38];
     const text = mode === "degree" ? bearing : "θ";
-    arc = g3TrigAngleMark([cx, cy], pN, [rx, ry], bearing, 36, true, text);
+    arc = g3TrigBearingArcFromNorth(cx, cy, bearing, 34, text);
   }
   return (
     g3TrigSvgOpen("真方位角") +
@@ -2477,13 +2497,43 @@ function g3TrigTrueBearingDiagram(bearing, arcMode) {
   );
 }
 
+/** 真方位角：A 為觀測點、B 為目標點，標 θ 鈍角弧 */
+function g3TrigABTrueBearingDiagram(bearingFromA) {
+  const cx = 120;
+  const cy = 90;
+  const r = 46;
+  const rayLen = r - 6;
+  const [bx, by] = g3TrigBearingRay(cx, cy, rayLen, bearingFromA);
+  const arc = g3TrigBearingArcFromNorth(cx, cy, bearingFromA, 34, "θ");
+  const bLblX = bx + (bx - cx > 0 ? 8 : bx - cx < 0 ? -8 : 0);
+  const bLblY = by + (by - cy > 0 ? 12 : -10);
+  return (
+    g3TrigSvgOpen("真方位角 A 至 B") +
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>` +
+    `<line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" stroke="#55efc4" stroke-width="1.5" opacity="0.85"/>` +
+    `<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" stroke="#55efc4" stroke-width="1.5" opacity="0.85"/>` +
+    `<line x1="${cx}" y1="${cy - r + 4}" x2="${cx}" y2="${cy}" stroke="#74b9ff" stroke-width="2"/>` +
+    `<line x1="${cx}" y1="${cy}" x2="${bx}" y2="${by}" stroke="#f1c40f" stroke-width="2.6"/>` +
+    `<circle cx="${cx}" cy="${cy}" r="5" fill="#ffeaa7" stroke="#f1c40f" stroke-width="1.5"/>` +
+    `<circle cx="${bx}" cy="${by}" r="5" fill="#f1c40f" stroke="#fdcb6e" stroke-width="1.5"/>` +
+    arc +
+    g3TrigLabel(cx, cy - r - 8, "N", "middle") +
+    g3TrigLabel(cx + r + 5, cy, "E", "start") +
+    g3TrigLabel(cx, cy + r + 11, "S", "middle") +
+    g3TrigLabel(cx - r - 5, cy, "W", "end") +
+    g3TrigLabel(cx - 10, cy + 4, "A", "end") +
+    g3TrigLabel(bLblX, bLblY, "B", bx - cx >= 0 ? "start" : "end") +
+    g3TrigSvgClose()
+  );
+}
+
 /** 羅盤方位：標北向偏角 θ，不寫 N30°E 等答案 */
 function g3TrigCompassDiagram(bearing) {
   const cx = 120;
   const cy = 90;
   const r = 46;
   const [rx, ry] = g3TrigBearingRay(cx, cy, r - 5, bearing);
-  const arc = g3TrigAngleMark([cx, cy], [cx, cy - 38], [rx, ry], bearing, 32, true, "θ");
+  const arc = g3TrigBearingArcFromNorth(cx, cy, bearing, 32, "θ");
   return (
     g3TrigSvgOpen("羅盤方位") +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>` +
@@ -2616,7 +2666,7 @@ function g3TrigAppsEasy(fixedType) {
   }
 
   if (type === 5) {
-    const bearing = [135, 210, 225, 250][rand(0, 3)];
+    const bearing = G3_TRIG_OBTUSE_BEARINGS[rand(0, G3_TRIG_OBTUSE_BEARINGS.length - 1)];
     const lbl = g3TrigPadBearing(bearing);
     const ans = `$${lbl}^{\\circ}$`;
     const opts = createUniqueOpts(ans, i =>
@@ -2720,12 +2770,20 @@ function g3TrigAppsEasy(fixedType) {
   };
 }
 
-function g3TrigAppsDse() {
-  const type = rand(1, 8);
+function g3TrigAppsDse(fixedType, variant) {
+  const type = fixedType != null ? fixedType : rand(1, 8);
+  const v = variant != null ? variant : 0;
 
   if (type === 1) {
-    const foot = rand(2, 4) * 3;
-    const ladder = rand(4, 5) * 3;
+    const cases = [
+      { foot: 6, ladder: 10 },
+      { foot: 9, ladder: 15 },
+      { foot: 12, ladder: 15 },
+      { foot: 15, ladder: 17 },
+    ];
+    const c = cases[v % cases.length];
+    const foot = c.foot;
+    const ladder = c.ladder;
     const height = Math.round(Math.sqrt(ladder * ladder - foot * foot));
     const angle = Math.round((Math.atan(height / foot) * 180) / Math.PI);
     const ans = `$${angle}^{\\circ}$`;
@@ -2748,8 +2806,10 @@ function g3TrigAppsDse() {
   }
 
   if (type === 2) {
-    const drop = rand(4, 8) * 10;
-    const angle = rand(25, 35);
+    const drops = [40, 50, 60, 70, 80];
+    const angles = [25, 28, 30, 32, 35];
+    const drop = drops[v % drops.length];
+    const angle = angles[(v + 2) % angles.length];
     const horiz = Math.round(drop / Math.tan((angle * Math.PI) / 180));
     const sinWrong = Math.round(drop / Math.sin((angle * Math.PI) / 180));
     const ans = `$${horiz}\\text{ m}$`;
@@ -2787,14 +2847,17 @@ function g3TrigAppsDse() {
   }
 
   if (type === 4) {
-    const b1 = rand(2, 7) * 10;
+    const b1 = G3_TRIG_OBTUSE_BEARINGS[v % G3_TRIG_OBTUSE_BEARINGS.length];
     const b2 = (b1 + 180) % 360;
     const ans = `$${g3TrigPadBearing(b2)}^{\\circ}$`;
     const opts = createUniqueOpts(ans, i =>
       [`$${g3TrigPadBearing(b1)}^{\\circ}$`, `$${g3TrigPadBearing((b1 + 90) % 360)}^{\\circ}$`, `$${g3TrigPadBearing((360 - b1) % 360 || 360)}^{\\circ}$`][i - 1],
     );
     return {
-      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(b1, "theta"), `$B$ 在 $A$ 的真方位角為 $${g3TrigPadBearing(b1)}^{\\circ}$，求 $A$ 在 $B$ 的真方位角`),
+      q: g3TrigAppsQ(
+        g3TrigABTrueBearingDiagram(b1),
+        `$B$ 在 $A$ 的真方位角為 $${g3TrigPadBearing(b1)}^{\\circ}$，求 $A$ 在 $B$ 的真方位角`,
+      ),
       ans,
       opts,
       hint: g3TrigAppsHint(`相反方向 ±180°：$${g3TrigPadBearing(b1)}^{\\circ} \\to ${g3TrigPadBearing(b2)}^{\\circ}$`, [
@@ -2885,6 +2948,29 @@ function g3TrigAppsDse() {
       "分子分母倒轉",
     ]),
   };
+}
+
+function generateTrigAppsDseQuestions() {
+  const qs = [];
+  for (let t = 1; t <= 8; t++) {
+    try {
+      const q = g3TrigAppsDse(t, 0);
+      if (isValidQuestion(q)) qs.push(q);
+      else qs.push(g3TrigAppsDse(t, 1));
+    } catch (_err) {
+      qs.push(g3TrigAppsDse(t, 1));
+    }
+  }
+  for (let t = 1; t <= 2; t++) {
+    try {
+      const q = g3TrigAppsDse(t, 1);
+      if (isValidQuestion(q)) qs.push(q);
+      else qs.push(g3TrigAppsDse(t, 2));
+    } catch (_err) {
+      qs.push(g3TrigAppsDse(t, 2));
+    }
+  }
+  return qs;
 }
 
 function generateTrigAppsEasyQuestions() {
@@ -3584,7 +3670,7 @@ const rawCurriculumGenerators = {
       title: "8. 三角學應用",
       generate: (difficulty = "easy") =>
         difficulty === "dse"
-          ? generate10Unique(() => g3TrigAppsDse())
+          ? generateTrigAppsDseQuestions()
           : generateTrigAppsEasyQuestions(),
     },
     {
