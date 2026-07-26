@@ -390,6 +390,10 @@ function shuffleOpts(opts) {
   return [...opts].sort(() => Math.random() - 0.5);
 }
 
+function shuffleArray(arr) {
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
 function formatQuad(a, b, c) {
   let res = a === 1 ? "x^2" : a === -1 ? "-x^2" : a + "x^2";
   if (b > 0) res += " + " + (b === 1 ? "" : b) + "x";
@@ -2575,9 +2579,11 @@ function g3TrigGradientDiagram(vert, horiz, showAngle, opts) {
   const y1 = y0;
   const x2 = x1;
   const y2 = y0 - drawH;
-  const slopeAng = Math.round((Math.atan2(drawH, drawW) * 180) / Math.PI);
+  const slopeAng = Math.round((Math.atan2(vert, horiz) * 180) / Math.PI);
+  const hypX = x0 + drawW;
+  const hypY = y0 - drawH;
   const inner = showAngle
-    ? g3TrigAngleMark([x0, y0], [x1, y1], [x2, y2], slopeAng, 22, true, "θ")
+    ? g3TrigAngleMark([x0, y0], [x1, y1], [hypX, hypY], slopeAng, 22, true, "θ")
     : "";
   let labels = "";
   if (!o.hideHoriz) labels += g3TrigLabel((x0 + x1) / 2, y0 + 14, `${horiz} m`, "middle");
@@ -2585,7 +2591,7 @@ function g3TrigGradientDiagram(vert, horiz, showAngle, opts) {
   return (
     g3TrigSvgOpen("坡度") +
     `<polygon points="${x0},${y0} ${x1},${y1} ${x2},${y2}" fill="rgba(108,92,231,0.15)" stroke="#a29bfe" stroke-width="2.4"/>` +
-    `<line x1="${x0}" y1="${y0}" x2="${x2}" y2="${y2}" stroke="#fdcb6e" stroke-width="2" stroke-dasharray="5 3"/>` +
+    `<line x1="${x0}" y1="${y0}" x2="${hypX}" y2="${hypY}" stroke="#fdcb6e" stroke-width="2" stroke-dasharray="5 3"/>` +
     inner +
     labels +
     g3TrigSvgClose()
@@ -2724,7 +2730,7 @@ function g3TrigAppsEasy(fixedType) {
     const ans = lbl;
     const opts = g3TrigMcOpts(ans, [`N${deg}°W`, `S${deg}°E`, `S${deg}°W`]);
     return {
-      q: g3TrigAppsQ(g3TrigCompassOffsetDiagram(false, deg, false), `圖中方向為 N${deg}°E，求羅盤方位角`),
+      q: g3TrigAppsQ(g3TrigCompassOffsetDiagram(false, deg, false), `圖中方向為 N${deg}°E（由 N 向東偏 ${deg}°），求羅盤方位角`),
       ans,
       opts,
       hint: g3TrigAppsHint(`由<strong>北</strong>向<strong>東</strong>偏 ${deg}° → ${lbl}`, [
@@ -2787,16 +2793,18 @@ function g3TrigAppsEasy(fixedType) {
 
 function g3TrigAppsDse(fixedType, variant) {
   const type = fixedType != null ? fixedType : rand(1, 12);
-  const v = variant != null ? variant : 0;
+  const v = variant != null ? variant : rand(0, 999);
 
   if (type === 1) {
-    const cases = [
+    const triples = [
       { foot: 6, ladder: 10 },
+      { foot: 8, ladder: 10 },
       { foot: 9, ladder: 15 },
       { foot: 12, ladder: 15 },
       { foot: 15, ladder: 17 },
+      { foot: 5, ladder: 13 },
     ];
-    const c = cases[v % cases.length];
+    const c = triples[v % triples.length];
     const foot = c.foot;
     const ladder = c.ladder;
     const height = Math.round(Math.sqrt(ladder * ladder - foot * foot));
@@ -2821,10 +2829,8 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 2) {
-    const drops = [40, 50, 60, 70, 80];
-    const angles = [25, 28, 30, 32, 35];
-    const drop = drops[v % drops.length];
-    const angle = angles[(v + 2) % angles.length];
+    const drop = (4 + (v % 5)) * 10;
+    const angle = 25 + (v % 11);
     const horiz = Math.round(drop / Math.tan((angle * Math.PI) / 180));
     const sinWrong = Math.round(drop / Math.sin((angle * Math.PI) / 180));
     const ans = `$${horiz}\\text{ m}$`;
@@ -2884,23 +2890,22 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 5) {
-    const degPool = [30, 35, 40, 45, 50];
-    const deg = degPool[v % degPool.length];
+    const deg = 20 + (v % 36);
     const bearing = g3TrigCompassBearing(true, deg, true);
     const lbl = `S${deg}°W`;
     const ans = `$${g3TrigPadBearing(bearing)}^{\\circ}$`;
-    const opts = createUniqueOpts(ans, i =>
-      [`$${g3TrigPadBearing(180 - deg)}^{\\circ}$`, `$${g3TrigPadBearing(deg)}^{\\circ}$`, `$${g3TrigPadBearing(270 - deg)}^{\\circ}$`][i - 1],
-    );
+    const wrongPool = [180 - deg, deg, (360 - deg) % 360].filter(b => b !== bearing);
+    while (wrongPool.length < 3) wrongPool.push((bearing + 90) % 360);
+    const opts = createUniqueOpts(ans, i => `$${g3TrigPadBearing(wrongPool[i - 1])}^{\\circ}$`);
     return {
       q: g3TrigAppsQ(
         g3TrigCompassOffsetDiagram(true, deg, true),
-        `圖中方向為 ${lbl}（由 S 向西偏 ${deg}^{\\circ}），求真方位角（三位數）`,
+        `圖中方向為 ${lbl}（由 S 向西偏 ${deg}°），求真方位角（三位數）`,
       ),
       ans,
       opts,
-      hint: g3TrigAppsHint(`S${deg}°W：由 S（$180^{\\circ}$）向西偏 ${deg}^{\\circ}$ → $180+${deg}=${bearing}^{\\circ}$`, [
-        "誤用 $270-${deg}$ 或 $360-${deg}$",
+      hint: g3TrigAppsHint(`S${deg}°W：由 S（180°）向西偏 ${deg}° → 180+${deg}=${bearing}°`, [
+        "誤用 270−偏角 或 360−偏角 公式",
         "把偏角當成答案",
         "象限起點搞錯（應由 S 量度）",
       ]),
@@ -2908,15 +2913,8 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 6) {
-    const cases = [
-      { n: 4, vert: 3 },
-      { n: 5, vert: 2 },
-      { n: 6, vert: 4 },
-      { n: 8, vert: 3 },
-    ];
-    const c = cases[v % cases.length];
-    const n = c.n;
-    const vert = c.vert;
+    const n = 4 + (v % 6);
+    const vert = 2 + (v % 5);
     const horiz = vert * n;
     const slopeLen = Math.round(Math.sqrt(vert * vert + horiz * horiz));
     const ans = `$${slopeLen}\\text{ m}$`;
@@ -2939,23 +2937,18 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 7) {
-    const cases = [
-      { n: 4, slopeLen: 100 },
-      { n: 5, slopeLen: 130 },
-      { n: 6, slopeLen: 120 },
-    ];
-    const c = cases[v % cases.length];
-    const n = c.n;
-    const slopeLen = c.slopeLen;
-    const vert = Math.round(slopeLen / Math.sqrt(n * n + 1));
+    const n = 4 + (v % 5);
+    const vert = 2 + (v % 5);
+    const horiz = vert * n;
+    const slopeLen = Math.round(Math.sqrt(vert * vert + horiz * horiz));
     const sinWrong = Math.round(slopeLen / n);
     const ans = `$${vert}\\text{ m}$`;
     const opts = createUniqueOpts(ans, i =>
-      [`$${sinWrong}\\text{ m}$`, `$${slopeLen - vert}\\text{ m}$`, `$${vert + 8}\\text{ m}$`][i - 1],
+      [`$${sinWrong}\\text{ m}$`, `$${horiz}\\text{ m}$`, `$${vert + 8}\\text{ m}$`][i - 1],
     );
     return {
       q: g3TrigAppsQ(
-        g3TrigGradientDiagram(vert, vert * n, true, { hideVert: true }),
+        g3TrigGradientDiagram(vert, horiz, true, { hideVert: true }),
         `坡度 $1:${n}$，斜路長 $${slopeLen}$ m，求垂直升高（整數）`,
       ),
       ans,
@@ -2969,14 +2962,8 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 8) {
-    const cases = [
-      { vert: 4, horiz: 20 },
-      { vert: 5, horiz: 25 },
-      { vert: 3, horiz: 18 },
-    ];
-    const c = cases[v % cases.length];
-    const vert = c.vert;
-    const horiz = c.horiz;
+    const vert = 3 + (v % 5);
+    const horiz = vert * (4 + ((v >> 2) % 5));
     const pct = roundTo((vert / horiz) * 100, 1);
     const sinWrong = roundTo((vert / Math.sqrt(vert * vert + horiz * horiz)) * 100, 1);
     const ans = `$${pct}\\%$`;
@@ -2994,8 +2981,8 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 9) {
-    const horiz = [40, 50, 60, 80][v % 4];
-    const height = [30, 35, 40, 45][v % 4];
+    const horiz = (4 + (v % 5)) * 10;
+    const height = (3 + ((v >> 3) % 5)) * 10;
     const angle = Math.round((Math.atan(height / horiz) * 180) / Math.PI);
     const ans = `$${angle}^{\\circ}$`;
     const opts = createUniqueOpts(ans, i =>
@@ -3017,8 +3004,7 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 10) {
-    const degPool = [25, 30, 35, 40];
-    const deg = degPool[v % degPool.length];
+    const deg = 20 + (v % 36);
     const bearing = g3TrigCompassBearing(false, deg, true);
     const lbl = `N${deg}°W`;
     const ans = `$${g3TrigPadBearing(bearing)}^{\\circ}$`;
@@ -3028,12 +3014,12 @@ function g3TrigAppsDse(fixedType, variant) {
     return {
       q: g3TrigAppsQ(
         g3TrigCompassOffsetDiagram(false, deg, true),
-        `圖中方向為 ${lbl}（由 N 向西偏 ${deg}^{\\circ}），求真方位角（三位數）`,
+        `圖中方向為 ${lbl}（由 N 向西偏 ${deg}°），求真方位角（三位數）`,
       ),
       ans,
       opts,
-      hint: g3TrigAppsHint(`N${deg}°W：由 N 向西偏 ${deg}^{\\circ}$ → $360-${deg}=${bearing}^{\\circ}$`, [
-        "誤用 $180+${deg}$ 或 $180-${deg}$",
+      hint: g3TrigAppsHint(`N${deg}°W：由 N 向西偏 ${deg}° → 360−${deg}=${bearing}°`, [
+        `誤用 ${180 + deg}° 或 ${180 - deg}°`,
         "把偏角直接當答案",
         "順逆時針搞反",
       ]),
@@ -3041,12 +3027,13 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 11) {
-    const tower = [40, 50, 60, 70][v % 4];
-    const angle = [32, 35, 38, 40][v % 4];
+    const tower = (4 + (v % 4)) * 10;
+    const angle = 30 + (v % 11);
     const dist = Math.round(tower / Math.tan((angle * Math.PI) / 180));
+    const sinWrong = Math.round(tower / Math.sin((angle * Math.PI) / 180));
     const ans = `$${dist}\\text{ m}$`;
     const opts = createUniqueOpts(ans, i =>
-      [`$${Math.round(tower * Math.tan((angle * Math.PI) / 180))}\\text{ m}$`, `$${dist + 25}\\text{ m}$`, `$${dist - 20}\\text{ m}$`][i - 1],
+      [`$${sinWrong}\\text{ m}$`, `$${tower}\\text{ m}$`, `$${dist + 25}\\text{ m}$`][i - 1],
     );
     return {
       q: g3TrigAppsQ(
@@ -3064,9 +3051,8 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 12) {
-    const nPool = [5, 6, 8, 10];
-    const n = nPool[v % nPool.length];
-    const vert = [2, 3, 4, 5][v % 4];
+    const n = 4 + (v % 7);
+    const vert = 2 + (v % 6);
     const horiz = vert * n;
     const ans = `$${horiz}\\text{ m}$`;
     const opts = createUniqueOpts(ans, i =>
@@ -3091,15 +3077,22 @@ function g3TrigAppsDse(fixedType, variant) {
 }
 
 function generateTrigAppsDseQuestions() {
+  const types = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]).slice(0, 10);
   const qs = [];
-  for (let t = 1; t <= 10; t++) {
-    try {
-      const q = g3TrigAppsDse(t, 0);
-      if (isValidQuestion(q)) qs.push(q);
-      else qs.push(g3TrigAppsDse(t, 1));
-    } catch (_err) {
-      qs.push(g3TrigAppsDse(t, 1));
+  for (const t of types) {
+    let picked = null;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      try {
+        const q = g3TrigAppsDse(t, rand(0, 999));
+        if (isValidQuestion(q)) {
+          picked = q;
+          break;
+        }
+      } catch (_err) {
+        /* try next variant */
+      }
     }
+    qs.push(picked != null ? picked : g3TrigAppsDse(t, rand(0, 999)));
   }
   return qs;
 }
