@@ -4774,99 +4774,353 @@ function generateCentralTendencyEasyQuestions() {
   return types.slice(0, 10).map(t => g3CentralTendencyEasy(t));
 }
 
-/** 中三第 10 課 DSE：含頻率表等進階題 */
-function g3CentralTendencyDse() {
-  const type = rand(1, 5);
+function g3StatsMedianDiscrete(values, freqs) {
+  const total = freqs.reduce((a, b) => a + b, 0);
+  function valueAtPosition(p) {
+    let cum = 0;
+    for (let i = 0; i < values.length; i++) {
+      cum += freqs[i];
+      if (cum >= p) return values[i];
+    }
+    return values[values.length - 1];
+  }
+  if (total % 2 === 1) return valueAtPosition((total + 1) / 2);
+  const v1 = valueAtPosition(total / 2);
+  const v2 = valueAtPosition(total / 2 + 1);
+  return (v1 + v2) / 2;
+}
 
+function g3StatsFreqDesc(title, rows) {
+  const lines = rows.map(r => `• ${r.label} $${r.val}$：頻數 $${r.f}$`).join("<br>");
+  return `<strong>${title}</strong><br>${lines}`;
+}
+
+function g3StatsClassMark(lo, hi) {
+  return (lo + hi) / 2;
+}
+
+function g3StatsMedianFromCumPoly(xVals, cumFreq) {
+  const total = cumFreq[cumFreq.length - 1];
+  const target = total / 2;
+  for (let i = 1; i < cumFreq.length; i++) {
+    if (cumFreq[i] >= target) {
+      const x0 = xVals[i - 1];
+      const y0 = cumFreq[i - 1];
+      const x1 = xVals[i];
+      const y1 = cumFreq[i];
+      if (y1 === y0) return x1;
+      return x0 + ((target - y0) / (y1 - y0)) * (x1 - x0);
+    }
+  }
+  return xVals[xVals.length - 1];
+}
+
+function g3StatsCumFreqSvg(xVals, cumFreq, xUnit, total) {
+  const W = 280;
+  const H = 200;
+  const padL = 44;
+  const padB = 36;
+  const padT = 22;
+  const padR = 16;
+  const plotW = W - padL - padR;
+  const plotH = H - padT - padB;
+  const maxX = xVals[xVals.length - 1];
+  const maxY = total;
+  const toPx = (x, y) => {
+    const px = padL + (x / maxX) * plotW;
+    const py = padT + plotH - (y / maxY) * plotH;
+    return `${px.toFixed(1)},${py.toFixed(1)}`;
+  };
+  const pts = xVals.map((x, i) => toPx(x, cumFreq[i])).join(" ");
+  const halfY = padT + plotH - (total / 2 / maxY) * plotH;
+  const labels = xVals
+    .filter((_, i) => i > 0)
+    .map(x => {
+      const px = padL + (x / maxX) * plotW;
+      return `<text x="${px}" y="${H - 8}" text-anchor="middle" fill="#a29bfe" font-size="10">${x}</text>`;
+    })
+    .join("");
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="累積頻數多邊形" style="max-width:280px;width:100%;height:auto;display:block;margin:8px auto">` +
+    `<text x="${W / 2}" y="14" text-anchor="middle" fill="#dfe6e9" font-size="11">累積頻數多邊形</text>` +
+    `<line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#6c5ce7" stroke-width="1.2"/>` +
+    `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="#6c5ce7" stroke-width="1.2"/>` +
+    `<text x="14" y="${padT + plotH / 2}" fill="#a29bfe" font-size="10" transform="rotate(-90 14 ${padT + plotH / 2})">累積頻數</text>` +
+    `<text x="${W / 2}" y="${H - 2}" text-anchor="middle" fill="#a29bfe" font-size="10">${xUnit}</text>` +
+    `<line x1="${padL}" y1="${halfY}" x2="${W - padR}" y2="${halfY}" stroke="#fdcb6e" stroke-width="1" stroke-dasharray="4 3"/>` +
+    `<text x="${W - padR + 2}" y="${halfY + 4}" fill="#fdcb6e" font-size="9">${total / 2}</text>` +
+    `<polyline points="${pts}" fill="none" stroke="#55efc4" stroke-width="2"/>` +
+    xVals
+      .map((x, i) => {
+        const [px, py] = toPx(x, cumFreq[i]).split(",");
+        return `<circle cx="${px}" cy="${py}" r="3.5" fill="#f1c40f"/>`;
+      })
+      .join("") +
+    labels +
+    `</svg>`
+  );
+}
+
+function g3StatsMcOpts(correct, pool) {
+  const distractors = pool.filter(t => t !== correct);
+  while (distractors.length < 3) distractors.push(pool[distractors.length % pool.length]);
+  return shuffleArray([correct, distractors[0], distractors[1], distractors[2]]);
+}
+
+/** 中三第 10 課 DSE：頻數分佈、加權平均、圖像讀中位數、性質等 */
+function g3CentralTendencyDse(fixedType, variant) {
+  const type = fixedType != null ? fixedType : rand(1, 10);
+  const v = variant != null ? variant : rand(0, 999);
+
+  // 1. 離散頻數表 — 平均數
   if (type === 1) {
-    const n = rand(5, 7);
-    const nums = [];
-    for (let i = 0; i < n; i++) nums.push(rand(2, 30));
-    const sum = nums.reduce((a, b) => a + b, 0);
-    const mean = sum / n;
-    const meanStr = g3StatsNumAns(mean);
-    const opts = createUniqueOpts(meanStr, i =>
-      [g3StatsNumAns(mean + 2), g3StatsNumAns(mean - 1), g3StatsNumAns(sum), g3StatsNumAns(Math.max(...nums))][i - 1],
-    );
-    return {
-      q: `求數據 $${nums.join(", ")}$ 的<strong>平均數</strong>`,
-      ans: meanStr,
-      opts,
-      hint: `平均數 $= \\dfrac{${nums.join("+")}}{${n}}$，得 ${g3StatsHintEnd(meanStr)}`,
-    };
-  }
-
-  if (type === 2) {
-    const nums = [rand(8, 14), rand(15, 18), rand(19, 22), rand(23, 26), rand(27, 30)].sort((a, b) => a - b);
-    const median = g3StatsMedian(nums);
-    const ans = g3StatsNumAns(median);
-    const opts = createUniqueOpts(ans, i =>
-      [g3StatsNumAns(nums[0]), g3StatsNumAns(nums[nums.length - 1]), g3StatsNumAns(median + 2), g3StatsNumAns(Math.round(nums.reduce((a, b) => a + b, 0) / nums.length))][
-        i - 1
-      ],
-    );
-    return {
-      q: `求數據 $${nums.join(", ")}$ 的<strong>中位數</strong>（已排序）`,
-      ans,
-      opts,
-      hint: `共 ${nums.length} 個數據，中位數為排序後中間位置的值 → ${g3StatsHintEnd(ans)}`,
-    };
-  }
-
-  if (type === 3) {
-    const modeVal = rand(3, 12);
-    const nums = [modeVal, modeVal, modeVal, modeVal + 2, modeVal + 4, modeVal + 5];
-    const shuffled = g3StatsShuffled(nums);
-    const ans = g3StatsNumAns(modeVal);
-    const opts = createUniqueOpts(ans, i =>
-      [g3StatsNumAns(modeVal + 2), g3StatsNumAns(modeVal + 5), g3StatsNumAns(modeVal - 1), g3StatsNumAns(Math.max(...nums))][
-        i - 1
-      ],
-    );
-    return {
-      q: `求數據 $${shuffled.join(", ")}$ 的<strong>眾數</strong>`,
-      ans,
-      opts,
-      hint: `出現次數最多的值為 ${g3StatsHintEnd(ans)}（出現 ${nums.filter(x => x === modeVal).length} 次）`,
-    };
-  }
-
-  if (type === 4) {
-    const f1 = rand(2, 6);
-    const f2 = rand(2, 5);
-    const f3 = rand(1, 4);
-    const v1 = rand(1, 4);
-    const v2 = v1 + rand(2, 4);
-    const v3 = v2 + rand(2, 4);
-    const total = f1 + f2 + f3;
-    const sum = f1 * v1 + f2 * v2 + f3 * v3;
+    const values = [12, 13, 14].map(x => x + (v % 3));
+    const freqs = [8, 2, 5].map((f, i) => f + (i === v % 3 ? 1 : 0));
+    const total = freqs.reduce((a, b) => a + b, 0);
+    const sum = values.reduce((s, x, i) => s + x * freqs[i], 0);
     const mean = sum / total;
     const meanStr = g3StatsNumAns(mean);
     const opts = createUniqueOpts(meanStr, i =>
-      [g3StatsNumAns(mean + 1), g3StatsNumAns(mean - 1), g3StatsNumAns(v2), g3StatsNumAns(sum)][i - 1],
+      [g3StatsNumAns(mean + 0.5), g3StatsNumAns(mean - 0.5), g3StatsNumAns(values[1]), g3StatsNumAns(sum / (total + 1))][i - 1],
     );
+    const numPart = values.map((x, i) => `${x}\\times${freqs[i]}`).join("+");
     return {
-      q: `頻率表：值 $${v1}$ 出現 $${f1}$ 次，$${v2}$ 出現 $${f2}$ 次，$${v3}$ 出現 $${f3}$ 次，求<strong>平均數</strong>`,
+      q: `${g3StatsFreqDesc("糖果重量（g，準確至最接近的 g）", values.map((x, i) => ({ label: "重量", val: x, f: freqs[i] })))}<br>求<strong>平均重量</strong>`,
       ans: meanStr,
       opts,
-      hint: `平均數 $= \\dfrac{${f1}\\times${v1} + ${f2}\\times${v2} + ${f3}\\times${v3}}{${total}}$，得 ${g3StatsHintEnd(meanStr)}`,
+      hint: `$\\bar{x}=\\dfrac{${numPart}}{${total}}$，得 ${g3StatsHintEnd(meanStr)}`,
     };
   }
 
-  const nums = [rand(10, 16), rand(17, 20), rand(21, 24), rand(25, 28)].sort((a, b) => a - b);
-  const median = (nums[1] + nums[2]) / 2;
-  const ans = g3StatsNumAns(median);
-  const opts = createUniqueOpts(ans, i =>
-    [g3StatsNumAns(nums[1]), g3StatsNumAns(nums[2]), g3StatsNumAns(nums[0]), g3StatsNumAns(Math.round(nums.reduce((a, b) => a + b, 0) / nums.length))][
-      i - 1
-    ],
-  );
+  // 2. 分組數據 — 平均數（組中點）
+  if (type === 2) {
+    const classes = [
+      { lo: 1, hi: 2, f: 9 },
+      { lo: 3, hi: 4, f: 25 },
+      { lo: 5, hi: 6, f: 6 },
+    ];
+    const marks = classes.map(c => g3StatsClassMark(c.lo, c.hi));
+    const freqs = classes.map(c => c.f);
+    const total = freqs.reduce((a, b) => a + b, 0);
+    const sum = marks.reduce((s, m, i) => s + m * freqs[i], 0);
+    const mean = sum / total;
+    const meanStr = g3StatsNumAns(mean);
+    const opts = createUniqueOpts(meanStr, i =>
+      [g3StatsNumAns(mean + 0.2), g3StatsNumAns(marks[1]), g3StatsNumAns(mean - 0.2), g3StatsNumAns(3.5)][i - 1],
+    );
+    const rows = classes.map((c, i) => ({
+      label: "時間",
+      val: `${c.lo}\\\\text{–}${c.hi}`,
+      f: freqs[i],
+    }));
+    const numPart = marks.map((m, i) => `${m}\\times${freqs[i]}`).join("+");
+    return {
+      q: `${g3StatsFreqDesc("學生溫習時間（小時，準確至最接近的小時）", rows)}<br>用<strong>組中點</strong>求平均時間`,
+      ans: meanStr,
+      opts,
+      hint: `組中點 $${marks.join(",\\ ")}$，$\\bar{x}=\\dfrac{${numPart}}{${total}}$，得 ${g3StatsHintEnd(meanStr)}`,
+    };
+  }
+
+  // 3. 離散頻數表 — 中位數（奇數總頻數）
+  if (type === 3) {
+    const values = [12, 13, 14];
+    const freqs = [8, 2, 5];
+    const total = freqs.reduce((a, b) => a + b, 0);
+    const median = g3StatsMedianDiscrete(values, freqs);
+    const ans = g3StatsNumAns(median);
+    const midPos = (total + 1) / 2;
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(13), g3StatsNumAns(14), g3StatsNumAns(12.5), g3StatsNumAns(values[2])][i - 1],
+    );
+    return {
+      q: `${g3StatsFreqDesc("糖果重量（g）", values.map((x, i) => ({ label: "重量", val: x, f: freqs[i] })))}<br>求<strong>中位數</strong>`,
+      ans,
+      opts,
+      hint: `總頻數 $${total}$（奇數），中位數為第 $${midPos}$ 個數據；首 $${freqs[0]}$ 個皆為 $${values[0]}$ → ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 4. 離散頻數表 — 中位數（偶數總頻數）
+  if (type === 4) {
+    const values = [10, 12, 15, 18];
+    const freqs = [6, 4, 3, 3];
+    const total = freqs.reduce((a, b) => a + b, 0);
+    const median = g3StatsMedianDiscrete(values, freqs);
+    const ans = g3StatsNumAns(median);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(10), g3StatsNumAns(12), g3StatsNumAns(11), g3StatsNumAns(12.5)][i - 1],
+    );
+    return {
+      q: `${g3StatsFreqDesc("測驗分數", values.map((x, i) => ({ label: "分數", val: x, f: freqs[i] })))}<br>求<strong>中位數</strong>`,
+      ans,
+      opts,
+      hint: `總頻數 $${total}$（偶數），中位數為第 $${total / 2}$ 及第 $${total / 2 + 1}$ 個數據的平均 → ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 5. 離散頻數表 — 眾數
+  if (type === 5) {
+    const values = [12, 13, 14].map(x => x + (v % 2));
+    const freqs = [8, 2, 5];
+    const maxF = Math.max(...freqs);
+    const modeIdx = freqs.indexOf(maxF);
+    const ans = g3StatsNumAns(values[modeIdx]);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(values[(modeIdx + 1) % 3]), g3StatsNumAns(values[(modeIdx + 2) % 3]), g3StatsNumAns(maxF), g3StatsNumAns(values[1])][
+        i - 1
+      ],
+    );
+    return {
+      q: `${g3StatsFreqDesc("糖果重量（g）", values.map((x, i) => ({ label: "重量", val: x, f: freqs[i] })))}<br>求<strong>眾數</strong>`,
+      ans,
+      opts,
+      hint: `頻數最大的是 $${maxF}$（對應 $${values[modeIdx]}$ g）→ ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 6. 分組數據 — 眾數組
+  if (type === 6) {
+    const classes = [
+      { lo: 1, hi: 2, f: 9 },
+      { lo: 3, hi: 4, f: 25 },
+      { lo: 5, hi: 6, f: 6 },
+    ];
+    const maxIdx = 1;
+    const c = classes[maxIdx];
+    const ans = `$${c.lo}\\\\text{–}${c.hi}$ 小時`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${classes[0].lo}\\\\text{–}${classes[0].hi}$ 小時`, `$${classes[2].lo}\\\\text{–}${classes[2].hi}$ 小時`, `$${c.lo}$ 小時`, `$3$ 小時`][
+        i - 1
+      ],
+    );
+    const rows = classes.map(cl => ({
+      label: "時間",
+      val: `${cl.lo}\\\\text{–}${cl.hi}`,
+      f: cl.f,
+    }));
+    return {
+      q: `${g3StatsFreqDesc("學生溫習時間（小時）", rows)}<br>求<strong>眾數組</strong>`,
+      ans,
+      opts,
+      hint: `最高頻數為 $${c.f}$，對應組別 $${c.lo}\\text{–}${c.hi}$ 小時`,
+    };
+  }
+
+  // 7. 累積頻數多邊形 — 估計中位數
+  if (type === 7) {
+    const xVals = [0, 2, 4, 6, 8];
+    const cumFreq = [0, 8, 26, 34, 40];
+    const total = 40;
+    const median = roundTo(g3StatsMedianFromCumPoly(xVals, cumFreq), 1);
+    const ans = g3StatsNumAns(median);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(2.5), g3StatsNumAns(3.5), g3StatsNumAns(4.5), g3StatsNumAns(2.1)][i - 1],
+    );
+    const diagram = g3StatsCumFreqSvg(xVals, cumFreq, "時間（小時）", total);
+    return {
+      q: `以下為某班學生每天瀏覽網站時間（準確至最接近的小時）的<strong>累積頻數多邊形</strong>，求中位數的估計值。<br>${diagram}`,
+      ans,
+      opts,
+      hint: `總頻數 $${total}$，取一半 $${total / 2}$ 的累積頻數，在圖上讀取對應橫坐標 → ${g3StatsHintEnd(ans)} 小時`,
+    };
+  }
+
+  // 8. 加權平均數
+  if (type === 8) {
+    const scores = v % 2 === 0 ? [80, 70] : [75, 85, 60];
+    const weights = v % 2 === 0 ? [6, 4] : [3, 2, 2];
+    const sum = scores.reduce((s, x, i) => s + x * weights[i], 0);
+    const wTotal = weights.reduce((a, b) => a + b, 0);
+    const mean = sum / wTotal;
+    const meanStr = g3StatsNumAns(mean);
+    const opts = createUniqueOpts(meanStr, i =>
+      [g3StatsNumAns(mean + 2), g3StatsNumAns(mean - 2), g3StatsNumAns(scores[0]), g3StatsNumAns((scores[0] + scores[1]) / 2)][i - 1],
+    );
+    const parts = scores.map((s, i) => `(${s}\\times${weights[i]})`).join("+");
+    const desc = scores.map((s, i) => `• 分數 $${s}$：權 $${weights[i]}$`).join("<br>");
+    return {
+      q: `學生測驗加權平均：<br>${desc}<br>求<strong>加權平均數</strong>`,
+      ans: meanStr,
+      opts,
+      hint: `$\\dfrac{${parts}}{${wTotal}}$，得 ${g3StatsHintEnd(meanStr)}`,
+    };
+  }
+
+  // 9. 數據變化對集中趨勢的影響
+  if (type === 9) {
+    const origMean = 5 + (v % 4);
+    const origMedian = 6 + (v % 3);
+    const origMode = 4 + (v % 2);
+    const useAdd = v % 2 === 0;
+    const k = useAdd ? 3 : 2;
+    const newMean = useAdd ? origMean + k : origMean * k;
+    const newMedian = useAdd ? origMedian + k : origMedian * k;
+    const newMode = useAdd ? origMode + k : origMode * k;
+    const ask = rand(0, 2);
+    const labels = ["平均數", "中位數", "眾數"];
+    const vals = [newMean, newMedian, newMode];
+    const ans = g3StatsNumAns(vals[ask]);
+    const opts = createUniqueOpts(ans, i =>
+      [g3StatsNumAns(vals[(ask + 1) % 3]), g3StatsNumAns(vals[(ask + 2) % 3]), g3StatsNumAns(useAdd ? origMean : origMean * k), g3StatsNumAns(newMean + 1)][
+        i - 1
+      ],
+    );
+    const op = useAdd ? `加 ${k}` : `乘以 ${k}`;
+    const orig = [origMean, origMedian, origMode];
+    return {
+      q: `某組數據的平均數、中位數及眾數分別為 $${origMean}$、$${origMedian}$ 及 $${origMode}$。若每個數據<strong>${op}</strong>，求新的<strong>${labels[ask]}</strong>`,
+      ans,
+      opts,
+      hint: `每個數據${useAdd ? "加" : "乘"}$${k}$ → 新的${labels[ask]} $=${useAdd ? `$${orig[ask]}+${k}$` : `$${orig[ask]}\\times${k}$`}，得 ${g3StatsHintEnd(ans)}`,
+    };
+  }
+
+  // 10. 集中趨勢量度的性質（選擇題）
+  const propertySets = [
+    {
+      ans: "平均數",
+      q: "下列哪一項量度<strong>可能受極端值影響</strong>？",
+      pool: ["中位數", "眾數", "眾數組"],
+      hint: "平均數使用所有數據計算，極端值會拉高或拉低結果",
+    },
+    {
+      ans: "中位數",
+      q: "對於<strong>不分組數據</strong>，哪一項量度在計算前<strong>須先排列</strong>數據？",
+      pool: ["平均數", "眾數", "加權平均數"],
+      hint: "中位數須找中間位置，故須先由小至大（或大至小）排列",
+    },
+    {
+      ans: "眾數",
+      q: "對於<strong>不分組數據</strong>，哪一項量度的值<strong>必定是其中一個數據</strong>？",
+      pool: ["平均數", "中位數", "加權平均數"],
+      hint: "眾數是出現次數最多的「原有數據」；平均數、中位數可以是計算值",
+    },
+    {
+      ans: "中位數",
+      q: "對於<strong>以區間分組的數據</strong>，哪一項量度<strong>可從累積頻數圖</strong>直接估計？",
+      pool: ["平均數", "眾數", "眾數組"],
+      hint: "在累積頻數多邊形上讀取一半總頻數對應的橫坐標，即可估計中位數",
+    },
+    {
+      ans: "眾數",
+      q: "下列哪一項量度<strong>不一定存在</strong>？",
+      pool: ["平均數", "中位數", "加權平均數"],
+      hint: "若各數值出現次數相同，可能沒有眾數；平均數、中位數必定存在",
+    },
+  ];
+  const pick = propertySets[v % propertySets.length];
   return {
-    q: `求數據 $${nums.join(", ")}$ 的<strong>中位數</strong>（共 4 個數據）`,
-    ans,
-    opts,
-    hint: `4 個數據的中位數 $= \\dfrac{${nums[1]} + ${nums[2]}}{2}$，得 ${g3StatsHintEnd(ans)}`,
+    q: pick.q,
+    ans: pick.ans,
+    opts: g3StatsMcOpts(pick.ans, [...pick.pool, pick.ans === "平均數" ? "眾數組" : "平均數"]),
+    hint: pick.hint,
   };
+}
+
+function generateCentralTendencyDseQuestions() {
+  const types = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  return types.map(t => g3CentralTendencyDse(t, rand(0, 999)));
 }
 
 /** 中三第 11 課：概率簡介 */
@@ -5461,7 +5715,7 @@ const extraTopicsByGrade = {
       title: "10. 集中趨勢的量度",
       generate: (difficulty = "easy") =>
         difficulty === "dse"
-          ? generate10Unique(() => g3CentralTendencyDse())
+          ? generateCentralTendencyDseQuestions()
           : generateCentralTendencyEasyQuestions(),
     },
     {
