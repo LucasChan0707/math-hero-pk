@@ -774,7 +774,7 @@ function g3T4DseQuestion() {
   };
 }
 
-function g3PiFmt(coefNum, coefDen = 1, suffix = "") {
+function g3PiCore(coefNum, coefDen = 1) {
   let n = coefNum;
   let d = coefDen;
   const g = gcd(Math.abs(n), Math.abs(d));
@@ -782,14 +782,17 @@ function g3PiFmt(coefNum, coefDen = 1, suffix = "") {
   d = Math.trunc(d / g);
   const sign = n < 0 ? "-" : "";
   n = Math.abs(n);
-  const suf = suffix ? `{${suffix}}` : "";
   if (d === 1) {
-    if (n === 0) return "$0$";
-    if (n === 1) return `$${sign}\\pi${suf}$`;
-    return `$${sign}${n}\\pi${suf}$`;
+    if (n === 0) return "0";
+    if (n === 1) return `${sign}\\pi`;
+    return `${sign}${n}\\pi`;
   }
-  if (n === 1) return `$${sign}\\frac{1}{${d}}\\pi${suf}$`;
-  return `$${sign}\\frac{${n}}{${d}}\\pi${suf}$`;
+  if (n === 1) return `${sign}\\frac{1}{${d}}\\pi`;
+  return `${sign}\\frac{${n}}{${d}}\\pi`;
+}
+
+function g3PiAns(coefNum, coefDen = 1) {
+  return `$${g3PiCore(coefNum, coefDen)}$`;
 }
 
 function g3T4VolumeEasy() {
@@ -798,43 +801,43 @@ function g3T4VolumeEasy() {
   if (type === 1) {
     const r = rand(2, 6);
     const h = rand(3, 8);
-    const ans = g3PiFmt(r * r * h, 3);
+    const ans = g3PiAns(r * r * h, 3);
     const opts = createUniqueOpts(ans, i =>
-      [g3PiFmt(r * r * h), g3PiFmt(r * r * h, 3 * 2), g3PiFmt(r * h, 3), g3PiFmt(r * r, 3)][i - 1],
+      [g3PiAns(r * r * h), g3PiAns(r * r * h, 6), g3PiAns(r * h, 3), g3PiAns(r * r, 3)][i - 1],
     );
     return {
       q: `圓錐底半徑 $${r}$、高 $${h}$，求體積（答案以 $\\pi$ 表示）`,
       ans,
       opts,
-      hint: `$V = \\frac{1}{3}\\pi r^2 h = \\frac{1}{3}\\pi \\times ${r}^2 \\times ${h} = ${ans}$`,
+      hint: `$V = \\frac{1}{3}\\pi r^2 h = \\frac{1}{3}\\pi \\times ${r}^2 \\times ${h} = ${g3PiCore(r * r * h, 3)}$`,
     };
   }
 
   if (type === 2) {
     const r = rand(2, 5);
-    const ans = g3PiFmt(4 * r * r * r, 3);
+    const ans = g3PiAns(4 * r * r * r, 3);
     const opts = createUniqueOpts(ans, i =>
-      [g3PiFmt(r * r * r), g3PiFmt(4 * r * r, 3), g3PiFmt(4 * (2 * r) ** 3, 3), g3PiFmt(r * r * r, 3)][i - 1],
+      [g3PiAns(r * r * r), g3PiAns(4 * r * r, 3), g3PiAns(4 * (2 * r) ** 3, 3), g3PiAns(r * r * r, 3)][i - 1],
     );
     return {
       q: `球體半徑 $${r}$，求體積（答案以 $\\pi$ 表示）`,
       ans,
       opts,
-      hint: `$V = \\frac{4}{3}\\pi r^3 = \\frac{4}{3}\\pi \\times ${r}^3 = ${ans}$`,
+      hint: `$V = \\frac{4}{3}\\pi r^3 = \\frac{4}{3}\\pi \\times ${r}^3 = ${g3PiCore(4 * r * r * r, 3)}$`,
     };
   }
 
   if (type === 3) {
     const r = rand(2, 6);
-    const ans = g3PiFmt(4 * r * r);
+    const ans = g3PiAns(4 * r * r);
     const opts = createUniqueOpts(ans, i =>
-      [g3PiFmt(r * r), g3PiFmt(4 * (2 * r) ** 2), g3PiFmt(2 * r * r), g3PiFmt(r * r * r)][i - 1],
+      [g3PiAns(r * r), g3PiAns(4 * (2 * r) ** 2), g3PiAns(2 * r * r), g3PiAns(r * r * r)][i - 1],
     );
     return {
       q: `球體半徑 $${r}$，求表面面積（答案以 $\\pi$ 表示）`,
       ans,
       opts,
-      hint: `$A = 4\\pi r^2 = 4\\pi \\times ${r}^2 = ${ans}$`,
+      hint: `$A = 4\\pi r^2 = 4\\pi \\times ${r}^2 = ${g3PiCore(4 * r * r)}$`,
     };
   }
 
@@ -846,30 +849,30 @@ function g3T4VolumeEasy() {
       [8, 15, 17],
     ];
     const [r, h, l] = triples[rand(0, triples.length - 1)];
-    const ans = g3PiFmt(r * l);
+    const ans = g3PiAns(r * l);
     const opts = createUniqueOpts(ans, i =>
-      [g3PiFmt(r * h), g3PiFmt(r * r), g3PiFmt(l * l), g3PiFmt(r * l, 2)][i - 1],
+      [g3PiAns(r * h), g3PiAns(r * r), g3PiAns(l * l), g3PiAns(r * l, 2)][i - 1],
     );
     return {
       q: `圓錐底半徑 $${r}$、高 $${h}$，求曲面面積（答案以 $\\pi$ 表示）`,
       ans,
       opts,
-      hint: `斜高 $l = \\sqrt{${r}^2 + ${h}^2} = ${l}$，曲面面積 $= \\pi r l = \\pi \\times ${r} \\times ${l} = ${ans}$`,
+      hint: `斜高 $l = ${l}$，曲面面積 $= \\pi r l = \\pi \\times ${r} \\times ${l} = ${g3PiCore(r * l)}$`,
     };
   }
 
   if (type === 5) {
     const r = rand(2, 5);
-    const ans = g3PiFmt(4 * r * r);
-    const vol = g3PiFmt(4 * r * r * r, 3);
+    const ans = g3PiAns(4 * r * r);
+    const vol = g3PiAns(4 * r * r * r, 3);
     const opts = createUniqueOpts(ans, i =>
-      [g3PiFmt(r * r), vol, g3PiFmt(4 * r), g3PiFmt(4 * r * r * r, 3)][i - 1],
+      [g3PiAns(r * r), vol, g3PiAns(4 * r), g3PiAns(4 * r * r * r, 3)][i - 1],
     );
     return {
-      q: `球體體積為 $${vol}$，求表面面積（答案以 $\\pi$ 表示）`,
+      q: `球體體積為 $${g3PiCore(4 * r * r * r, 3)}$，求表面面積（答案以 $\\pi$ 表示）`,
       ans,
       opts,
-      hint: `$V = \\frac{4}{3}\\pi r^3 = ${vol} \\Rightarrow r = ${r}$，故 $A = 4\\pi r^2 = ${ans}$`,
+      hint: `$V = \\frac{4}{3}\\pi r^3 = ${g3PiCore(4 * r * r * r, 3)} \\Rightarrow r = ${r}$，故 $A = 4\\pi r^2 = ${g3PiCore(4 * r * r)}$`,
     };
   }
 
@@ -884,10 +887,10 @@ function g3T4VolumeEasy() {
     const ans = `$${l}$`;
     const opts = createUniqueOpts(ans, i => [`$${_h}$`, `$${r}$`, `$${l + 1}$`, `$${l - 1}$`][i - 1]);
     return {
-      q: `圓錐底半徑 $${r}$，曲面面積為 $${g3PiFmt(curved)}$，求斜高 $l$`,
+      q: `圓錐底半徑 $${r}$，曲面面積為 $${g3PiCore(curved)}$，求斜高 $l$`,
       ans,
       opts,
-      hint: `$\\pi r l = ${g3PiFmt(curved)} \\Rightarrow l = \\dfrac{${g3PiFmt(curved)}}{\\pi \\times ${r}} = ${l}$`,
+      hint: `$\\pi r l = ${g3PiCore(curved)} \\Rightarrow l = ${l}$`,
     };
   }
 
@@ -898,29 +901,29 @@ function g3T4VolumeEasy() {
       [6, 8, 10],
     ];
     const [r, h, l] = triples[rand(0, triples.length - 1)];
-    const ans = g3PiFmt(r * r + r * l);
+    const ans = g3PiAns(r * r + r * l);
     const opts = createUniqueOpts(ans, i =>
-      [g3PiFmt(r * l), g3PiFmt(r * r), g3PiFmt(r * h), g3PiFmt(r * l + r * r, 2)][i - 1],
+      [g3PiAns(r * l), g3PiAns(r * r), g3PiAns(r * h), g3PiAns(r * l + r * r, 2)][i - 1],
     );
     return {
       q: `圓錐底半徑 $${r}$、高 $${h}$，求總表面面積（答案以 $\\pi$ 表示）`,
       ans,
       opts,
-      hint: `$l = ${l}$，總表面面積 $= \\pi r^2 + \\pi r l = ${g3PiFmt(r * r)} + ${g3PiFmt(r * l)} = ${ans}$`,
+      hint: `$l = ${l}$，總表面面積 $= \\pi r^2 + \\pi r l = ${g3PiCore(r * r)} + ${g3PiCore(r * l)} = ${g3PiCore(r * r + r * l)}$`,
     };
   }
 
   const k = rand(2, 4);
   const small = rand(2, 6);
-  const ans = g3PiFmt(small * k * k * k);
+  const ans = g3PiAns(small * k * k * k);
   const opts = createUniqueOpts(ans, i =>
-    [g3PiFmt(small * k), g3PiFmt(small * k * k), g3PiFmt(small * k * k * k, 2), g3PiFmt(small * (k + 1) ** 3)][i - 1],
+    [g3PiAns(small * k), g3PiAns(small * k * k), g3PiAns(small * k * k * k, 2), g3PiAns(small * (k + 1) ** 3)][i - 1],
   );
   return {
-    q: `兩相似立體長度比 $1 : ${k}$，小立體體積為 $${g3PiFmt(small)}$，求大立體體積（答案以 $\\pi$ 表示）`,
+    q: `兩相似立體長度比 $1 : ${k}$，小立體體積為 $${g3PiCore(small)}$，求大立體體積（答案以 $\\pi$ 表示）`,
     ans,
     opts,
-    hint: `體積比 $= ${k}^3 = ${k * k * k}$，大立體體積 $= ${g3PiFmt(small)} \\times ${k}^3 = ${ans}$`,
+    hint: `體積比 $= ${k}^3 = ${k * k * k}$，大立體體積 $= ${g3PiCore(small)} \\times ${k}^3 = ${g3PiCore(small * k * k * k)}$`,
   };
 }
 
@@ -929,19 +932,16 @@ function g3T4VolumeDse() {
 
   if (type === 1) {
     const k = rand(2, 3);
-    const fracNum = 1;
-    const fracDen = k;
-    const volRatioNum = 1;
     const volRatioDen = k * k * k;
-    const ans = `$\\dfrac{${volRatioNum}}{${volRatioDen}}$`;
+    const ans = `$\\dfrac{1}{${volRatioDen}}$`;
     const opts = createUniqueOpts(ans, i =>
       [`$\\dfrac{1}{${k}}$`, `$\\dfrac{1}{${k * k}}$`, `$\\dfrac{${k}}{1}$`, `$\\dfrac{1}{${volRatioDen + 1}}$`][i - 1],
     );
     return {
-      q: `倒轉圓錐容器高 $H$，水深為高的 $\\dfrac{${fracNum}}{${fracDen}}$（相似立體），求水體積佔容器總容積的比例`,
+      q: `倒轉圓錐容器高 $H$，水深為高的 $\\dfrac{1}{${k}}$（相似立體），求水體積佔容器總容積的比例`,
       ans,
       opts,
-      hint: `長度比 $\\dfrac{${fracNum}}{${fracDen}} \\Rightarrow$ 體積比 $= \\left(\\dfrac{${fracNum}}{${fracDen}}\\right)^3 = ${ans}$`,
+      hint: `長度比 $\\dfrac{1}{${k}} \\Rightarrow$ 體積比 $= \\left(\\dfrac{1}{${k}}\\right)^3 = \\dfrac{1}{${volRatioDen}}$`,
     };
   }
 
@@ -965,15 +965,15 @@ function g3T4VolumeDse() {
     const curved = R * lBig - r * lSmall;
     const base = R * R;
     const top = r * r;
-    const ans = g3PiFmt(curved + base + top);
+    const ans = g3PiAns(curved + base + top);
     const opts = createUniqueOpts(ans, i =>
-      [g3PiFmt(curved), g3PiFmt(curved + base), g3PiFmt(base + top), g3PiFmt(R * lBig)][i - 1],
+      [g3PiAns(curved), g3PiAns(curved + base), g3PiAns(base + top), g3PiAns(R * lBig)][i - 1],
     );
     return {
       q: `平截頭體由底半徑 $${R}$、斜高 $${lBig}$ 的圓錐截去上方相似小圓錐（長度比 $${k}:1$）而成，求總表面面積（含頂圓及底圓，答案以 $\\pi$ 表示）`,
       ans,
       opts,
-      hint: `小圓錐 $r=${r}$、$l'=${lSmall}$；側面 $= \\pi R l - \\pi r l' = ${g3PiFmt(curved)}$，再加頂底圓 ${g3PiFmt(top)} + ${g3PiFmt(base)} = ${ans}$`,
+      hint: `側面 $= ${g3PiCore(curved)}$，再加頂底圓 $${g3PiCore(top)} + ${g3PiCore(base)} = ${g3PiCore(curved + base + top)}$`,
     };
   }
 
@@ -983,6 +983,7 @@ function g3T4VolumeDse() {
     const l = rand(6, 12);
     const g = gcd(l * theta, 360);
     const ansR = g === 360 ? `$${(l * theta) / 360}$` : `$\\dfrac{${(l * theta) / g}}{${360 / g}}$`;
+    const ansCore = g === 360 ? String((l * theta) / 360) : `\\dfrac{${(l * theta) / g}}{${360 / g}}`;
     const opts = createUniqueOpts(ansR, i =>
       [`$\\dfrac{${l * theta * 2}}{360}$`, `$\\dfrac{${l}}{2}$`, `$${l}$`, `$\\dfrac{${l * theta}}{180}$`][i - 1],
     );
@@ -990,7 +991,7 @@ function g3T4VolumeDse() {
       q: `圓錐曲面展開成扇形，扇形半徑（斜高）$l = ${l}$，圓心角 $${theta}^{\\circ}$，求圓錐底半徑 $r$`,
       ans: ansR,
       opts,
-      hint: `$2\\pi r = 2\\pi l \\times \\dfrac{${theta}}{360} \\Rightarrow r = \\dfrac{${l} \\times ${theta}}{360} = ${ansR}$`,
+      hint: `$2\\pi r = 2\\pi l \\times \\dfrac{${theta}}{360} \\Rightarrow r = ${ansCore}$`,
     };
   }
 
@@ -1002,23 +1003,22 @@ function g3T4VolumeDse() {
       q: `相似圓錐容器，水深由 $h$ 增至 $${k}h$，求新舊水體積之比`,
       ans,
       opts,
-      hint: `長度比 $${k} : 1 \\Rightarrow$ 體積比 $= ${k}^3 : 1$`,
+      hint: `長度比 $${k} : 1 \\Rightarrow$ 體積比 $${k}^3 : 1$`,
     };
   }
 
   const k = rand(2, 3);
-  const filledNum = 1;
   const filledDen = k * k * k;
   const remainNum = filledDen - 1;
   const ans = `$\\dfrac{${remainNum}}{${filledDen}}$`;
   const opts = createUniqueOpts(ans, i =>
-    [`$\\dfrac{1}{${k}}$`, `$\\dfrac{1}{${filledDen}}$`, `$\\dfrac{${filledNum}}{${k}}$`, `$\\dfrac{${remainNum}}{${filledDen + 1}}$`][i - 1],
+    [`$\\dfrac{1}{${k}}$`, `$\\dfrac{1}{${filledDen}}$`, `$\\dfrac{1}{${k * k}}$`, `$\\dfrac{${remainNum}}{${filledDen + 1}}$`][i - 1],
   );
   return {
     q: `倒轉圓錐容器，水深為高的 $\\dfrac{1}{${k}}$，求剩餘空間佔容器總容積的比例`,
     ans,
     opts,
-    hint: `水體積比 $= \\dfrac{1}{${filledDen}}$，剩餘 $= 1 - \\dfrac{1}{${filledDen}} = ${ans}$`,
+    hint: `水體積比 $\\dfrac{1}{${filledDen}}$，剩餘 $= 1 - \\dfrac{1}{${filledDen}} = \\dfrac{${remainNum}}{${filledDen}}$`,
   };
 }
 
