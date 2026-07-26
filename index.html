@@ -1053,6 +1053,17 @@ function g3CoordPlainAns(s) {
   return String(s).replace(/\$/g, "");
 }
 
+/** 提示結尾答案：去掉原有 $ 後再包一層，避免嵌套 */
+function g3CoordHintAns(s) {
+  const inner = String(s).replace(/^\$|\$$/g, "");
+  return `$${inner}$`;
+}
+
+/** 提示結尾：單段 LaTeX 用 $ 包裹，多段（如兩個 k）用純文字 */
+function g3CoordHintEnd(ans) {
+  return String(ans).split("$").length > 3 ? g3CoordPlainAns(ans) : g3CoordHintAns(ans);
+}
+
 function g3CoordMcOpts(correct, pool) {
   const distractors = pool.filter(t => t !== correct);
   while (distractors.length < 3) distractors.push(pool[distractors.length % pool.length]);
@@ -1109,7 +1120,7 @@ function g3CoordGeomEasy(fixedType) {
       q: `求點 $A(${x1}, ${y1})$ 與點 $B(${x2}, ${y2})$ 之間的距離`,
       ans: `$${dist}$`,
       opts,
-      hint: `$AB = \\sqrt{(${x2}-${x1})^2 + (${y2}-${y1})^2} = \\sqrt{${dx * dx + dy * dy}} = ${dist}$`,
+      hint: `$AB = \\sqrt{${g3CoordSub(x2, x1)}^2 + ${g3CoordSub(y2, y1)}^2} = ${dist}$`,
     };
   }
 
@@ -1128,7 +1139,7 @@ function g3CoordGeomEasy(fixedType) {
       q: `求 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$ 的中點坐標`,
       ans: ansStr,
       opts,
-      hint: `中點公式 $M = \\left(\\dfrac{x_1+x_2}{2},\\ \\dfrac{y_1+y_2}{2}\\right) = ${ansStr}`,
+      hint: `中點公式 $M = \\left(\\dfrac{x_1+x_2}{2},\\ \\dfrac{y_1+y_2}{2}\\right)$，得 $(${mx}, ${my})$`,
     };
   }
 
@@ -1184,7 +1195,7 @@ function g3CoordGeomEasy(fixedType) {
       q: `$A(${x1}, ${y1})$ 與 $B(k, ${y2})$ 的中點為 $M(${mx}, ${my})$，求 $k$`,
       ans,
       opts,
-      hint: `$\\dfrac{${g3CoordParen(x1)}+k}{2} = ${mx}$，解得 ${g3CoordPlainAns(ans)}`,
+      hint: `$\\dfrac{${g3CoordParen(x1)}+k}{2} = ${mx}$，解得 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1212,7 +1223,7 @@ function g3CoordGeomEasy(fixedType) {
       q: `直線斜率為 $${m}$，求與該直線垂直的直線斜率`,
       ans,
       opts,
-      hint: `垂直線 $m_2 = -\\dfrac{1}{m_1}$。代入 $m_1 = ${g3CoordParen(m)}$，得 ${g3CoordPlainAns(ans)}`,
+      hint: `垂直線 $m_2 = -\\dfrac{1}{m_1}$。代入 $m_1 = ${g3CoordParen(m)}$，得 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1228,7 +1239,7 @@ function g3CoordGeomEasy(fixedType) {
       q: `求點 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$ 之間的距離（水平距離）`,
       ans,
       opts,
-      hint: `同一水平線，$AB = |${x2} - (${x1})| = ${dx}$`,
+      hint: `同一水平線，$|${g3CoordSub(x2, x1)}| = ${dx}$`,
     };
   }
 
@@ -1265,7 +1276,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `點 $A(${x1}, ${y1})$ 與 $B(${x2}, k)$ 的距離為 $${dist}$，求 $k$ 的所有可能值`,
       ans,
       opts,
-      hint: `$\\sqrt{${g3CoordSub(x2, x1)}^2 + (k-${g3CoordParen(y1)})^2} = ${dist}$，化簡得 $(k-${g3CoordParen(y1)})^2 = ${other * other}$，故 ${g3CoordPlainAns(ans)}`,
+      hint: `$\\sqrt{${g3CoordSub(x2, x1)}^2 + (k-${g3CoordParen(y1)})^2} = ${dist}$，化簡得 $(k-${g3CoordParen(y1)})^2 = ${other * other}$，故 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1289,7 +1300,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `點 $A(k, ${y1})$ 與 $B(${xBase}, ${y2})$ 的距離為 $${dist}$，求 $k$ 的所有可能值`,
       ans,
       opts,
-      hint: `$\\sqrt{(${xBase}-k)^2 + ${g3CoordSub(y2, y1)}^2} = ${dist}$，化簡得 $(k-${g3CoordParen(xBase)})^2 = ${other * other}$，故 ${g3CoordPlainAns(ans)}`,
+      hint: `$\\sqrt{(${xBase}-k)^2 + ${g3CoordSub(y2, y1)}^2} = ${dist}$，化簡得 $(k-${g3CoordParen(xBase)})^2 = ${other * other}$，故 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1311,7 +1322,7 @@ function g3CoordGeomDse(fixedType, variant) {
         q: `$A(${x1}, ${y1})$ 與 $B(k, ${y2})$ 的中點為 $M(${mx}, ${my})$，求 $k$`,
         ans,
         opts,
-        hint: `中點公式 $\\dfrac{${g3CoordParen(x1)}+k}{2} = ${mx}$，解得 ${g3CoordPlainAns(ans)}`,
+        hint: `中點公式 $\\dfrac{${g3CoordParen(x1)}+k}{2} = ${mx}$，解得 ${g3CoordHintEnd(ans)}`,
       };
     }
     const k = y2;
@@ -1321,7 +1332,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `$A(${x1}, ${y1})$ 與 $B(${x2}, k)$ 的中點為 $M(${mx}, ${my})$，求 $k$`,
       ans,
       opts,
-      hint: `中點公式 $\\dfrac{${g3CoordParen(y1)}+k}{2} = ${my}$，解得 ${g3CoordPlainAns(ans)}`,
+      hint: `中點公式 $\\dfrac{${g3CoordParen(y1)}+k}{2} = ${my}$，解得 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1341,7 +1352,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `直線通過 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$。點 $C(${x3}, k)$ 在該直線上，求 $k$`,
       ans,
       opts,
-      hint: `斜率相等：$\\dfrac{${g3CoordSub(y2, y1)}}{${g3CoordSub(x2, x1)}} = \\dfrac{k-${g3CoordParen(y2)}}{${g3CoordSub(x3, x2)}} = ${m}$，解得 ${g3CoordPlainAns(ans)}`,
+      hint: `斜率相等：$\\dfrac{${g3CoordSub(y2, y1)}}{${g3CoordSub(x2, x1)}} = \\dfrac{k-${g3CoordParen(y2)}}{${g3CoordSub(x3, x2)}} = ${m}$，解得 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1364,7 +1375,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `長方形 $ABCD$ 中，$A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(${x3}, ${y3})$，求頂點 $D$ 的坐標`,
       ans,
       opts,
-      hint: `對角線互相平分：$D = A + C - B = ${ans}$`,
+      hint: `對角線互相平分：$D = A + C - B$，得 $(${dx}, ${dy})$`,
     };
   }
 
@@ -1384,7 +1395,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `三點 $A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(${x3}, k)$ 共線，求 $k$`,
       ans,
       opts,
-      hint: `共線則斜率相等，$\\dfrac{k-${g3CoordParen(y2)}}{${g3CoordSub(x3, x2)}} = ${m}$，解得 ${g3CoordPlainAns(ans)}`,
+      hint: `共線則斜率相等，$\\dfrac{k-${g3CoordParen(y2)}}{${g3CoordSub(x3, x2)}} = ${m}$，解得 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1403,7 +1414,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `直線 $AB$ 斜率為 $${m}$。點 $C(${x3}, k)$ 在過 $B(${x2}, ${y2})$ 且與 $AB$ 平行的直線上，求 $k$`,
       ans,
       opts,
-      hint: `平行線斜率相等：$\\dfrac{k-${g3CoordParen(y2)}}{${g3CoordSub(x3, x2)}} = ${m}$，解得 ${g3CoordPlainAns(ans)}`,
+      hint: `平行線斜率相等：$\\dfrac{k-${g3CoordParen(y2)}}{${g3CoordSub(x3, x2)}} = ${m}$，解得 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1423,7 +1434,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `直線 $AB$ 斜率為 $${m}$。點 $C(${x3}, k)$ 在過 $B(${x2}, ${y2})$ 且與 $AB$ 垂直的直線上，求 $k$`,
       ans,
       opts,
-      hint: `垂直線斜率 $m_2 = -\\dfrac{1}{${g3CoordParen(m)}}$，故 $\\dfrac{k-${g3CoordParen(y2)}}{${g3CoordSub(x3, x2)}} = -\\dfrac{1}{${g3CoordParen(m)}}$，解得 ${g3CoordPlainAns(ans)}`,
+      hint: `垂直線斜率 $m_2 = -\\dfrac{1}{${g3CoordParen(m)}}$，故 $\\dfrac{k-${g3CoordParen(y2)}}{${g3CoordSub(x3, x2)}} = -\\dfrac{1}{${g3CoordParen(m)}}$，解得 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1445,7 +1456,7 @@ function g3CoordGeomDse(fixedType, variant) {
       q: `$A(${x1}, ${y1})$、$B(${x2}, ${y2})$ 與 $C(${x3}, ${y3})$、$D(${x4}, k)$。若 $AB \\parallel CD$，求 $k$`,
       ans,
       opts,
-      hint: `$AB$ 斜率 $= ${m}$，平行則 $\\dfrac{k-${g3CoordParen(y3)}}{${g3CoordSub(x4, x3)}} = ${m}$，解得 ${g3CoordPlainAns(ans)}`,
+      hint: `$AB$ 斜率 $= ${m}$，平行則 $\\dfrac{k-${g3CoordParen(y3)}}{${g3CoordSub(x4, x3)}} = ${m}$，解得 ${g3CoordHintEnd(ans)}`,
     };
   }
 
@@ -1466,7 +1477,7 @@ function g3CoordGeomDse(fixedType, variant) {
     q: `$A(${x1}, ${y1})$、$B(${x2}, ${y2})$ 與 $C(${x3}, ${y3})$、$D(${x4}, k)$。若 $AB \\perp CD$，求 $k$`,
     ans,
     opts,
-    hint: `$AB$ 斜率 $= ${m1}$，垂直則 $CD$ 斜率 $= -\\dfrac{1}{${g3CoordParen(m1)}}$，解得 ${g3CoordPlainAns(ans)}`,
+    hint: `$AB$ 斜率 $= ${m1}$，垂直則 $CD$ 斜率 $= -\\dfrac{1}{${g3CoordParen(m1)}}$，解得 ${g3CoordHintEnd(ans)}`,
   };
 }
 
