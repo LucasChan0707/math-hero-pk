@@ -1039,7 +1039,7 @@ const G3_PARALLELOGRAM_PROOFS = [
 ];
 
 function g3QuadMcHint(correct, pool, mode) {
-  const okItem = pool.find(p => p.text === correct)!;
+  const okItem = pool.find(p => p.text === correct) || pool[0];
   const wrongItems = pool.filter(p => p.text !== correct);
   const wrongNote = wrongItems
     .slice(0, 3)
