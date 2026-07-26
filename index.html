@@ -2077,7 +2077,7 @@ function g3TriCenterMcOpts(correct, pool) {
   return shuffleOpts([correct, distractors[0], distractors[1], distractors[2]]);
 }
 
-function g3TriangleCentersEasy(fixedType number) {
+function g3TriangleCentersEasy(fixedType) {
   const type = fixedType != null ? fixedType : rand(1, 10);
   const names = G3_TRI_CENTER_INFO.map(c => c.name);
   const lineTypes = G3_TRI_CENTER_INFO.map(c => c.lines);
