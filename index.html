@@ -2340,92 +2340,113 @@ function g3TrigBearingRay(cx, cy, r, bearing) {
   return [cx + r * Math.sin(rad), cy - r * Math.cos(rad)];
 }
 
-/** 仰角：固定佈局，數字只作標籤 */
+/** 內角弧（可選是否顯示度數標籤） */
+function g3TrigAngleMark(vertex, p1, p2, labelDeg, radius, showLabel) {
+  const v1 = g3QuadVNorm(g3QuadVSub(p1, vertex));
+  const v2 = g3QuadVNorm(g3QuadVSub(p2, vertex));
+  const a1 = Math.atan2(v1[1], v1[0]);
+  const a2 = Math.atan2(v2[1], v2[0]);
+  let diff = a2 - a1;
+  while (diff <= -Math.PI) diff += 2 * Math.PI;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  const target = Number(labelDeg);
+  if (!isNaN(target)) {
+    const degShort = (Math.abs(diff) * 180) / Math.PI;
+    const degLong = 360 - degShort;
+    if (Math.abs(degShort - target) > Math.abs(degLong - target)) {
+      diff = diff > 0 ? diff - 2 * Math.PI : diff + 2 * Math.PI;
+    }
+  }
+  const sx = vertex[0] + radius * Math.cos(a1);
+  const sy = vertex[1] + radius * Math.sin(a1);
+  const ex = vertex[0] + radius * Math.cos(a1 + diff);
+  const ey = vertex[1] + radius * Math.sin(a1 + diff);
+  const sweep = diff >= 0 ? 1 : 0;
+  const large = Math.abs(diff) > Math.PI ? 1 : 0;
+  const mid = a1 + diff / 2;
+  const labelR = radius + 13;
+  const lx = vertex[0] + labelR * Math.cos(mid);
+  const ly = vertex[1] + labelR * Math.sin(mid);
+  const path = `<path d="M ${sx} ${sy} A ${radius} ${radius} 0 ${large} ${sweep} ${ex} ${ey}" fill="none" stroke="#ff7675" stroke-width="2.4"/>`;
+  if (!showLabel) return path;
+  const txt = String(labelDeg) === "θ" ? "θ" : `${labelDeg}°`;
+  return path + g3QuadLabel(lx, ly, txt, "middle");
+}
+
+/** 仰角：視線與水平線夾角，幾何與標註一致 */
 function g3TrigElevDiagram(adjM, heightM, angleDeg) {
   const ox = 28;
   const oy = 128;
   const bx = 200;
-  const by = 46;
-  const arcR = 24;
-  const a1 = 0;
-  const a2 = (-angleDeg * Math.PI) / 180;
-  const sx = ox + arcR * Math.cos(a1);
-  const sy = oy + arcR * Math.sin(a1);
-  const ex = ox + arcR * Math.cos(a2);
-  const ey = oy + arcR * Math.sin(a2);
-  const sweep = angleDeg > 0 ? 0 : 1;
+  const rad = (angleDeg * Math.PI) / 180;
+  const by = Math.round(oy - (bx - ox) * Math.tan(rad));
+  const arc = g3TrigAngleMark([ox, oy], [bx, oy], [bx, by], angleDeg, 28, true);
   return (
     g3TrigSvgOpen("仰角") +
     `<line x1="16" y1="${oy}" x2="224" y2="${oy}" stroke="#55efc4" stroke-width="2" stroke-dasharray="6 4"/>` +
     `<line x1="${bx}" y1="${oy}" x2="${bx}" y2="${by}" stroke="#a29bfe" stroke-width="2.5"/>` +
     `<line x1="${ox}" y1="${oy}" x2="${bx}" y2="${by}" stroke="#f1c40f" stroke-width="2" stroke-dasharray="5 3"/>` +
-    `<path d="M ${sx} ${sy} A ${arcR} ${arcR} 0 0 ${sweep} ${ex} ${ey}" fill="none" stroke="#ff7675" stroke-width="2"/>` +
+    arc +
     `<circle cx="${ox}" cy="${oy}" r="4" fill="#ffeaa7"/>` +
     g3QuadLabel(ox, oy + 14, "觀測者", "middle") +
     g3QuadLabel((ox + bx) / 2, oy + 14, `${adjM} m`, "middle") +
     g3QuadLabel(bx + 6, (oy + by) / 2, `${heightM} m`, "start", 0) +
-    g3QuadLabel(ox + 34, oy - 8, `${angleDeg}°`, "start") +
     g3TrigSvgClose()
   );
 }
 
-/** 俯角：固定佈局，角弧在水平線下方 */
+/** 俯角：水平線向下至視線 */
 function g3TrigDepressDiagram(horizM, dropM, angleDeg) {
   const ox = 28;
   const oy = 36;
   const tx = 200;
-  const ty = 128;
-  const arcR = 24;
-  const a1 = 0;
-  const a2 = (angleDeg * Math.PI) / 180;
-  const sx = ox + arcR * Math.cos(a1);
-  const sy = oy + arcR * Math.sin(a1);
-  const ex = ox + arcR * Math.cos(a2);
-  const ey = oy + arcR * Math.sin(a2);
+  const rad = (angleDeg * Math.PI) / 180;
+  const ty = Math.round(oy + (tx - ox) * Math.tan(rad));
+  const arc = g3TrigAngleMark([ox, oy], [tx, oy], [tx, ty], angleDeg, 28, true);
   return (
     g3TrigSvgOpen("俯角") +
     `<line x1="16" y1="${oy}" x2="224" y2="${oy}" stroke="#55efc4" stroke-width="2" stroke-dasharray="6 4"/>` +
     `<line x1="${ox}" y1="${oy}" x2="${tx}" y2="${ty}" stroke="#f1c40f" stroke-width="2" stroke-dasharray="5 3"/>` +
     `<line x1="${tx}" y1="${oy}" x2="${tx}" y2="${ty}" stroke="#a29bfe" stroke-width="2"/>` +
-    `<path d="M ${sx} ${sy} A ${arcR} ${arcR} 0 0 1 ${ex} ${ey}" fill="none" stroke="#ff7675" stroke-width="2"/>` +
+    arc +
     `<circle cx="${ox}" cy="${oy}" r="4" fill="#ffeaa7"/>` +
     g3QuadLabel(ox, oy - 12, "觀測者", "middle") +
     g3QuadLabel((ox + tx) / 2, oy + 14, `${horizM} m`, "middle") +
     g3QuadLabel(tx + 6, (oy + ty) / 2, `${dropM} m`, "start", 0) +
-    g3QuadLabel(ox + 32, oy + 16, `${angleDeg}°`, "start") +
     g3TrigSvgClose()
   );
 }
 
-/** 正北方位角羅盤（固定大小） */
+/** 真方位角羅盤（圖上不顯示答案度數） */
 function g3TrigTrueBearingDiagram(bearing) {
   const cx = 120;
   const cy = 88;
   const r = 48;
   const [rx, ry] = g3TrigBearingRay(cx, cy, r - 6, bearing);
-  const lbl = g3TrigPadBearing(bearing);
+  const arc = g3TrigAngleMark([cx, cy], [cx, cy - 40], [rx, ry], bearing, 32, false);
   return (
-    g3TrigSvgOpen("方位角") +
+    g3TrigSvgOpen("真方位角") +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>` +
     `<line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" stroke="#55efc4" stroke-width="1.5" opacity="0.85"/>` +
     `<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" stroke="#55efc4" stroke-width="1.5" opacity="0.85"/>` +
     `<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.6"/>` +
     `<circle cx="${rx}" cy="${ry}" r="4" fill="#f1c40f"/>` +
+    arc +
     g3QuadLabel(cx, cy - r - 8, "N", "middle") +
     g3QuadLabel(cx + r + 6, cy, "E", "start") +
     g3QuadLabel(cx, cy + r + 12, "S", "middle") +
     g3QuadLabel(cx - r - 6, cy, "W", "end") +
-    g3QuadLabel(cx + 28, cy - 22, `${lbl}°`, "middle") +
     g3TrigSvgClose()
   );
 }
 
-/** 羅盤方位角（固定大小） */
-function g3TrigCompassDiagram(label, bearing) {
+/** 羅盤方位角：只標偏角弧，不寫 N30°E 等答案 */
+function g3TrigCompassDiagram(bearing, arcDeg) {
   const cx = 120;
   const cy = 88;
   const r = 48;
   const [rx, ry] = g3TrigBearingRay(cx, cy, r - 6, bearing);
+  const arc = g3TrigAngleMark([cx, cy], [cx, cy - 40], [rx, ry], arcDeg, 30, true);
   return (
     g3TrigSvgOpen("羅盤方位") +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>` +
@@ -2433,16 +2454,16 @@ function g3TrigCompassDiagram(label, bearing) {
     `<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" stroke="#55efc4" stroke-width="1.5" opacity="0.5"/>` +
     `<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.6"/>` +
     `<circle cx="${rx}" cy="${ry}" r="4" fill="#f1c40f"/>` +
+    arc +
     g3QuadLabel(cx, cy - r - 8, "N", "middle") +
     g3QuadLabel(cx + r + 6, cy, "E", "start") +
     g3QuadLabel(cx, cy + r + 12, "S", "middle") +
     g3QuadLabel(cx - r - 6, cy, "W", "end") +
-    g3QuadLabel(cx, cy + 20, label, "middle") +
     g3TrigSvgClose()
   );
 }
 
-/** 坡度：固定底邊像素，高度按比例但限制範圍 */
+/** 坡度：傾角 θ 在坡底頂點標示 */
 function g3TrigGradientDiagram(vert, horiz, showAngle) {
   const x0 = 32;
   const y0 = 128;
@@ -2453,9 +2474,8 @@ function g3TrigGradientDiagram(vert, horiz, showAngle) {
   const y1 = y0;
   const x2 = x1;
   const y2 = y0 - drawH;
-  const arcR = 20;
   const inner = showAngle
-    ? `<path d="M ${x1 - arcR} ${y1} A ${arcR} ${arcR} 0 0 0 ${x1 - 14} ${y1 - 12}" fill="none" stroke="#ff7675" stroke-width="2"/>${g3QuadLabel(x1 - 22, y1 - 4, "θ", "middle")}`
+    ? g3TrigAngleMark([x1, y1], [x0, y1], [x2, y2], "θ", 24, true)
     : "";
   return (
     g3TrigSvgOpen("坡度") +
@@ -2547,7 +2567,7 @@ function g3TrigAppsEasy(fixedType) {
       q: g3TrigAppsQ(g3TrigDepressDiagram(80, 40, 27), "俯角應在圖中的哪個位置量度？"),
       ans,
       opts: g3TrigMcOpts(ans, ["水平線上方", "牆壁與視線之間", "垂直線與視線之間"]),
-      hint: g3TrigAppsHint("俯角由<strong>水平線向下</strong>量至視線（★ Band 3 陷阱：勿畫在牆壁與視線之間）", [
+      hint: g3TrigAppsHint("俯角由<strong>水平線向下</strong>量至視線，勿畫在牆壁與視線之間", [
         "水平線上方是仰角",
         "牆壁夾角不是俯角定義",
         "垂直線夾角亦非俯角",
@@ -2563,10 +2583,10 @@ function g3TrigAppsEasy(fixedType) {
       [`$${g3TrigPadBearing(bearing + 90 > 360 ? bearing - 270 : bearing + 90)}^{\\circ}$`, `$${g3TrigPadBearing(bearing + 180 > 360 ? bearing - 180 : bearing + 180)}^{\\circ}$`, `$${String(bearing).padStart(2, "0")}^{\\circ}$`][i - 1],
     );
     return {
-      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(bearing), "求圖中標示方向的<strong>正北方位角</strong>（三位數）"),
+      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(bearing), "求圖中標示方向的<strong>真方位角</strong>（三位數）"),
       ans,
       opts,
-      hint: g3TrigAppsHint(`由正北順時針量度 → $${lbl}^{\\circ}$`, [
+      hint: g3TrigAppsHint(`由 N 順時針量度 → $${lbl}^{\\circ}$`, [
         "加了 90° 混淆東向",
         "讀成相反方向 +180°",
         "未用三位數表示",
@@ -2586,7 +2606,7 @@ function g3TrigAppsEasy(fixedType) {
       [`$${g3TrigPadBearing(Number(d.ans) + 90 > 360 ? Number(d.ans) - 270 : Number(d.ans) + 90)}^{\\circ}$`, `$${g3TrigPadBearing(Number(d.ans) + 180 > 360 ? Number(d.ans) - 180 : Number(d.ans) + 180)}^{\\circ}$`, `$${d.ans.slice(1)}^{\\circ}$`][i - 1],
     );
     return {
-      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(Number(d.ans)), `${d.name}方向的正北方位角是？`),
+      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(Number(d.ans)), `${d.name}方向的真方位角是？`),
       ans,
       opts,
       hint: g3TrigAppsHint(`${d.name} = $${d.ans}^{\\circ}$（由 N 順時針）`, ["順逆時針搞反", "讀成相反方向", "漏寫前導零"]),
@@ -2599,7 +2619,7 @@ function g3TrigAppsEasy(fixedType) {
     const ans = lbl;
     const opts = g3TrigMcOpts(ans, [`N${deg}°W`, `S${deg}°E`, `S${deg}°W`]);
     return {
-      q: g3TrigAppsQ(g3TrigCompassDiagram(lbl, deg), "圖中方向的羅盤方位角是？"),
+      q: g3TrigAppsQ(g3TrigCompassDiagram(deg, deg), "圖中方向由北向東偏離，求羅盤方位角"),
       ans,
       opts,
       hint: g3TrigAppsHint(`由<strong>北</strong>向<strong>東</strong>偏 ${deg}° → ${lbl}`, [
@@ -2718,9 +2738,9 @@ function g3TrigAppsDse() {
       q: g3TrigAppsQ("", `關於仰角與俯角，下列何者正確？<br>I. 兩者均以水平線為起點<br>II. 仰角向上量度，俯角向下量度<br>III. 俯角是視線與垂直牆壁的夾角`),
       ans,
       opts,
-      hint: g3TrigAppsHint("I、II 正確；III 錯（★ 俯角不是牆壁夾角）", [
+      hint: g3TrigAppsHint("I、II 正確；III 錯（俯角不是牆壁夾角）", [
         "忽略 II",
-        "III 是 Band 3 陷阱",
+        "III 把俯角當牆壁夾角",
         "III 錯但 II 對",
       ]),
     };
@@ -2734,7 +2754,7 @@ function g3TrigAppsDse() {
       [`$${g3TrigPadBearing(b1)}^{\\circ}$`, `$${g3TrigPadBearing((b1 + 90) % 360)}^{\\circ}$`, `$${g3TrigPadBearing((360 - b1) % 360 || 360)}^{\\circ}$`][i - 1],
     );
     return {
-      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(b1), `$B$ 在 $A$ 的正北方位角為 $${g3TrigPadBearing(b1)}^{\\circ}$，求 $A$ 在 $B$ 的正北方位角`),
+      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(b1), `$B$ 在 $A$ 的真方位角為 $${g3TrigPadBearing(b1)}^{\\circ}$，求 $A$ 在 $B$ 的真方位角`),
       ans,
       opts,
       hint: g3TrigAppsHint(`相反方向 ±180°：$${g3TrigPadBearing(b1)}^{\\circ} \\to ${g3TrigPadBearing(b2)}^{\\circ}$`, [
@@ -2753,7 +2773,7 @@ function g3TrigAppsDse() {
       [`$${g3TrigPadBearing(deg)}^{\\circ}$`, `$${g3TrigPadBearing(180 + deg)}^{\\circ}$`, `$${g3TrigPadBearing(180 - deg)}^{\\circ}$`][i - 1],
     );
     return {
-      q: g3TrigAppsQ(g3TrigCompassDiagram(lbl, 360 - deg), `${lbl} 的正北方位角是？`),
+      q: g3TrigAppsQ(g3TrigCompassDiagram(360 - deg, deg), `${lbl} 的真方位角是？`),
       ans,
       opts,
       hint: g3TrigAppsHint(`S${deg}°W：從 S 向西偏 ${deg}° → $${360 - deg}^{\\circ}$`, [
@@ -2802,7 +2822,7 @@ function g3TrigAppsDse() {
       ans,
       opts,
       hint: g3TrigAppsHint(`垂直 $= \\dfrac{${slopeLen}}{\\sqrt{${n}^2+1}} \\approx ${vert}$ m`, [
-        "誤用 $\\sin$ 或 斜路÷n（Band 3 陷阱）",
+        "誤用 $\\sin$ 或 斜路÷n",
         "用水平距離代替",
         "未用畢氏定理",
       ]),
