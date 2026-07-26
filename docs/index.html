@@ -1040,8 +1040,30 @@ function g3KTwoAns(k1, k2) {
   return `$k = ${lo}$ 或 $k = ${hi}$`;
 }
 
-function g3T4EasyQuestion() {
-  const type = rand(1, 3);
+function g3CoordMcOpts(correct, pool) {
+  const distractors = pool.filter(t => t !== correct);
+  while (distractors.length < 3) distractors.push(pool[distractors.length % pool.length]);
+  return shuffleOpts([correct, distractors[0], distractors[1], distractors[2]]);
+}
+
+function g3CoordSlopeAns(m) {
+  return `$m = ${m}$`;
+}
+
+function g3CoordPerpSlopeAns(m) {
+  if (m === 1 || m === -1) return g3CoordSlopeAns(-m);
+  const g = gcd(1, Math.abs(m));
+  const num = -1;
+  const den = m / g;
+  const n = num / g;
+  if (den === 1) return `$m = ${n}$`;
+  if (n === 1) return `$m = \\dfrac{1}{${den}}$`;
+  if (n === -1) return `$m = -\\dfrac{1}{${Math.abs(den)}}$`;
+  return `$m = \\dfrac{${n}}{${den}}$`;
+}
+
+function g3CoordGeomEasy(fixedType) {
+  const type = fixedType != null ? fixedType : rand(1, 10);
 
   if (type === 1) {
     const triples = [
@@ -1064,7 +1086,7 @@ function g3T4EasyQuestion() {
       q: `求點 $A(${x1}, ${y1})$ 與點 $B(${x2}, ${y2})$ 之間的距離`,
       ans: `$${dist}$`,
       opts,
-      hint: `距離公式 $AB = \\sqrt{(x_2-x_1)^2 + (y_2-y_1)^2} = \\sqrt{(${x2}-${x1})^2 + (${y2}-${y1})^2} = \\sqrt{${dx * dx + dy * dy}} = ${dist}$`,
+      hint: `$AB = \\sqrt{(${x2}-${x1})^2 + (${y2}-${y1})^2} = \\sqrt{${dx * dx + dy * dy}} = ${dist}$`,
     };
   }
 
@@ -1083,28 +1105,122 @@ function g3T4EasyQuestion() {
       q: `求 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$ 的中點坐標`,
       ans: ansStr,
       opts,
-      hint: `中點公式 $M = \\left(\\frac{x_1+x_2}{2}, \\frac{y_1+y_2}{2}\\right) = ${ansStr}`,
+      hint: `中點公式 $M = \\left(\\dfrac{x_1+x_2}{2},\\ \\dfrac{y_1+y_2}{2}\\right) = ${ansStr}`,
     };
   }
 
-  let m = rand(-3, 3);
-  while (m === 0) m = rand(-3, 3);
-  const dx = rand(1, 4);
-  const x1 = rand(-4, 4);
-  const y1 = rand(-4, 4);
-  const x2 = x1 + dx;
-  const y2 = y1 + m * dx;
-  const opts = createUniqueOpts(`$m = ${m}$`, i => `$m = ${[m + 1, m - 1, -m, m * 2][i - 1]}$`);
+  if (type === 3) {
+    let m = rand(-3, 3);
+    while (m === 0) m = rand(-3, 3);
+    const dx = rand(1, 4);
+    const x1 = rand(-4, 4);
+    const y1 = rand(-4, 4);
+    const x2 = x1 + dx;
+    const y2 = y1 + m * dx;
+    const opts = createUniqueOpts(g3CoordSlopeAns(m), i => g3CoordSlopeAns([m + 1, m - 1, -m, m * 2][i - 1]));
+    return {
+      q: `求通過點 $A(${x1}, ${y1})$ 與點 $B(${x2}, ${y2})$ 的直線斜率`,
+      ans: g3CoordSlopeAns(m),
+      opts,
+      hint: `$m = \\dfrac{${y2} - (${y1})}{${x2} - (${x1})} = ${m}$`,
+    };
+  }
+
+  if (type === 4) {
+    const ans = "斜率相等";
+    return {
+      q: `兩直線平行，它們的斜率有何關係？`,
+      ans,
+      opts: g3CoordMcOpts(ans, ["斜率互為相反數", "斜率乘積為 $-1$", "斜率互為倒數"]),
+      hint: `平行線斜率<strong>相等</strong>：$m_1 = m_2$`,
+    };
+  }
+
+  if (type === 5) {
+    const ans = "斜率乘積為 $-1$";
+    return {
+      q: `兩直線互相垂直，它們的斜率有何關係？`,
+      ans,
+      opts: g3CoordMcOpts(ans, ["斜率相等", "斜率互為相反數", "斜率互為倒數"]),
+      hint: `垂直線滿足 $m_1 \\times m_2 = -1$`,
+    };
+  }
+
+  if (type === 6) {
+    const x1 = rand(-5, 5);
+    const y1 = rand(-5, 5);
+    const dx = rand(2, 6) * 2;
+    const dy = rand(2, 6) * 2 * (rand(0, 1) ? 1 : -1);
+    const x2 = x1 + dx;
+    const y2 = y1 + dy;
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+    const ans = g3KAns(x2);
+    const opts = createUniqueOpts(ans, i => [g3KAns(x2 + 2), g3KAns(x2 - 2), g3KAns(mx), g3KAns(x1)][i - 1]);
+    return {
+      q: `$A(${x1}, ${y1})$ 與 $B(k, ${y2})$ 的中點為 $M(${mx}, ${my})$，求 $k$`,
+      ans,
+      opts,
+      hint: `$\\dfrac{${x1}+k}{2} = ${mx}$，解得 ${ans}`,
+    };
+  }
+
+  if (type === 7) {
+    let m = rand(-4, 4);
+    while (m === 0) m = rand(-4, 4);
+    const ans = g3CoordSlopeAns(m);
+    const opts = createUniqueOpts(ans, i => g3CoordSlopeAns([m + 1, -m, m - 1, m * 2][i - 1]));
+    return {
+      q: `直線 $L$ 的斜率為 $${m}$。直線 $M$ 與 $L$ 平行，求 $M$ 的斜率`,
+      ans,
+      opts,
+      hint: `平行線斜率相等 → $m_M = m_L = ${m}$`,
+    };
+  }
+
+  if (type === 8) {
+    let m = rand(-4, 4);
+    while (m === 0 || m === 1 || m === -1) m = rand(-4, 4);
+    const ans = g3CoordPerpSlopeAns(m);
+    const opts = createUniqueOpts(ans, i =>
+      [g3CoordSlopeAns(m), g3CoordSlopeAns(-m), g3CoordPerpSlopeAns(m + 2), g3CoordSlopeAns(m * 2)][i - 1],
+    );
+    return {
+      q: `直線斜率為 $${m}$，求與該直線垂直的直線斜率`,
+      ans,
+      opts,
+      hint: `垂直線 $m_2 = -\\dfrac{1}{m_1} = -\\dfrac{1}{${m}}$`,
+    };
+  }
+
+  if (type === 9) {
+    const x1 = rand(-5, 5);
+    const y1 = rand(-5, 5);
+    const dx = rand(3, 8);
+    const x2 = x1 + dx;
+    const y2 = y1;
+    const ans = `$${dx}$`;
+    const opts = createUniqueOpts(ans, i => [`$${dx + 2}$`, `$${dx - 1}$`, `$${dx + y1}$`, `$${Math.abs(x2)}$`][i - 1]);
+    return {
+      q: `求點 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$ 之間的距離（水平距離）`,
+      ans,
+      opts,
+      hint: `同一水平線，$AB = |${x2} - (${x1})| = ${dx}$`,
+    };
+  }
+
+  const ans = g3CoordSlopeAns(0);
   return {
-    q: `求通過點 $A(${x1}, ${y1})$ 與點 $B(${x2}, ${y2})$ 的直線斜率`,
-    ans: `$m = ${m}$`,
-    opts,
-    hint: `斜率公式 $m = \\frac{y_2 - y_1}{x_2 - x_1} = \\frac{${y2} - (${y1})}{${x2} - (${x1})} = ${m}$`,
+    q: `水平線（平行於 $x$ 軸）的斜率是？`,
+    ans,
+    opts: g3CoordMcOpts(ans, [g3CoordSlopeAns(1), "$m$ 不存在", g3CoordSlopeAns(-1)]),
+    hint: `水平線斜率為 $0$`,
   };
 }
 
-function g3T4DseQuestion() {
-  const type = rand(1, 6);
+function g3CoordGeomDse(fixedType, variant) {
+  const type = fixedType != null ? fixedType : rand(1, 10);
+  const v = variant != null ? variant : rand(0, 999);
 
   if (type === 1) {
     const triples = [
@@ -1112,7 +1228,7 @@ function g3T4DseQuestion() {
       [6, 8, 10],
       [5, 12, 13],
     ];
-    const [leg, other, dist] = triples[rand(0, triples.length - 1)];
+    const [leg, other, dist] = triples[v % triples.length];
     const x1 = rand(-4, 4);
     const y1 = rand(-4, 4);
     const x2 = x1 + leg;
@@ -1126,7 +1242,7 @@ function g3T4DseQuestion() {
       q: `點 $A(${x1}, ${y1})$ 與 $B(${x2}, k)$ 的距離為 $${dist}$，求 $k$ 的所有可能值`,
       ans,
       opts,
-      hint: `列式 $\\sqrt{(${x2}-${x1})^2 + (k-${y1})^2} = ${dist}$，化簡得 $(k-${y1})^2 = ${other * other}$，故 ${ans}`,
+      hint: `$\\sqrt{(${x2}-${x1})^2 + (k-${y1})^2} = ${dist}$ → $(k-${y1})^2 = ${other * other}$，故 ${ans}`,
     };
   }
 
@@ -1136,7 +1252,7 @@ function g3T4DseQuestion() {
       [6, 8, 10],
       [5, 12, 13],
     ];
-    const [leg, other, dist] = triples[rand(0, triples.length - 1)];
+    const [leg, other, dist] = triples[v % triples.length];
     const y1 = rand(-4, 4);
     const xBase = rand(-2, 4);
     const y2 = y1 + leg;
@@ -1150,147 +1266,220 @@ function g3T4DseQuestion() {
       q: `點 $A(k, ${y1})$ 與 $B(${xBase}, ${y2})$ 的距離為 $${dist}$，求 $k$ 的所有可能值`,
       ans,
       opts,
-      hint: `列式 $\\sqrt{(${xBase}-k)^2 + (${y2}-${y1})^2} = ${dist}$，化簡得 $(k-${xBase})^2 = ${other * other}$，故 ${ans}`,
+      hint: `$\\sqrt{(${xBase}-k)^2 + (${y2}-${y1})^2} = ${dist}$ → $(k-${xBase})^2 = ${other * other}$，故 ${ans}`,
     };
   }
 
   if (type === 3) {
-    const variant = rand(1, 2);
+    const useX = v % 2 === 0;
     const x1 = rand(-5, 5);
     const y1 = rand(-5, 5);
-    const x2 = rand(-5, 5);
-    const y2 = rand(-5, 5);
+    const dx = rand(2, 6) * 2;
+    const dy = rand(2, 6) * 2 * (rand(0, 1) ? 1 : -1);
+    const x2 = x1 + dx;
+    const y2 = y1 + dy;
     const mx = (x1 + x2) / 2;
     const my = (y1 + y2) / 2;
-    if (variant === 1) {
-      const k = 2 * mx - x1;
+    if (useX) {
+      const k = x2;
       const ans = g3KAns(k);
-      const opts = createUniqueOpts(ans, i => [g3KAns(k + 2), g3KAns(k - 2), g3KAns(mx), g3KAns(x2)][i - 1]);
+      const opts = createUniqueOpts(ans, i => [g3KAns(k + 2), g3KAns(k - 2), g3KAns(mx), g3KAns(x1)][i - 1]);
       return {
         q: `$A(${x1}, ${y1})$ 與 $B(k, ${y2})$ 的中點為 $M(${mx}, ${my})$，求 $k$`,
         ans,
         opts,
-        hint: `中點公式 $\\frac{${x1}+k}{2} = ${mx}$，解得 ${ans}`,
+        hint: `中點公式 $\\dfrac{${x1}+k}{2} = ${mx}$，解得 ${ans}`,
       };
     }
-    const k = 2 * my - y1;
+    const k = y2;
     const ans = g3KAns(k);
-    const opts = createUniqueOpts(ans, i => [g3KAns(k + 2), g3KAns(k - 2), g3KAns(my), g3KAns(y2)][i - 1]);
+    const opts = createUniqueOpts(ans, i => [g3KAns(k + 2), g3KAns(k - 2), g3KAns(my), g3KAns(y1)][i - 1]);
     return {
       q: `$A(${x1}, ${y1})$ 與 $B(${x2}, k)$ 的中點為 $M(${mx}, ${my})$，求 $k$`,
       ans,
       opts,
-      hint: `中點公式 $\\frac{${y1}+k}{2} = ${my}$，解得 ${ans}`,
+      hint: `中點公式 $\\dfrac{${y1}+k}{2} = ${my}$，解得 ${ans}`,
     };
   }
 
   if (type === 4) {
-    const variant = rand(1, 2);
-    let m = rand(-4, 4);
-    while (m === 0) m = rand(-4, 4);
+    let m = rand(-3, 4);
+    while (m === 0) m = rand(-3, 4);
     const dx = rand(2, 5);
     const x1 = rand(-4, 4);
     const y1 = rand(-4, 4);
     const x2 = x1 + dx;
     const y2 = y1 + m * dx;
-    if (variant === 1) {
-      const k = y1 + m * (x2 + dx - x1);
-      const ans = g3KAns(k);
-      const opts = createUniqueOpts(ans, i => [g3KAns(k + m), g3KAns(k - m), g3KAns(y2), g3KAns(y1 + m)][i - 1]);
-      return {
-        q: `直線通過 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$，斜率為 $${m}$。點 $C(${x2 + dx}, k)$ 亦在該直線上，求 $k$`,
-        ans,
-        opts,
-        hint: `斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{k-${y2}}{${x2 + dx}-${x2}} = ${m}$，解得 ${ans}`,
-      };
-    }
-    const k = x1 + dx + (y2 - y1) / m;
+    const x3 = x2 + rand(2, 4);
+    const k = y2 + m * (x3 - x2);
     const ans = g3KAns(k);
-    const opts = createUniqueOpts(ans, i => [g3KAns(k + 1), g3KAns(k - 1), g3KAns(x2), g3KAns(x1 + dx)][i - 1]);
+    const opts = createUniqueOpts(ans, i => [g3KAns(k + m), g3KAns(k - m), g3KAns(y2), g3KAns(y1 + m)][i - 1]);
     return {
-      q: `直線通過 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$，斜率為 $${m}$。點 $C(k, ${y2 + m * dx})$ 亦在該直線上，求 $k$`,
+      q: `直線通過 $A(${x1}, ${y1})$ 與 $B(${x2}, ${y2})$。點 $C(${x3}, k)$ 在該直線上，求 $k$`,
       ans,
       opts,
-      hint: `斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{${y2 + m * dx}-${y1}}{k-${x1}} = ${m}$，解得 ${ans}`,
+      hint: `斜率相等：$\\dfrac{${y2}-${y1}}{${x2}-${x1}} = \\dfrac{k-${y2}}{${x3}-${x2}} = ${m}$，解得 ${ans}`,
     };
   }
 
   if (type === 5) {
-    const shape = rand(1, 2);
-    if (shape === 1) {
-      const x1 = rand(0, 4);
-      const y1 = rand(0, 4);
-      const w = rand(2, 5);
-      const h = rand(2, 5);
-      const x2 = x1 + w;
-      const y2 = y1;
-      const x3 = x2;
-      const y3 = y1 + h;
-      const dx = x1;
-      const dy = y1 + h;
-      const ans = g3CoordAns(dx, dy);
-      const opts = createUniqueOpts(ans, i =>
-        [g3CoordAns(x1, y3), g3CoordAns(x3, y1), g3CoordAns(x1 + w, y1 + h), g3CoordAns(x2, dy)][i - 1],
-      );
-      return {
-        q: `長方形 $ABCD$ 中，$A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(${x3}, ${y3})$，求頂點 $D$ 的坐標`,
-        ans,
-        opts,
-        hint: `長方形對角線互相平分：$D = A + C - B = (${x1}+${x3}-${x2},\\ ${y1}+${y3}-${y2}) = ${ans}`,
-      };
-    }
-    const ax = rand(-2, 3);
-    const ay = rand(-2, 3);
-    const bx = ax + rand(2, 4);
-    const by = ay + rand(-2, 2);
-    const cx = bx + rand(-2, 2);
-    const cy = by + rand(2, 4);
-    const dx = ax + cx - bx;
-    const dy = ay + cy - by;
+    const x1 = rand(0, 4);
+    const y1 = rand(0, 4);
+    const w = rand(2, 5);
+    const h = rand(2, 5);
+    const x2 = x1 + w;
+    const y2 = y1;
+    const x3 = x2;
+    const y3 = y1 + h;
+    const dx = x1;
+    const dy = y1 + h;
     const ans = g3CoordAns(dx, dy);
     const opts = createUniqueOpts(ans, i =>
-      [g3CoordAns(bx + cx - ax, by + cy - ay), g3CoordAns(ax + bx - cx, ay + by - cy), g3CoordAns(cx, ay), g3CoordAns(ax, cy)][
-        i - 1
-      ],
+      [g3CoordAns(x1, y3), g3CoordAns(x3, y1), g3CoordAns(x1 + w, y1 + h), g3CoordAns(x2, dy)][i - 1],
     );
     return {
-      q: `正方形 $ABCD$ 中，$A(${ax}, ${ay})$、$B(${bx}, ${by})$、$C(${cx}, ${cy})$（按順序排列），求頂點 $D$ 的坐標`,
+      q: `長方形 $ABCD$ 中，$A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(${x3}, ${y3})$，求頂點 $D$ 的坐標`,
       ans,
       opts,
-      hint: `正方形對角線互相平分：$D = A + C - B = (${ax}+${cx}-${bx},\\ ${ay}+${cy}-${by}) = ${ans}`,
+      hint: `對角線互相平分：$D = A + C - B = ${ans}$`,
     };
   }
 
-  let m = rand(-3, 4);
-  while (m === 0) m = rand(-3, 4);
-  const x1 = rand(-3, 3);
-  const y1 = rand(-3, 5);
-  const step = rand(2, 4);
-  const x2 = x1 + step;
-  const y2 = y1 + m * step;
-  const x3 = x2 + rand(2, 4);
-  const y3 = y2 + m * (x3 - x2);
-  const variant = rand(1, 2);
-  if (variant === 1) {
-    const k = x3;
+  if (type === 6) {
+    let m = rand(-3, 4);
+    while (m === 0) m = rand(-3, 4);
+    const step = rand(2, 4);
+    const x1 = rand(-3, 3);
+    const y1 = rand(-3, 5);
+    const x2 = x1 + step;
+    const y2 = y1 + m * step;
+    const x3 = x2 + rand(2, 4);
+    const k = y2 + m * (x3 - x2);
     const ans = g3KAns(k);
-    const opts = createUniqueOpts(ans, i => [g3KAns(k + 1), g3KAns(k - 1), g3KAns(x2), g3KAns(x1 + step * 2)][i - 1]);
+    const opts = createUniqueOpts(ans, i => [g3KAns(k + 1), g3KAns(k - 1), g3KAns(y2), g3KAns(y1 + m * 2)][i - 1]);
     return {
-      q: `三點 $A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(k, ${y3})$ 共線，求 $k$`,
+      q: `三點 $A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(${x3}, k)$ 共線，求 $k$`,
       ans,
       opts,
-      hint: `共線則斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{${y3}-${y2}}{k-${x2}} = ${m}$，解得 ${ans}`,
+      hint: `共線則斜率相等，$\\dfrac{k-${y2}}{${x3}-${x2}} = ${m}$，解得 ${ans}`,
     };
   }
-  const k = y3;
+
+  if (type === 7) {
+    let m = rand(2, 4) * (rand(0, 1) ? 1 : -1);
+    const dx = rand(2, 4);
+    const x1 = rand(-3, 3);
+    const y1 = rand(-4, 4);
+    const x2 = x1 + dx;
+    const y2 = y1 + m * dx;
+    const x3 = x2 + rand(2, 4);
+    const k = y2 + m * (x3 - x2);
+    const ans = g3KAns(k);
+    const opts = createUniqueOpts(ans, i => [g3KAns(k + 1), g3KAns(k - 1), g3KAns(y2), g3KAns(y2 + m * 2)][i - 1]);
+    return {
+      q: `直線 $AB$ 斜率為 $${m}$。點 $C(${x3}, k)$ 在過 $B(${x2}, ${y2})$ 且與 $AB$ 平行的直線上，求 $k$`,
+      ans,
+      opts,
+      hint: `平行線斜率相等：$\\dfrac{k-${y2}}{${x3}-${x2}} = ${m}$，解得 ${ans}`,
+    };
+  }
+
+  if (type === 8) {
+    let m = rand(2, 4) * (rand(0, 1) ? 1 : -1);
+    const mp = -1 / m;
+    const dx = rand(2, 4);
+    const x1 = rand(-3, 3);
+    const y1 = rand(-4, 4);
+    const x2 = x1 + dx;
+    const y2 = y1 + m * dx;
+    const x3 = x2 + rand(2, 4);
+    const k = Math.round(y2 + mp * (x3 - x2));
+    const ans = g3KAns(k);
+    const opts = createUniqueOpts(ans, i => [g3KAns(k + 1), g3KAns(k - 1), g3KAns(y2), g3KAns(Math.round(y2 + m * (x3 - x2)))][i - 1]);
+    return {
+      q: `直線 $AB$ 斜率為 $${m}$。點 $C(${x3}, k)$ 在過 $B(${x2}, ${y2})$ 且與 $AB$ 垂直的直線上，求 $k$`,
+      ans,
+      opts,
+      hint: `垂直線斜率 $m_2 = -\\dfrac{1}{${m}}$，故 $\\dfrac{k-${y2}}{${x3}-${x2}} = -\\dfrac{1}{${m}}$，解得 ${ans}`,
+    };
+  }
+
+  if (type === 9) {
+    let m = rand(-3, 4);
+    while (m === 0) m = rand(-3, 4);
+    const dx = rand(2, 4);
+    const x1 = rand(-4, 3);
+    const y1 = rand(-4, 4);
+    const x2 = x1 + dx;
+    const y2 = y1 + m * dx;
+    const x3 = rand(-3, 4);
+    const y3 = rand(-4, 4);
+    const x4 = x3 + dx;
+    const k = y3 + m * dx;
+    const ans = g3KAns(k);
+    const opts = createUniqueOpts(ans, i => [g3KAns(k + m), g3KAns(k - m), g3KAns(y3), g3KAns(y3 + dx)][i - 1]);
+    return {
+      q: `$A(${x1}, ${y1})$、$B(${x2}, ${y2})$ 與 $C(${x3}, ${y3})$、$D(${x4}, k)$。若 $AB \\parallel CD$，求 $k$`,
+      ans,
+      opts,
+      hint: `$AB$ 斜率 $= ${m}$，平行則 $\\dfrac{k-${y3}}{${x4}-${x3}} = ${m}$，解得 ${ans}`,
+    };
+  }
+
+  let m1 = rand(2, 4) * (rand(0, 1) ? 1 : -1);
+  const dx = rand(2, 4);
+  const x1 = rand(-3, 3);
+  const y1 = rand(-4, 4);
+  const x2 = x1 + dx;
+  const y2 = y1 + m1 * dx;
+  const m2 = -1 / m1;
+  const x3 = rand(-3, 4);
+  const y3 = rand(-4, 4);
+  const x4 = x3 + dx;
+  const k = Math.round(y3 + m2 * dx);
   const ans = g3KAns(k);
-  const opts = createUniqueOpts(ans, i => [g3KAns(k + m), g3KAns(k - m), g3KAns(y2), g3KAns(y1 + m * 2)][i - 1]);
+  const opts = createUniqueOpts(ans, i => [g3KAns(k + 1), g3KAns(k - 1), g3KAns(y3), g3KAns(Math.round(y3 + m1 * dx))][i - 1]);
   return {
-    q: `三點 $A(${x1}, ${y1})$、$B(${x2}, ${y2})$、$C(${x3}, k)$ 共線，求 $k$`,
+    q: `$A(${x1}, ${y1})$、$B(${x2}, ${y2})$ 與 $C(${x3}, ${y3})$、$D(${x4}, k)$。若 $AB \\perp CD$，求 $k$`,
     ans,
     opts,
-    hint: `共線則斜率相等：$\\frac{${y2}-${y1}}{${x2}-${x1}} = \\frac{k-${y2}}{${x3}-${x2}} = ${m}$，解得 ${ans}`,
+    hint: `$AB$ 斜率 $= ${m1}$，垂直則 $CD$ 斜率 $= -\\dfrac{1}{${m1}}$，解得 ${ans}`,
   };
+}
+
+function generateCoordGeomEasyQuestions() {
+  const qs = [];
+  for (let t = 1; t <= 10; t++) {
+    try {
+      const q = g3CoordGeomEasy(t);
+      if (isValidQuestion(q)) qs.push(q);
+      else qs.push(g3CoordGeomEasy(1));
+    } catch (_err) {
+      qs.push(g3CoordGeomEasy(1));
+    }
+  }
+  return qs;
+}
+
+function generateCoordGeomDseQuestions() {
+  const types = shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  const qs = [];
+  for (const t of types) {
+    let picked = null;
+    for (let attempt = 0; attempt < 12; attempt++) {
+      try {
+        const q = g3CoordGeomDse(t, rand(0, 999));
+        if (isValidQuestion(q)) {
+          picked = q;
+          break;
+        }
+      } catch (_err) {
+        /* retry */
+      }
+    }
+    qs.push(picked != null ? picked : g3CoordGeomDse(t, 0));
+  }
+  return qs;
 }
 
 function g3PiCore(coefNum, coefDen = 1) {
@@ -2604,9 +2793,8 @@ function g3TrigMcOpts(correct, pool) {
   return shuffleOpts([correct, distractors[0], distractors[1], distractors[2]]);
 }
 
-function g3TrigAppsHint(main, traps) {
-  const extra = traps.length ? " 常見誤區：" + traps.join("；") : "";
-  return main + extra;
+function g3TrigAppsHint(main) {
+  return main;
 }
 
 function g3TrigAppsEasy(fixedType) {
@@ -3799,9 +3987,9 @@ const rawCurriculumGenerators = {
     },
     {
       id: "g3_t9",
-      title: "9. 座標幾何 (距離、中點、斜率)",
+      title: "9. 座標幾何",
       generate: (difficulty = "easy") =>
-        generate10Unique(() => (difficulty === "dse" ? g3T4DseQuestion() : g3T4EasyQuestion())),
+        difficulty === "dse" ? generateCoordGeomDseQuestions() : generateCoordGeomEasyQuestions(),
     },
 
   ],
