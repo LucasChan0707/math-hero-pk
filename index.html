@@ -70,6 +70,8 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;ba
 .sub{text-align:center;font-size:12px;color:#a29bfe;margin-bottom:12px}
 .q-fig{display:block;width:100%;text-align:center;line-height:0;margin:2px auto 4px}
 .q-fig svg{display:block!important;max-width:200px;width:100%;height:auto;margin:0 auto;visibility:visible!important;opacity:1!important}
+.q-fig-trig{display:flex;justify-content:center;align-items:center;min-height:148px;margin:4px auto 6px}
+.q-fig-trig svg{max-width:220px!important;width:100%!important;height:auto!important;min-height:0!important}
 .q-text{font-weight:bold;line-height:1.5}
 .avatar-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 14px}
 .av{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;max-height:72px;padding:6px;border:2px solid #4a3e7d;border-radius:16px;cursor:pointer;background:rgba(0,0,0,.25);touch-action:manipulation;font-size:32px;line-height:1}
@@ -2313,10 +2315,20 @@ function generateTriCenterEasyQuestions() {
 }
 
 /** ── 三角學應用：仰角、俯角、方位角、坡度 ── */
-const G3_TRIG_SVG = G3_QUAD_SVG_STYLE;
+const G3_TRIG_VB = "0 0 240 160";
+const G3_TRIG_SVG =
+  "display:block;width:100%;max-width:220px;height:auto;margin:0 auto;overflow:visible";
+
+function g3TrigSvgOpen(ariaLabel) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${G3_TRIG_VB}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${ariaLabel}" style="${G3_TRIG_SVG}">`;
+}
+
+function g3TrigSvgClose() {
+  return `</svg>`;
+}
 
 function g3TrigAppsQ(diagram, text) {
-  return `<div class="q-fig">${diagram}</div><p class="q-text" style="margin-top:8px;text-align:center">${text}</p>`;
+  return `<div class="q-fig q-fig-trig">${diagram}</div><p class="q-text" style="margin-top:8px;text-align:center">${text}</p>`;
 }
 
 function g3TrigPadBearing(deg) {
@@ -2325,116 +2337,134 @@ function g3TrigPadBearing(deg) {
 
 function g3TrigBearingRay(cx, cy, r, bearing) {
   const rad = (bearing * Math.PI) / 180;
-  const x = cx + r * Math.sin(rad);
-  const y = cy - r * Math.cos(rad);
-  return [x, y];
+  return [cx + r * Math.sin(rad), cy - r * Math.cos(rad)];
 }
 
-/** 仰角：觀測者在左，水平線向右，物體在右上方 */
+/** 仰角：固定佈局，數字只作標籤 */
 function g3TrigElevDiagram(adjM, heightM, angleDeg) {
-  const ox = 32;
+  const ox = 28;
   const oy = 128;
-  const bx = 218;
-  const by = oy - 58;
-  const arcR = 28;
-  const ex = ox + arcR;
-  const ey = oy;
-  const sx = ox + arcR * Math.cos((angleDeg * Math.PI) / 180);
-  const sy = oy - arcR * Math.sin((angleDeg * Math.PI) / 180);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="仰角" style="${G3_TRIG_SVG}">
-<line x1="20" y1="${oy}" x2="235" y2="${oy}" stroke="#55efc4" stroke-width="2" stroke-dasharray="6 4"/>
-<line x1="${bx}" y1="${oy}" x2="${bx}" y2="${by}" stroke="#a29bfe" stroke-width="2.5"/>
-<line x1="${ox}" y1="${oy}" x2="${bx}" y2="${by}" stroke="#f1c40f" stroke-width="2" stroke-dasharray="5 3"/>
-<path d="M ${ex} ${ey} A ${arcR} ${arcR} 0 0 0 ${sx} ${sy}" fill="none" stroke="#ff7675" stroke-width="2"/>
-<circle cx="${ox}" cy="${oy}" r="4" fill="#ffeaa7"/>
-${g3QuadLabel(ox - 4, oy + 16, "觀測者", "middle")}
-${g3QuadLabel((ox + bx) / 2, oy + 16, `${adjM} m`, "middle")}
-${g3QuadLabel(bx + 14, (oy + by) / 2, `${heightM} m`, "start")}
-${g3QuadLabel(ox + 38, oy - 10, `${angleDeg}°`, "start")}
-${g3QuadLabel(ox + 52, oy - 22, "仰角", "start")}
-</svg>`;
+  const bx = 200;
+  const by = 46;
+  const arcR = 24;
+  const a1 = 0;
+  const a2 = (-angleDeg * Math.PI) / 180;
+  const sx = ox + arcR * Math.cos(a1);
+  const sy = oy + arcR * Math.sin(a1);
+  const ex = ox + arcR * Math.cos(a2);
+  const ey = oy + arcR * Math.sin(a2);
+  const sweep = angleDeg > 0 ? 0 : 1;
+  return (
+    g3TrigSvgOpen("仰角") +
+    `<line x1="16" y1="${oy}" x2="224" y2="${oy}" stroke="#55efc4" stroke-width="2" stroke-dasharray="6 4"/>` +
+    `<line x1="${bx}" y1="${oy}" x2="${bx}" y2="${by}" stroke="#a29bfe" stroke-width="2.5"/>` +
+    `<line x1="${ox}" y1="${oy}" x2="${bx}" y2="${by}" stroke="#f1c40f" stroke-width="2" stroke-dasharray="5 3"/>` +
+    `<path d="M ${sx} ${sy} A ${arcR} ${arcR} 0 0 ${sweep} ${ex} ${ey}" fill="none" stroke="#ff7675" stroke-width="2"/>` +
+    `<circle cx="${ox}" cy="${oy}" r="4" fill="#ffeaa7"/>` +
+    g3QuadLabel(ox, oy + 14, "觀測者", "middle") +
+    g3QuadLabel((ox + bx) / 2, oy + 14, `${adjM} m`, "middle") +
+    g3QuadLabel(bx + 6, (oy + by) / 2, `${heightM} m`, "start", 0) +
+    g3QuadLabel(ox + 34, oy - 8, `${angleDeg}°`, "start") +
+    g3TrigSvgClose()
+  );
 }
 
-/** 俯角：觀測者在左上方，水平線向右，目標在右下方（角在水平線下方） */
+/** 俯角：固定佈局，角弧在水平線下方 */
 function g3TrigDepressDiagram(horizM, dropM, angleDeg) {
-  const ox = 36;
-  const oy = 42;
-  const tx = 210;
-  const ty = 118;
-  const arcR = 26;
-  const hx = ox + arcR;
-  const hy = oy;
-  const sx = ox + arcR * Math.cos((angleDeg * Math.PI) / 180);
-  const sy = oy + arcR * Math.sin((angleDeg * Math.PI) / 180);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="俯角" style="${G3_TRIG_SVG}">
-<line x1="20" y1="${oy}" x2="235" y2="${oy}" stroke="#55efc4" stroke-width="2" stroke-dasharray="6 4"/>
-<line x1="${ox}" y1="${oy}" x2="${tx}" y2="${ty}" stroke="#f1c40f" stroke-width="2" stroke-dasharray="5 3"/>
-<line x1="${tx}" y1="${oy}" x2="${tx}" y2="${ty}" stroke="#a29bfe" stroke-width="2"/>
-<path d="M ${hx} ${hy} A ${arcR} ${arcR} 0 0 1 ${sx} ${sy}" fill="none" stroke="#ff7675" stroke-width="2"/>
-<circle cx="${ox}" cy="${oy}" r="4" fill="#ffeaa7"/>
-${g3QuadLabel(ox - 4, oy - 14, "觀測者", "middle")}
-${g3QuadLabel((ox + tx) / 2, oy + 16, `${horizM} m`, "middle")}
-${g3QuadLabel(tx + 12, (oy + ty) / 2, `${dropM} m`, "start")}
-${g3QuadLabel(ox + 36, oy + 18, `${angleDeg}°`, "start")}
-${g3QuadLabel(ox + 48, oy + 30, "俯角", "start")}
-</svg>`;
+  const ox = 28;
+  const oy = 36;
+  const tx = 200;
+  const ty = 128;
+  const arcR = 24;
+  const a1 = 0;
+  const a2 = (angleDeg * Math.PI) / 180;
+  const sx = ox + arcR * Math.cos(a1);
+  const sy = oy + arcR * Math.sin(a1);
+  const ex = ox + arcR * Math.cos(a2);
+  const ey = oy + arcR * Math.sin(a2);
+  return (
+    g3TrigSvgOpen("俯角") +
+    `<line x1="16" y1="${oy}" x2="224" y2="${oy}" stroke="#55efc4" stroke-width="2" stroke-dasharray="6 4"/>` +
+    `<line x1="${ox}" y1="${oy}" x2="${tx}" y2="${ty}" stroke="#f1c40f" stroke-width="2" stroke-dasharray="5 3"/>` +
+    `<line x1="${tx}" y1="${oy}" x2="${tx}" y2="${ty}" stroke="#a29bfe" stroke-width="2"/>` +
+    `<path d="M ${sx} ${sy} A ${arcR} ${arcR} 0 0 1 ${ex} ${ey}" fill="none" stroke="#ff7675" stroke-width="2"/>` +
+    `<circle cx="${ox}" cy="${oy}" r="4" fill="#ffeaa7"/>` +
+    g3QuadLabel(ox, oy - 12, "觀測者", "middle") +
+    g3QuadLabel((ox + tx) / 2, oy + 14, `${horizM} m`, "middle") +
+    g3QuadLabel(tx + 6, (oy + ty) / 2, `${dropM} m`, "start", 0) +
+    g3QuadLabel(ox + 32, oy + 16, `${angleDeg}°`, "start") +
+    g3TrigSvgClose()
+  );
 }
 
-/** 正北方位角羅盤 */
+/** 正北方位角羅盤（固定大小） */
 function g3TrigTrueBearingDiagram(bearing) {
-  const cx = 125;
-  const cy = 78;
-  const r = 52;
-  const [rx, ry] = g3TrigBearingRay(cx, cy, r - 8, bearing);
+  const cx = 120;
+  const cy = 88;
+  const r = 48;
+  const [rx, ry] = g3TrigBearingRay(cx, cy, r - 6, bearing);
   const lbl = g3TrigPadBearing(bearing);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="方位角" style="${G3_TRIG_SVG}">
-<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>
-<line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" stroke="#55efc4" stroke-width="1.5"/>
-<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" stroke="#55efc4" stroke-width="1.5"/>
-<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.8"/>
-<polygon points="${rx},${ry} ${rx - 6},${ry + 10} ${rx + 6},${ry + 10}" fill="#f1c40f" transform="rotate(${bearing},${rx},${ry})"/>
-${g3QuadLabel(cx, cy - r - 10, "N", "middle")}
-${g3QuadLabel(cx + r + 10, cy, "E", "start")}
-${g3QuadLabel(cx, cy + r + 14, "S", "middle")}
-${g3QuadLabel(cx - r - 10, cy, "W", "end")}
-${g3QuadLabel(cx + 38, cy - 28, `${lbl}°`, "start")}
-</svg>`;
+  return (
+    g3TrigSvgOpen("方位角") +
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>` +
+    `<line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" stroke="#55efc4" stroke-width="1.5" opacity="0.85"/>` +
+    `<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" stroke="#55efc4" stroke-width="1.5" opacity="0.85"/>` +
+    `<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.6"/>` +
+    `<circle cx="${rx}" cy="${ry}" r="4" fill="#f1c40f"/>` +
+    g3QuadLabel(cx, cy - r - 8, "N", "middle") +
+    g3QuadLabel(cx + r + 6, cy, "E", "start") +
+    g3QuadLabel(cx, cy + r + 12, "S", "middle") +
+    g3QuadLabel(cx - r - 6, cy, "W", "end") +
+    g3QuadLabel(cx + 28, cy - 22, `${lbl}°`, "middle") +
+    g3TrigSvgClose()
+  );
 }
 
-/** 羅盤方位角 Nθ°E / Sθ°W 等 */
+/** 羅盤方位角（固定大小） */
 function g3TrigCompassDiagram(label, bearing) {
-  const cx = 125;
-  const cy = 78;
-  const r = 52;
-  const [rx, ry] = g3TrigBearingRay(cx, cy, r - 8, bearing);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="羅盤方位" style="${G3_TRIG_SVG}">
-<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>
-<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.8"/>
-${g3QuadLabel(cx, cy - r - 10, "N", "middle")}
-${g3QuadLabel(cx + r + 10, cy, "E", "start")}
-${g3QuadLabel(cx, cy + r + 14, "S", "middle")}
-${g3QuadLabel(cx - r - 10, cy, "W", "end")}
-${g3QuadLabel(cx + 42, cy - 30, label, "start")}
-</svg>`;
+  const cx = 120;
+  const cy = 88;
+  const r = 48;
+  const [rx, ry] = g3TrigBearingRay(cx, cy, r - 6, bearing);
+  return (
+    g3TrigSvgOpen("羅盤方位") +
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>` +
+    `<line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" stroke="#55efc4" stroke-width="1.5" opacity="0.5"/>` +
+    `<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" stroke="#55efc4" stroke-width="1.5" opacity="0.5"/>` +
+    `<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.6"/>` +
+    `<circle cx="${rx}" cy="${ry}" r="4" fill="#f1c40f"/>` +
+    g3QuadLabel(cx, cy - r - 8, "N", "middle") +
+    g3QuadLabel(cx + r + 6, cy, "E", "start") +
+    g3QuadLabel(cx, cy + r + 12, "S", "middle") +
+    g3QuadLabel(cx - r - 6, cy, "W", "end") +
+    g3QuadLabel(cx, cy + 20, label, "middle") +
+    g3TrigSvgClose()
+  );
 }
 
-/** 坡度：直角三角形，垂直/水平標註 */
+/** 坡度：固定底邊像素，高度按比例但限制範圍 */
 function g3TrigGradientDiagram(vert, horiz, showAngle) {
-  const x0 = 48;
-  const y0 = 118;
-  const x1 = x0 + horiz * 4.2;
+  const x0 = 32;
+  const y0 = 128;
+  const drawW = 150;
+  const ratio = vert / horiz;
+  const drawH = Math.min(72, Math.max(26, drawW * ratio));
+  const x1 = x0 + drawW;
   const y1 = y0;
   const x2 = x1;
-  const y2 = y0 - vert * 4.2;
+  const y2 = y0 - drawH;
+  const arcR = 20;
   const inner = showAngle
-    ? `<path d="M ${x1 - 22} ${y1} A 22 22 0 0 0 ${x1 - 16} ${y1 - 14}" fill="none" stroke="#ff7675" stroke-width="2"/>${g3QuadLabel(x1 - 28, y1 - 6, "θ", "middle")}`
+    ? `<path d="M ${x1 - arcR} ${y1} A ${arcR} ${arcR} 0 0 0 ${x1 - 14} ${y1 - 12}" fill="none" stroke="#ff7675" stroke-width="2"/>${g3QuadLabel(x1 - 22, y1 - 4, "θ", "middle")}`
     : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="坡度" style="${G3_TRIG_SVG}">
-<polygon points="${x0},${y0} ${x1},${y1} ${x2},${y2}" fill="rgba(108,92,231,0.15)" stroke="#a29bfe" stroke-width="2.4"/>
-${inner}
-${g3QuadLabel((x0 + x1) / 2, y0 + 16, `${horiz} m`, "middle")}
-${g3QuadLabel(x1 + 14, (y0 + y2) / 2, `${vert} m`, "start")}
-</svg>`;
+  return (
+    g3TrigSvgOpen("坡度") +
+    `<polygon points="${x0},${y0} ${x1},${y1} ${x2},${y2}" fill="rgba(108,92,231,0.15)" stroke="#a29bfe" stroke-width="2.4"/>` +
+    inner +
+    g3QuadLabel((x0 + x1) / 2, y0 + 14, `${horiz} m`, "middle") +
+    g3QuadLabel(x1 + 6, (y0 + y2) / 2, `${vert} m`, "start", 0) +
+    g3TrigSvgClose()
+  );
 }
 
 function g3TrigMcOpts(correct, pool) {
