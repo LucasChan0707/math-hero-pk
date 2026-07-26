@@ -2312,6 +2312,505 @@ function generateTriCenterEasyQuestions() {
   return qs;
 }
 
+/** ── 三角學應用：仰角、俯角、方位角、坡度 ── */
+const G3_TRIG_SVG = G3_QUAD_SVG_STYLE;
+
+function g3TrigAppsQ(diagram, text) {
+  return `<div class="q-fig">${diagram}</div><p class="q-text" style="margin-top:8px;text-align:center">${text}</p>`;
+}
+
+function g3TrigPadBearing(deg) {
+  return String(deg).padStart(3, "0");
+}
+
+function g3TrigBearingRay(cx, cy, r, bearing) {
+  const rad = (bearing * Math.PI) / 180;
+  const x = cx + r * Math.sin(rad);
+  const y = cy - r * Math.cos(rad);
+  return [x, y];
+}
+
+/** 仰角：觀測者在左，水平線向右，物體在右上方 */
+function g3TrigElevDiagram(adjM, heightM, angleDeg) {
+  const ox = 32;
+  const oy = 128;
+  const bx = 218;
+  const by = oy - 58;
+  const arcR = 28;
+  const ex = ox + arcR;
+  const ey = oy;
+  const sx = ox + arcR * Math.cos((angleDeg * Math.PI) / 180);
+  const sy = oy - arcR * Math.sin((angleDeg * Math.PI) / 180);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="仰角" style="${G3_TRIG_SVG}">
+<line x1="20" y1="${oy}" x2="235" y2="${oy}" stroke="#55efc4" stroke-width="2" stroke-dasharray="6 4"/>
+<line x1="${bx}" y1="${oy}" x2="${bx}" y2="${by}" stroke="#a29bfe" stroke-width="2.5"/>
+<line x1="${ox}" y1="${oy}" x2="${bx}" y2="${by}" stroke="#f1c40f" stroke-width="2" stroke-dasharray="5 3"/>
+<path d="M ${ex} ${ey} A ${arcR} ${arcR} 0 0 0 ${sx} ${sy}" fill="none" stroke="#ff7675" stroke-width="2"/>
+<circle cx="${ox}" cy="${oy}" r="4" fill="#ffeaa7"/>
+${g3QuadLabel(ox - 4, oy + 16, "觀測者", "middle")}
+${g3QuadLabel((ox + bx) / 2, oy + 16, `${adjM} m`, "middle")}
+${g3QuadLabel(bx + 14, (oy + by) / 2, `${heightM} m`, "start")}
+${g3QuadLabel(ox + 38, oy - 10, `${angleDeg}°`, "start")}
+${g3QuadLabel(ox + 52, oy - 22, "仰角", "start")}
+</svg>`;
+}
+
+/** 俯角：觀測者在左上方，水平線向右，目標在右下方（角在水平線下方） */
+function g3TrigDepressDiagram(horizM, dropM, angleDeg) {
+  const ox = 36;
+  const oy = 42;
+  const tx = 210;
+  const ty = 118;
+  const arcR = 26;
+  const hx = ox + arcR;
+  const hy = oy;
+  const sx = ox + arcR * Math.cos((angleDeg * Math.PI) / 180);
+  const sy = oy + arcR * Math.sin((angleDeg * Math.PI) / 180);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="俯角" style="${G3_TRIG_SVG}">
+<line x1="20" y1="${oy}" x2="235" y2="${oy}" stroke="#55efc4" stroke-width="2" stroke-dasharray="6 4"/>
+<line x1="${ox}" y1="${oy}" x2="${tx}" y2="${ty}" stroke="#f1c40f" stroke-width="2" stroke-dasharray="5 3"/>
+<line x1="${tx}" y1="${oy}" x2="${tx}" y2="${ty}" stroke="#a29bfe" stroke-width="2"/>
+<path d="M ${hx} ${hy} A ${arcR} ${arcR} 0 0 1 ${sx} ${sy}" fill="none" stroke="#ff7675" stroke-width="2"/>
+<circle cx="${ox}" cy="${oy}" r="4" fill="#ffeaa7"/>
+${g3QuadLabel(ox - 4, oy - 14, "觀測者", "middle")}
+${g3QuadLabel((ox + tx) / 2, oy + 16, `${horizM} m`, "middle")}
+${g3QuadLabel(tx + 12, (oy + ty) / 2, `${dropM} m`, "start")}
+${g3QuadLabel(ox + 36, oy + 18, `${angleDeg}°`, "start")}
+${g3QuadLabel(ox + 48, oy + 30, "俯角", "start")}
+</svg>`;
+}
+
+/** 正北方位角羅盤 */
+function g3TrigTrueBearingDiagram(bearing) {
+  const cx = 125;
+  const cy = 78;
+  const r = 52;
+  const [rx, ry] = g3TrigBearingRay(cx, cy, r - 8, bearing);
+  const lbl = g3TrigPadBearing(bearing);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="方位角" style="${G3_TRIG_SVG}">
+<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>
+<line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" stroke="#55efc4" stroke-width="1.5"/>
+<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" stroke="#55efc4" stroke-width="1.5"/>
+<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.8"/>
+<polygon points="${rx},${ry} ${rx - 6},${ry + 10} ${rx + 6},${ry + 10}" fill="#f1c40f" transform="rotate(${bearing},${rx},${ry})"/>
+${g3QuadLabel(cx, cy - r - 10, "N", "middle")}
+${g3QuadLabel(cx + r + 10, cy, "E", "start")}
+${g3QuadLabel(cx, cy + r + 14, "S", "middle")}
+${g3QuadLabel(cx - r - 10, cy, "W", "end")}
+${g3QuadLabel(cx + 38, cy - 28, `${lbl}°`, "start")}
+</svg>`;
+}
+
+/** 羅盤方位角 Nθ°E / Sθ°W 等 */
+function g3TrigCompassDiagram(label, bearing) {
+  const cx = 125;
+  const cy = 78;
+  const r = 52;
+  const [rx, ry] = g3TrigBearingRay(cx, cy, r - 8, bearing);
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="羅盤方位" style="${G3_TRIG_SVG}">
+<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>
+<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.8"/>
+${g3QuadLabel(cx, cy - r - 10, "N", "middle")}
+${g3QuadLabel(cx + r + 10, cy, "E", "start")}
+${g3QuadLabel(cx, cy + r + 14, "S", "middle")}
+${g3QuadLabel(cx - r - 10, cy, "W", "end")}
+${g3QuadLabel(cx + 42, cy - 30, label, "start")}
+</svg>`;
+}
+
+/** 坡度：直角三角形，垂直/水平標註 */
+function g3TrigGradientDiagram(vert, horiz, showAngle: boolean) {
+  const x0 = 48;
+  const y0 = 118;
+  const x1 = x0 + horiz * 4.2;
+  const y1 = y0;
+  const x2 = x1;
+  const y2 = y0 - vert * 4.2;
+  const inner = showAngle
+    ? `<path d="M ${x1 - 22} ${y1} A 22 22 0 0 0 ${x1 - 16} ${y1 - 14}" fill="none" stroke="#ff7675" stroke-width="2"/>${g3QuadLabel(x1 - 28, y1 - 6, "θ", "middle")}`
+    : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 250 150" role="img" aria-label="坡度" style="${G3_TRIG_SVG}">
+<polygon points="${x0},${y0} ${x1},${y1} ${x2},${y2}" fill="rgba(108,92,231,0.15)" stroke="#a29bfe" stroke-width="2.4"/>
+${inner}
+${g3QuadLabel((x0 + x1) / 2, y0 + 16, `${horiz} m`, "middle")}
+${g3QuadLabel(x1 + 14, (y0 + y2) / 2, `${vert} m`, "start")}
+</svg>`;
+}
+
+function g3TrigMcOpts(correct, pool) {
+  const distractors = pool.filter(t => t !== correct);
+  while (distractors.length < 3) distractors.push(pool[distractors.length % pool.length]);
+  return shuffleOpts([correct, distractors[0], distractors[1], distractors[2]]);
+}
+
+function g3TrigAppsHint(main, traps) {
+  const extra = traps.length ? " 常見誤區：" + traps.join("；") : "";
+  return main + extra;
+}
+
+function g3TrigAppsEasy(fixedType) {
+  const type = fixedType != null ? fixedType : rand(1, 10);
+
+  if (type === 1) {
+    const adj = rand(3, 6) * 10;
+    const angle = [30, 35, 40, 45][rand(0, 3)];
+    const height = Math.round(adj * Math.tan((angle * Math.PI) / 180));
+    const tanVal = roundTo(Math.tan((angle * Math.PI) / 180), 2);
+    const ans = `$${height}\\text{ m}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${adj}\\text{ m}$`, `$${height + 10}\\text{ m}$`, `$${Math.round(adj / tanVal)}\\text{ m}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigElevDiagram(adj, height, angle),
+        `水平距離 $${adj}$ m，仰角 $${angle}^{\\circ}$（$\\tan ${angle}^{\\circ} \\approx ${tanVal}$），求建築物高度`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`$h = ${adj} \\times \\tan ${angle}^{\\circ} \\approx ${height}$ m`, [
+        "把水平距離當高度",
+        "用 $\\sin$ 代替 $\\tan$",
+      ]),
+    };
+  }
+
+  if (type === 2) {
+    const ans = "水平線";
+    return {
+      q: g3TrigAppsQ(g3TrigElevDiagram(50, 35, 35), "仰角是以哪一條線為起點量度？"),
+      ans,
+      opts: g3TrigMcOpts(ans, ["視線", "垂直線", "地面斜邊"]),
+      hint: g3TrigAppsHint("仰角由<strong>水平線</strong>向上量至視線", [
+        "視線是終點邊，不是起點",
+        "垂直線是牆高方向，不是仰角起點",
+        "地面不是水平參考線",
+      ]),
+    };
+  }
+
+  if (type === 3) {
+    const drop = rand(2, 5) * 10;
+    const angle = [25, 30, 35][rand(0, 2)];
+    const horiz = Math.round(drop / Math.tan((angle * Math.PI) / 180));
+    const tanVal = roundTo(Math.tan((angle * Math.PI) / 180), 2);
+    const ans = `$${horiz}\\text{ m}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${drop}\\text{ m}$`, `$${horiz + 15}\\text{ m}$`, `$${Math.round(drop * tanVal)}\\text{ m}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigDepressDiagram(horiz, drop, angle),
+        `垂直落差 $${drop}$ m，俯角 $${angle}^{\\circ}$（$\\tan ${angle}^{\\circ} \\approx ${tanVal}$），求水平距離`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`水平 $= \\dfrac{${drop}}{\\tan ${angle}^{\\circ}} \\approx ${horiz}$ m`, [
+        "把垂直落差當水平距離",
+        "用 $\\sin$ 或 $\\cos$ 代替 $\\tan$",
+      ]),
+    };
+  }
+
+  if (type === 4) {
+    const ans = "水平線下方";
+    return {
+      q: g3TrigAppsQ(g3TrigDepressDiagram(80, 40, 27), "俯角應在圖中的哪個位置量度？"),
+      ans,
+      opts: g3TrigMcOpts(ans, ["水平線上方", "牆壁與視線之間", "垂直線與視線之間"]),
+      hint: g3TrigAppsHint("俯角由<strong>水平線向下</strong>量至視線（★ Band 3 陷阱：勿畫在牆壁與視線之間）", [
+        "水平線上方是仰角",
+        "牆壁夾角不是俯角定義",
+        "垂直線夾角亦非俯角",
+      ]),
+    };
+  }
+
+  if (type === 5) {
+    const bearing = [45, 90, 135, 210][rand(0, 3)];
+    const lbl = g3TrigPadBearing(bearing);
+    const ans = `$${lbl}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${g3TrigPadBearing(bearing + 90 > 360 ? bearing - 270 : bearing + 90)}^{\\circ}$`, `$${g3TrigPadBearing(bearing + 180 > 360 ? bearing - 180 : bearing + 180)}^{\\circ}$`, `$${String(bearing).padStart(2, "0")}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(bearing), "求圖中標示方向的<strong>正北方位角</strong>（三位數）"),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`由正北順時針量度 → $${lbl}^{\\circ}$`, [
+        "加了 90° 混淆東向",
+        "讀成相反方向 +180°",
+        "未用三位數表示",
+      ]),
+    };
+  }
+
+  if (type === 6) {
+    const dirs = [
+      { name: "正東", ans: "090" },
+      { name: "正南", ans: "180" },
+      { name: "正西", ans: "270" },
+    ];
+    const d = dirs[rand(0, 2)];
+    const ans = `$${d.ans}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${g3TrigPadBearing(Number(d.ans) + 90 > 360 ? Number(d.ans) - 270 : Number(d.ans) + 90)}^{\\circ}$`, `$${g3TrigPadBearing(Number(d.ans) + 180 > 360 ? Number(d.ans) - 180 : Number(d.ans) + 180)}^{\\circ}$`, `$${d.ans.slice(1)}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(Number(d.ans)), `${d.name}方向的正北方位角是？`),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`${d.name} = $${d.ans}^{\\circ}$（由 N 順時針）`, ["順逆時針搞反", "讀成相反方向", "漏寫前導零"]),
+    };
+  }
+
+  if (type === 7) {
+    const deg = [20, 30, 40, 45][rand(0, 3)];
+    const lbl = `N${deg}°E`;
+    const ans = lbl;
+    const opts = g3TrigMcOpts(ans, [`N${deg}°W`, `S${deg}°E`, `S${deg}°W`]);
+    return {
+      q: g3TrigAppsQ(g3TrigCompassDiagram(lbl, deg), "圖中方向的羅盤方位角是？"),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`由<strong>北</strong>向<strong>東</strong>偏 ${deg}° → ${lbl}`, [
+        "東西方向搞反",
+        "誤以南方為起點",
+        "對角象限混淆",
+      ]),
+    };
+  }
+
+  if (type === 8) {
+    const k = rand(2, 5);
+    const vert = k;
+    const horiz = k * 5;
+    const ans = `$1:${horiz / vert}$`;
+    const opts = createUniqueOpts(ans, i => [`$${vert}:${horiz}$`, `$1:${horiz + vert}$`, `$1:${vert}$`][i - 1]);
+    return {
+      q: g3TrigAppsQ(g3TrigGradientDiagram(vert, horiz, false), `垂直升高 $${vert}$ m、水平距離 $${horiz}$ m，求坡度（1:n 形式）`),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`坡度 $= \\dfrac{\\text{垂直}}{\\text{水平}} = \\dfrac{${vert}}{${horiz}} = 1:${horiz / vert}$`, [
+        "分子分母倒轉",
+        "把垂直+水平當比例",
+        "n 取成垂直距離",
+      ]),
+    };
+  }
+
+  if (type === 9) {
+    const ans = "$\\tan \\theta$";
+    const opts = g3TrigMcOpts(ans, ["$\\sin \\theta$", "$\\cos \\theta$", "$\\cot \\theta$"]);
+    return {
+      q: g3TrigAppsQ(g3TrigGradientDiagram(3, 12, true), "坡度 $= \\dfrac{\\text{垂直}}{\\text{水平}}$，傾角 $\\theta$ 滿足？"),
+      ans,
+      opts,
+      hint: g3TrigAppsHint("$\\tan \\theta = \\dfrac{\\text{垂直}}{\\text{水平}} =$ 坡度", [
+        "誤用斜邊（sin）",
+        "誤用斜邊（cos）",
+        "倒數關係搞錯",
+      ]),
+    };
+  }
+
+  const vert = 1;
+  const horiz = 5;
+  const pct = 20;
+  const ans = `$${pct}\\%$`;
+  const opts = createUniqueOpts(ans, i => [`$${100 / horiz}\\%$`, `$${pct + 5}\\%$`, `$${vert * horiz}\\%$`][i - 1]);
+  return {
+    q: g3TrigAppsQ(g3TrigGradientDiagram(vert, horiz, false), `坡度為 $1:5$，以百分比表示`),
+    ans,
+    opts,
+    hint: g3TrigAppsHint("$1:5 = \\dfrac{1}{5} = 0.2 = 20\\%$", [
+      "用 n 的倒數錯誤",
+      "把 1:5 當 1/5×100 計算錯",
+      "把 1×5 當百分比",
+    ]),
+  };
+}
+
+function g3TrigAppsDse() {
+  const type = rand(1, 8);
+
+  if (type === 1) {
+    const foot = rand(2, 4) * 3;
+    const ladder = rand(4, 5) * 3;
+    const height = Math.round(Math.sqrt(ladder * ladder - foot * foot));
+    const angle = Math.round((Math.atan(height / foot) * 180) / Math.PI);
+    const ans = `$${angle}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${90 - angle}^{\\circ}$`, `$${angle + 8}^{\\circ}$`, `$${Math.round((Math.asin(height / ladder) * 180) / Math.PI)}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigElevDiagram(foot, height, angle),
+        `梯子長 $${ladder}$ m，腳距牆 $${foot}$ m（牆垂直地面），求梯子與地面的<strong>仰角</strong>（整數）`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`先畢氏：牆高 $=${height}$ m，再 $\\tan \\theta = \\dfrac{${height}}{${foot}}$ → $${angle}^{\\circ}$`, [
+        "未先求牆高，直接用梯長當對邊",
+        "用 $\\sin$（梯長當斜邊）得錯角",
+        "仰角起點不是水平線",
+      ]),
+    };
+  }
+
+  if (type === 2) {
+    const drop = rand(4, 8) * 10;
+    const angle = rand(25, 35);
+    const horiz = Math.round(drop / Math.tan((angle * Math.PI) / 180));
+    const sinWrong = Math.round(drop / Math.sin((angle * Math.PI) / 180));
+    const ans = `$${horiz}\\text{ m}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${sinWrong}\\text{ m}$`, `$${drop}\\text{ m}$`, `$${horiz + 20}\\text{ m}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigDepressDiagram(horiz, drop, angle),
+        `懸崖高出海面 $${drop}$ m，俯角 $${angle}^{\\circ}$ 望見船隻，求水平距離（整數）`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`$\\tan ${angle}^{\\circ} = \\dfrac{${drop}}{\\text{水平}}$ → ${horiz}$ m`, [
+        "誤用 $\\sin$（斜邊距離）",
+        "把垂直落差當水平距離",
+        "俯角畫在牆壁與視線之間",
+      ]),
+    };
+  }
+
+  if (type === 3) {
+    const ans = "只有 I 及 II";
+    const opts = g3TrigMcOpts(ans, ["只有 I", "只有 II 及 III", "I、II 及 III"]);
+    return {
+      q: g3TrigAppsQ("", `關於仰角與俯角，下列何者正確？<br>I. 兩者均以水平線為起點<br>II. 仰角向上量度，俯角向下量度<br>III. 俯角是視線與垂直牆壁的夾角`),
+      ans,
+      opts,
+      hint: g3TrigAppsHint("I、II 正確；III 錯（★ 俯角不是牆壁夾角）", [
+        "忽略 II",
+        "III 是 Band 3 陷阱",
+        "III 錯但 II 對",
+      ]),
+    };
+  }
+
+  if (type === 4) {
+    const b1 = rand(2, 7) * 10;
+    const b2 = (b1 + 180) % 360;
+    const ans = `$${g3TrigPadBearing(b2)}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${g3TrigPadBearing(b1)}^{\\circ}$`, `$${g3TrigPadBearing((b1 + 90) % 360)}^{\\circ}$`, `$${g3TrigPadBearing((360 - b1) % 360 || 360)}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(g3TrigTrueBearingDiagram(b1), `$B$ 在 $A$ 的正北方位角為 $${g3TrigPadBearing(b1)}^{\\circ}$，求 $A$ 在 $B$ 的正北方位角`),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`相反方向 ±180°：$${g3TrigPadBearing(b1)}^{\\circ} \\to ${g3TrigPadBearing(b2)}^{\\circ}$`, [
+        "讀成相同方向",
+        "加了 90° 而非 180°",
+        "逆時針量度",
+      ]),
+    };
+  }
+
+  if (type === 5) {
+    const deg = rand(25, 55);
+    const ans = `$${g3TrigPadBearing(360 - deg)}^{\\circ}$`;
+    const lbl = `S${deg}°W`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${g3TrigPadBearing(deg)}^{\\circ}$`, `$${g3TrigPadBearing(180 + deg)}^{\\circ}$`, `$${g3TrigPadBearing(180 - deg)}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(g3TrigCompassDiagram(lbl, 360 - deg), `${lbl} 的正北方位角是？`),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`S${deg}°W：從 S 向西偏 ${deg}° → $${360 - deg}^{\\circ}$`, [
+        "誤當 N${deg}°E",
+        "加了 180° 錯誤",
+        "象限搞錯",
+      ]),
+    };
+  }
+
+  if (type === 6) {
+    const n = rand(4, 8);
+    const vert = rand(2, 4);
+    const horiz = vert * n;
+    const slopeLen = Math.round(Math.sqrt(vert * vert + horiz * horiz));
+    const ans = `$${slopeLen}\\text{ m}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${horiz + vert}\\text{ m}$`, `$${horiz}\\text{ m}$`, `$${vert * n + n}\\text{ m}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigGradientDiagram(vert, horiz, true),
+        `坡度 $1:${n}$，沿斜路向上走，垂直升高 $${vert}$ m，求斜路長度（整數）`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`水平 $=${horiz}$ m，斜路 $=\\sqrt{${vert}^2+${horiz}^2}=${slopeLen}$ m`, [
+        "垂直+水平相加",
+        "把水平距離當斜路",
+        "只用坡度比例未畢氏",
+      ]),
+    };
+  }
+
+  if (type === 7) {
+    const n = rand(4, 6);
+    const slopeLen = rand(5, 10) * 10;
+    const vert = Math.round(slopeLen / Math.sqrt(n * n + 1));
+    const sinWrong = Math.round(slopeLen / n);
+    const ans = `$${vert}\\text{ m}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${sinWrong}\\text{ m}$`, `$${slopeLen - vert}\\text{ m}$`, `$${vert + 5}\\text{ m}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(g3TrigGradientDiagram(vert, vert * n, true), `坡度 $1:${n}$，斜路長 $${slopeLen}$ m，求垂直升高（整數）`),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`垂直 $= \\dfrac{${slopeLen}}{\\sqrt{${n}^2+1}} \\approx ${vert}$ m`, [
+        "誤用 $\\sin$ 或 斜路÷n（Band 3 陷阱）",
+        "用水平距離代替",
+        "未用畢氏定理",
+      ]),
+    };
+  }
+
+  const vert = rand(3, 6);
+  const horiz = vert * rand(4, 6);
+  const pct = roundTo((vert / horiz) * 100, 1);
+  const sinWrong = roundTo((vert / Math.sqrt(vert * vert + horiz * horiz)) * 100, 1);
+  const ans = `$${pct}\\%$`;
+  const opts = createUniqueOpts(ans, i => [`$${sinWrong}\\%$`, `$${pct + 10}\\%$`, `$${horiz / vert}\\%$`][i - 1]);
+  return {
+    q: g3TrigAppsQ(g3TrigGradientDiagram(vert, horiz, true), `垂直 $${vert}$ m、水平 $${horiz}$ m，求坡度百分比（1 位小數）`),
+    ans,
+    opts,
+    hint: g3TrigAppsHint(`$\\dfrac{${vert}}{${horiz}} \\times 100\\% = ${pct}\\%$`, [
+      "誤用斜邊（sin）當坡度",
+      "把 1:n 當 n%",
+      "分子分母倒轉",
+    ]),
+  };
+}
+
+function generateTrigAppsEasyQuestions() {
+  const qs = [];
+  for (let t = 1; t <= 10; t++) {
+    try {
+      const q = g3TrigAppsEasy(t);
+      if (isValidQuestion(q)) qs.push(q);
+      else qs.push(g3TrigAppsEasy(1));
+    } catch (_err) {
+      qs.push(g3TrigAppsEasy(1));
+    }
+  }
+  return qs;
+}
+
 function hashCode(s) {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
@@ -2328,7 +2827,7 @@ function mulberry32(seed) {
 }
 
 /** 舊課題中已內建 easy/dse 分難度的 id */
-const LEGACY_DIFFICULTY_TOPIC_IDS = new Set(["g3_t1", "g3_t2", "g3_t3", "g3_t4", "g3_t5", "g3_t6", "g3_t7", "g3_t8"]);
+const LEGACY_DIFFICULTY_TOPIC_IDS = new Set(["g3_t1", "g3_t2", "g3_t3", "g3_t4", "g3_t5", "g3_t6", "g3_t7", "g3_t8", "g3_t9", "g3_t10", "g3_t11"]);
 
 /** 將原有 5 課題包裝為支援 easy/dse（DSE 用不同亂數種子重新生成） */
 function wrapLegacyTopic(topic) {
@@ -2992,7 +3491,15 @@ const rawCurriculumGenerators = {
     },
     {
       id: "g3_t8",
-      title: "8. 座標幾何 (距離、中點、斜率)",
+      title: "8. 三角學應用",
+      generate: (difficulty = "easy") =>
+        difficulty === "dse"
+          ? generate10Unique(() => g3TrigAppsDse())
+          : generateTrigAppsEasyQuestions(),
+    },
+    {
+      id: "g3_t9",
+      title: "9. 座標幾何 (距離、中點、斜率)",
       generate: (difficulty = "easy") =>
         generate10Unique(() => (difficulty === "dse" ? g3T4DseQuestion() : g3T4EasyQuestion())),
     },
@@ -3544,6 +4051,152 @@ function roundTo(n, dp) {
   return Math.round(n * f) / f;
 }
 
+/** 中三第 10 課：集中趨勢的量度（平均數、中位數、眾數） */
+function g3CentralTendencyQuestion(difficulty) {
+  const dse = difficulty === "dse";
+  const type = rand(1, dse ? 5 : 4);
+
+  if (type === 1) {
+    const n = rand(dse ? 5 : 3, dse ? 7 : 5);
+    const nums = [];
+    for (let i = 0; i < n; i++) nums.push(rand(2, dse ? 30 : 20));
+    const sum = nums.reduce((a, b) => a + b, 0);
+    const mean = sum / n;
+    const meanStr = mean % 1 === 0 ? `$${mean}$` : `$${roundTo(mean, 1)}$`;
+    const opts = createUniqueOpts(meanStr, i =>
+      [`$${mean + 2}$`, `$${mean - 1}$`, `$${sum}$`, `$${Math.max(...nums)}$`][i - 1],
+    );
+    return {
+      q: `求數據 $${nums.join(", ")}$ 的<strong>平均數</strong>`,
+      ans: meanStr,
+      opts,
+      hint: `平均數 $= \\dfrac{${nums.join("+")}}{${n}} = ${meanStr}$`,
+    };
+  }
+
+  if (type === 2) {
+    const nums = dse
+      ? [rand(8, 14), rand(15, 18), rand(19, 22), rand(23, 26), rand(27, 30)].sort((a, b) => a - b)
+      : (() => {
+          const base = rand(3, 10);
+          return [base, base + 2, base + 5, base + 7, base + 9].sort((a, b) => a - b);
+        })();
+    const median = nums[Math.floor(nums.length / 2)];
+    const ans = `$${median}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${nums[0]}$`, `$${nums[nums.length - 1]}$`, `$${median + 2}$`, `$${Math.round(nums.reduce((a, b) => a + b, 0) / nums.length)}$`][i - 1],
+    );
+    return {
+      q: `求數據 $${nums.join(", ")}$ 的<strong>中位數</strong>（已排序）`,
+      ans,
+      opts,
+      hint: `共 ${nums.length} 個數據，中位數為排序後中間位置的值 → $${median}$`,
+    };
+  }
+
+  if (type === 3) {
+    const modeVal = rand(3, 12);
+    const nums = dse
+      ? [modeVal, modeVal, modeVal, modeVal + 2, modeVal + 4, modeVal + 5]
+      : [modeVal, modeVal, modeVal, modeVal + 3, modeVal + 5];
+    const shuffled = [...nums].sort(() => Math.random() - 0.5);
+    const ans = `$${modeVal}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${modeVal + 2}$`, `$${modeVal + 5}$`, `$${modeVal - 1}$`, `$${Math.max(...nums)}$`][i - 1],
+    );
+    return {
+      q: `求數據 $${shuffled.join(", ")}$ 的<strong>眾數</strong>`,
+      ans,
+      opts,
+      hint: `出現次數最多的值為 $${modeVal}$（出現 ${nums.filter(x => x === modeVal).length} 次）`,
+    };
+  }
+
+  if (type === 4) {
+    const f1 = rand(2, dse ? 6 : 4);
+    const f2 = rand(2, dse ? 5 : 4);
+    const f3 = rand(1, dse ? 4 : 3);
+    const v1 = rand(1, 4);
+    const v2 = v1 + rand(2, 4);
+    const v3 = v2 + rand(2, 4);
+    const total = f1 + f2 + f3;
+    const sum = f1 * v1 + f2 * v2 + f3 * v3;
+    const mean = sum / total;
+    const meanStr = mean % 1 === 0 ? `$${mean}$` : `$${roundTo(mean, 1)}$`;
+    const opts = createUniqueOpts(meanStr, i =>
+      [`$${mean + 1}$`, `$${mean - 1}$`, `$${v2}$`, `$${sum}$`][i - 1],
+    );
+    return {
+      q: `頻率表：值 $${v1}$ 出現 $${f1}$ 次，$${v2}$ 出現 $${f2}$ 次，$${v3}$ 出現 $${f3}$ 次，求<strong>平均數</strong>`,
+      ans: meanStr,
+      opts,
+      hint: `平均數 $= \\dfrac{${f1}\\times${v1} + ${f2}\\times${v2} + ${f3}\\times${v3}}{${total}} = ${meanStr}$`,
+    };
+  }
+
+  const nums = [rand(10, 16), rand(17, 20), rand(21, 24), rand(25, 28)].sort((a, b) => a - b);
+  const median = (nums[1] + nums[2]) / 2;
+  const ans = median % 1 === 0 ? `$${median}$` : `$${roundTo(median, 1)}$`;
+  const opts = createUniqueOpts(ans, i =>
+    [`$${nums[1]}$`, `$${nums[2]}$`, `$${nums[0]}$`, `$${Math.round(nums.reduce((a, b) => a + b, 0) / nums.length)}$`][i - 1],
+  );
+  return {
+    q: `求數據 $${nums.join(", ")}$ 的<strong>中位數</strong>（共 4 個數據）`,
+    ans,
+    opts,
+    hint: `4 個數據的中位數 $= \\dfrac{${nums[1]} + ${nums[2]}}{2} = ${ans}$`,
+  };
+}
+
+/** 中三第 11 課：概率簡介 */
+function g3ProbabilityIntroQuestion(difficulty) {
+  const dse = difficulty === "dse";
+  const red = rand(2, dse ? 5 : 5);
+  const blue = rand(3, dse ? 6 : 6);
+  const total = red + blue;
+
+  if (dse && rand(0, 1) === 0) {
+    const ans = `$\\frac{${blue}}{${total}}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$\\frac{${red}}{${total}}$`, `$\\frac{1}{${total}}$`, `$\\frac{${blue + 1}}{${total}}$`, `$1 - \\frac{${red}}{${total}}$`][i - 1],
+    );
+    return {
+      q: `袋中 $${red}$ 個紅球與 $${blue}$ 個藍球，隨機抽一個，求抽到<strong>藍球</strong>的概率`,
+      ans,
+      opts,
+      hint: `$P(\\text{藍}) = \\dfrac{${blue}}{${red}+${blue}} = \\dfrac{${blue}}{${total}}$`,
+    };
+  }
+
+  if (dse) {
+    const ans = `$\\frac{${total - red}}{${total}}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$\\frac{${red}}{${total}}$`, `$\\frac{${blue}}{${total}}$`, `$\\frac{1}{${total}}$`, `$\\frac{${red - 1}}{${total}}$`][i - 1],
+    );
+    return {
+      q: `袋中 $${red}$ 紅 $${blue}$ 藍，隨機抽一個，求<strong>不是紅球</strong>的概率`,
+      ans,
+      opts,
+      hint: `$P(\\text{非紅}) = 1 - \\dfrac{${red}}{${total}} = \\dfrac{${total - red}}{${total}}$`,
+    };
+  }
+
+  const pickRed = rand(0, 1) === 0;
+  const ans = pickRed ? `$\\frac{${red}}{${total}}$` : `$\\frac{${blue}}{${total}}$`;
+  const color = pickRed ? "紅球" : "藍球";
+  const opts = createUniqueOpts(ans, i =>
+    pickRed
+      ? [`$\\frac{${blue}}{${total}}$`, `$\\frac{1}{${total}}$`, `$\\frac{${red + 1}}{${total}}$`, `$\\frac{${red}}{${blue}}$`][i - 1]
+      : [`$\\frac{${red}}{${total}}$`, `$\\frac{1}{${total}}$`, `$\\frac{${blue + 1}}{${total}}$`, `$\\frac{${blue}}{${red}}$`][i - 1],
+  );
+  return {
+    q: `袋中 $${red}$ 紅 $${blue}$ 藍，隨機抽一個是${color}的概率？`,
+    ans,
+    opts,
+    hint: `$P = \\dfrac{\\text{目標球數}}{\\text{總球數}} = ${ans}$`,
+  };
+}
+
 const extraTopicsByGrade = {
   1: [
     {
@@ -4083,128 +4736,16 @@ const extraTopicsByGrade = {
   ],
   3: [
     {
-      id: "g3_t9",
-      title: "9. 相似三角形邊長比",
-      generate: () =>
-        generate10Unique(() => {
-          const ratio = rand(2, 5);
-          const side1 = rand(3, 8);
-          const side2 = side1 * ratio;
-          const opts = createUniqueOpts(`$${side2}$`, i => `$${[side1 + ratio, side2 + 2, side1 * 2, side2 - 3][i - 1]}$`);
-          return {
-            q: `兩相似三角形邊長比為 $1 : ${ratio}$，若小三角形對應邊長為 $${side1}$，求大三角形對應邊長`,
-            ans: `$${side2}$`,
-            opts,
-            hint: `對應邊成比例：$${side1} \\times ${ratio} = ${side2}$`,
-          };
-        }),
-    },
-    {
       id: "g3_t10",
-      title: "10. 不等式",
+      title: "10. 集中趨勢的量度",
       generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          const a = rand(2, dse ? 6 : 5);
-          const xAns = rand(3, dse ? 12 : 10);
-          if (dse) {
-            const b = rand(1, 12);
-            const rhs = a * xAns + b + rand(1, 5);
-            const correct = `$x < ${xAns}$`;
-            const opts = createUniqueOpts(correct, i =>
-              [`$x > ${xAns}$`, `$x \\geq ${xAns}$`, `$x < ${xAns - 1}$`, `$x > ${xAns + 1}$`][i - 1],
-            );
-            return {
-              q: `解不等式：$${a}x + ${b} < ${rhs}$`,
-              ans: correct,
-              opts,
-              hint: `$${a}x < ${rhs - b}$ \\implies x < ${xAns}$`,
-            };
-          }
-          const k = rand(1, a - 1 || 1);
-          const rhs = a * xAns - k;
-          const correct = `$x > ${xAns}$`;
-          const opts = createUniqueOpts(correct, i =>
-            [`$x < ${xAns}$`, `$x \\leq ${xAns}$`, `$x > ${xAns + 1}$`, `$x < ${xAns - 1}$`][i - 1],
-          );
-          return {
-            q: `解不等式：$${a}x > ${rhs}$`,
-            ans: correct,
-            opts,
-            hint: `$x > \\frac{${rhs}}{${a}} \\implies x > ${xAns}$`,
-          };
-        }),
+        generate10Unique(() => g3CentralTendencyQuestion(difficulty)),
     },
     {
       id: "g3_t11",
-      title: "11. 三角學應用",
+      title: "11. 概率簡介",
       generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          if (dse) {
-            const dist = rand(50, 200);
-            const angle = rand(30, 60);
-            const height = Math.round(dist * Math.tan((angle * Math.PI) / 180));
-            const opts = createUniqueOpts(`$${height}\\text{ m}$`, i =>
-              [`$${height + 10}\\text{ m}$`, `$${dist}\\text{ m}$`, `$${height - 5}\\text{ m}$`, `$${Math.round(dist / 2)}\\text{ m}$`][i - 1],
-            );
-            return {
-              q: `地面距離 $${dist}$ m 處測得仰角 $${angle}^{\\circ}$（$\\tan ${angle}^{\\circ} \\approx ${roundTo(Math.tan((angle * Math.PI) / 180), 2)}$），求建築物高度（整數）`,
-              ans: `$${height}\\text{ m}$`,
-              opts,
-              hint: `$h = ${dist} \\tan ${angle}^{\\circ} \\approx ${height}$ m`,
-            };
-          }
-          const opp = rand(3, 8);
-          const adj = rand(4, 10);
-          const hyp = Math.round(Math.sqrt(opp * opp + adj * adj));
-          const opts = createUniqueOpts(`$${hyp}$`, i => `$${[opp + adj, hyp + 2, hyp - 1, opp * adj][i - 1]}$`);
-          return {
-            q: `直角三角形兩直角邊 $${opp}$ 和 $${adj}$，求斜邊`,
-            ans: `$${hyp}$`,
-            opts,
-            hint: `$c = \\sqrt{${opp}^2 + ${adj}^2} = ${hyp}$`,
-          };
-        }),
-    },
-    {
-      id: "g3_t12",
-      title: "12. 概率進階",
-      generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          if (dse) {
-            const red = rand(3, 5);
-            const blue = rand(2, 4);
-            const total = red + blue;
-            const ansNum = red * (red - 1);
-            const ansDen = total * (total - 1);
-            const g = gcd(ansNum, ansDen);
-            const ans = `$\\frac{${ansNum / g}}{${ansDen / g}}$`;
-            const opts = createUniqueOpts(ans, i =>
-              [`$\\frac{${red}}{${total}}$`, `$\\frac{${blue}}{${total}}$`, `$\\frac{${red - 1}}{${total - 1}}$`, `$\\frac{${red}}{${total - 1}}$`][i - 1],
-            );
-            return {
-              q: `袋中 $${red}$ 紅 $${blue}$ 藍，不放回抽 2 次，兩次皆紅的概率？`,
-              ans,
-              opts,
-              hint: `$\\frac{${red}}{${total}} \\times \\frac{${red - 1}}{${total - 1}} = ${ans}$`,
-            };
-          }
-          const red = rand(2, 5);
-          const blue = rand(3, 6);
-          const total = red + blue;
-          const ans = `$\\frac{${blue}}{${total}}$`;
-          const opts = createUniqueOpts(ans, i =>
-            [`$\\frac{${red}}{${total}}$`, `$\\frac{1}{${total}}$`, `$\\frac{${blue + 1}}{${total}}$`, `$\\frac{${blue}}{${red}}$`][i - 1],
-          );
-          return {
-            q: `袋中 $${red}$ 紅 $${blue}$ 藍，隨機抽一個是藍球的概率？`,
-            ans,
-            opts,
-            hint: `$P = \\frac{${blue}}{${red}+${blue}} = \\frac{${blue}}{${total}}$`,
-          };
-        }),
+        generate10Unique(() => g3ProbabilityIntroQuestion(difficulty)),
     },
   ],
   4: [
