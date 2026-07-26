@@ -4849,17 +4849,74 @@ function g3StatsMedianFromCumPoly(xVals, cumFreq) {
   return xVals[xVals.length - 1];
 }
 
+/** DSE 離散頻數（總頻數奇數） */
+function g3StatsDseDiscreteOdd(v) {
+  const values = [10 + (v % 4), 12 + (v % 3), 14 + (v % 2), 16 + (v % 3)].slice(0, 3);
+  const freqs = [5 + (v % 4), 2 + (v % 3), 4 + (v % 2)];
+  if (freqs.reduce((a, b) => a + b, 0) % 2 === 0) freqs[0]++;
+  return { values, freqs };
+}
+
+/** DSE 離散頻數（總頻數偶數） */
+function g3StatsDseDiscreteEven(v) {
+  const values = [8 + (v % 3), 10 + (v % 4), 13 + (v % 2), 16 + (v % 3)];
+  const freqs = [4 + (v % 3), 3 + (v % 2), 2 + (v % 3), 3 + (v % 2)];
+  if (freqs.reduce((a, b) => a + b, 0) % 2 === 1) freqs[0]++;
+  return { values, freqs };
+}
+
+/** DSE 分組數據（3 組） */
+function g3StatsDseGrouped(v) {
+  const start = 1 + (v % 3) * 2;
+  let freqs = [6 + (v % 5), 18 + (v % 7), 5 + (v % 4)];
+  const maxIdx = 1;
+  freqs[maxIdx] = Math.max(freqs[0], freqs[1], freqs[2]) + 3 + (v % 4);
+  return [
+    { lo: start, hi: start + 1, f: freqs[0] },
+    { lo: start + 2, hi: start + 3, f: freqs[1] },
+    { lo: start + 4, hi: start + 5, f: freqs[2] },
+  ];
+}
+
+/** DSE 累積頻數多邊形數據 */
+function g3StatsDseCumPoly(v) {
+  const step = 2;
+  const inc = [6 + (v % 5), 10 + (v % 8), 5 + (v % 4), 3 + (v % 3)];
+  const xVals = [0, step, step * 2, step * 3, step * 4];
+  let run = 0;
+  const cumFreq = [0];
+  for (let i = 0; i < inc.length; i++) {
+    run += inc[i];
+    cumFreq.push(run);
+  }
+  return { xVals, cumFreq, total: run };
+}
+
+function g3StatsWrongNums(correct, count, deltas) {
+  const ds = deltas || [0.5, -0.5, 1, -1, 2, -2];
+  const out = [];
+  for (const d of ds) {
+    const w = roundTo(correct + d, 1);
+    if (w !== correct && w > 0 && !out.includes(w)) out.push(w);
+    if (out.length >= count) break;
+  }
+  return out;
+}
+
 function g3StatsCumFreqSvg(xVals, cumFreq, xUnit, total) {
   const W = 280;
-  const H = 200;
+  const H = 228;
   const padL = 44;
-  const padB = 36;
-  const padT = 22;
-  const padR = 16;
+  const padB = 52;
+  const padT = 24;
+  const padR = 20;
   const plotW = W - padL - padR;
   const plotH = H - padT - padB;
   const maxX = xVals[xVals.length - 1];
   const maxY = total;
+  const axisY = padT + plotH;
+  const tickY = axisY + 16;
+  const unitY = H - 8;
   const toPx = (x, y) => {
     const px = padL + (x / maxX) * plotW;
     const py = padT + plotH - (y / maxY) * plotH;
@@ -4867,22 +4924,32 @@ function g3StatsCumFreqSvg(xVals, cumFreq, xUnit, total) {
   };
   const pts = xVals.map((x, i) => toPx(x, cumFreq[i])).join(" ");
   const halfY = padT + plotH - (total / 2 / maxY) * plotH;
-  const labels = xVals
+  const tickLabels = xVals
     .filter((_, i) => i > 0)
     .map(x => {
       const px = padL + (x / maxX) * plotW;
-      return `<text x="${px}" y="${H - 8}" text-anchor="middle" fill="#a29bfe" font-size="10">${x}</text>`;
+      return `<text x="${px}" y="${tickY}" text-anchor="middle" fill="#dfe6e9" font-size="10">${x}</text>`;
+    })
+    .join("");
+  const yTicks = [0, total / 2, total]
+    .map(y => {
+      const py = padT + plotH - (y / maxY) * plotH;
+      return (
+        `<line x1="${padL - 4}" y1="${py}" x2="${padL}" y2="${py}" stroke="#6c5ce7" stroke-width="1"/>` +
+        `<text x="${padL - 6}" y="${py + 3}" text-anchor="end" fill="#a29bfe" font-size="9">${y}</text>`
+      );
     })
     .join("");
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="累積頻數多邊形" style="max-width:280px;width:100%;height:auto;display:block;margin:8px auto">` +
-    `<text x="${W / 2}" y="14" text-anchor="middle" fill="#dfe6e9" font-size="11">累積頻數多邊形</text>` +
-    `<line x1="${padL}" y1="${padT + plotH}" x2="${W - padR}" y2="${padT + plotH}" stroke="#6c5ce7" stroke-width="1.2"/>` +
-    `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" stroke="#6c5ce7" stroke-width="1.2"/>` +
-    `<text x="14" y="${padT + plotH / 2}" fill="#a29bfe" font-size="10" transform="rotate(-90 14 ${padT + plotH / 2})">累積頻數</text>` +
-    `<text x="${W / 2}" y="${H - 2}" text-anchor="middle" fill="#a29bfe" font-size="10">${xUnit}</text>` +
+    `<text x="${W / 2}" y="16" text-anchor="middle" fill="#dfe6e9" font-size="11">累積頻數多邊形</text>` +
+    `<line x1="${padL}" y1="${axisY}" x2="${W - padR}" y2="${axisY}" stroke="#6c5ce7" stroke-width="1.2"/>` +
+    `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${axisY}" stroke="#6c5ce7" stroke-width="1.2"/>` +
+    yTicks +
+    `<text x="12" y="${padT + plotH / 2}" fill="#a29bfe" font-size="9" transform="rotate(-90 12 ${padT + plotH / 2})">累積頻數</text>` +
+    tickLabels +
+    `<text x="${W / 2}" y="${unitY}" text-anchor="middle" fill="#a29bfe" font-size="10">${xUnit}</text>` +
     `<line x1="${padL}" y1="${halfY}" x2="${W - padR}" y2="${halfY}" stroke="#fdcb6e" stroke-width="1" stroke-dasharray="4 3"/>` +
-    `<text x="${W - padR + 2}" y="${halfY + 4}" fill="#fdcb6e" font-size="9">${total / 2}</text>` +
     `<polyline points="${pts}" fill="none" stroke="#55efc4" stroke-width="2"/>` +
     xVals
       .map((x, i) => {
@@ -4890,7 +4957,6 @@ function g3StatsCumFreqSvg(xVals, cumFreq, xUnit, total) {
         return `<circle cx="${px}" cy="${py}" r="3.5" fill="#f1c40f"/>`;
       })
       .join("") +
-    labels +
     `</svg>`
   );
 }
@@ -4908,14 +4974,14 @@ function g3CentralTendencyDse(fixedType, variant) {
 
   // 1. 離散頻數表 — 平均數
   if (type === 1) {
-    const values = [12, 13, 14].map(x => x + (v % 3));
-    const freqs = [8, 2, 5].map((f, i) => f + (i === v % 3 ? 1 : 0));
+    const { values, freqs } = g3StatsDseDiscreteOdd(v);
     const total = freqs.reduce((a, b) => a + b, 0);
     const sum = values.reduce((s, x, i) => s + x * freqs[i], 0);
     const mean = sum / total;
     const meanStr = g3StatsNumAns(mean);
+    const wrongs = g3StatsWrongNums(mean, 3);
     const opts = createUniqueOpts(meanStr, i =>
-      [g3StatsNumAns(mean + 0.5), g3StatsNumAns(mean - 0.5), g3StatsNumAns(values[1]), g3StatsNumAns(sum / (total + 1))][i - 1],
+      [g3StatsNumAns(wrongs[0]), g3StatsNumAns(wrongs[1]), g3StatsNumAns(values[1]), g3StatsNumAns(sum / (total + 1))][i - 1],
     );
     const numPart = values.map((x, i) => `${x}\\times${freqs[i]}`).join("+");
     return {
@@ -4928,19 +4994,16 @@ function g3CentralTendencyDse(fixedType, variant) {
 
   // 2. 分組數據 — 平均數（組中點）
   if (type === 2) {
-    const classes = [
-      { lo: 1, hi: 2, f: 9 },
-      { lo: 3, hi: 4, f: 25 },
-      { lo: 5, hi: 6, f: 6 },
-    ];
+    const classes = g3StatsDseGrouped(v);
     const marks = classes.map(c => g3StatsClassMark(c.lo, c.hi));
     const freqs = classes.map(c => c.f);
     const total = freqs.reduce((a, b) => a + b, 0);
     const sum = marks.reduce((s, m, i) => s + m * freqs[i], 0);
     const mean = sum / total;
     const meanStr = g3StatsNumAns(mean);
+    const wrongs = g3StatsWrongNums(mean, 3, [0.2, -0.2, 0.5, -0.5]);
     const opts = createUniqueOpts(meanStr, i =>
-      [g3StatsNumAns(mean + 0.2), g3StatsNumAns(marks[1]), g3StatsNumAns(mean - 0.2), g3StatsNumAns(3.5)][i - 1],
+      [g3StatsNumAns(wrongs[0]), g3StatsNumAns(marks[1]), g3StatsNumAns(wrongs[1]), g3StatsNumAns(marks[0])][i - 1],
     );
     const rows = classes.map(c => ({ val: g3StatsClassRange(c.lo, c.hi), f: c.f }));
     const numPart = marks.map((m, i) => `${m}\\times${freqs[i]}`).join("+");
@@ -4954,32 +5017,41 @@ function g3CentralTendencyDse(fixedType, variant) {
 
   // 3. 離散頻數表 — 中位數（奇數總頻數）
   if (type === 3) {
-    const values = [12, 13, 14];
-    const freqs = [8, 2, 5];
+    const { values, freqs } = g3StatsDseDiscreteOdd(v + 1);
     const total = freqs.reduce((a, b) => a + b, 0);
     const median = g3StatsMedianDiscrete(values, freqs);
     const ans = g3StatsNumAns(median);
     const midPos = (total + 1) / 2;
+    let cum = 0;
+    let midVal = values[0];
+    for (let i = 0; i < values.length; i++) {
+      cum += freqs[i];
+      if (cum >= midPos) {
+        midVal = values[i];
+        break;
+      }
+    }
+    const wrongs = g3StatsWrongNums(median, 3);
     const opts = createUniqueOpts(ans, i =>
-      [g3StatsNumAns(13), g3StatsNumAns(14), g3StatsNumAns(12.5), g3StatsNumAns(values[2])][i - 1],
+      [g3StatsNumAns(wrongs[0]), g3StatsNumAns(wrongs[1]), g3StatsNumAns(values[1]), g3StatsNumAns(values[values.length - 1])][i - 1],
     );
     return {
       q: `${g3StatsFreqTable("糖果重量（g）", "重量 (g)", values.map((x, i) => ({ val: String(x), f: freqs[i] })))}<br>求<strong>中位數</strong>`,
       ans,
       opts,
-      hint: `總頻數 $${total}$（奇數），中位數為第 $${midPos}$ 個數據；首 $${freqs[0]}$ 個皆為 $${values[0]}$ → ${g3StatsHintEnd(ans)}`,
+      hint: `總頻數 $${total}$（奇數），中位數為第 $${midPos}$ 個數據，落在 $${midVal}$ → ${g3StatsHintEnd(ans)}`,
     };
   }
 
   // 4. 離散頻數表 — 中位數（偶數總頻數）
   if (type === 4) {
-    const values = [10, 12, 15, 18];
-    const freqs = [6, 4, 3, 3];
+    const { values, freqs } = g3StatsDseDiscreteEven(v);
     const total = freqs.reduce((a, b) => a + b, 0);
     const median = g3StatsMedianDiscrete(values, freqs);
     const ans = g3StatsNumAns(median);
+    const wrongs = g3StatsWrongNums(median, 3);
     const opts = createUniqueOpts(ans, i =>
-      [g3StatsNumAns(10), g3StatsNumAns(12), g3StatsNumAns(11), g3StatsNumAns(12.5)][i - 1],
+      [g3StatsNumAns(values[0]), g3StatsNumAns(values[1]), g3StatsNumAns(wrongs[0]), g3StatsNumAns(wrongs[1])][i - 1],
     );
     return {
       q: `${g3StatsFreqTable("測驗分數", "分數", values.map((x, i) => ({ val: String(x), f: freqs[i] })))}<br>求<strong>中位數</strong>`,
@@ -4991,15 +5063,17 @@ function g3CentralTendencyDse(fixedType, variant) {
 
   // 5. 離散頻數表 — 眾數
   if (type === 5) {
-    const values = [12, 13, 14].map(x => x + (v % 2));
-    const freqs = [8, 2, 5];
+    const { values, freqs } = g3StatsDseDiscreteOdd(v + 2);
     const maxF = Math.max(...freqs);
     const modeIdx = freqs.indexOf(maxF);
     const ans = g3StatsNumAns(values[modeIdx]);
     const opts = createUniqueOpts(ans, i =>
-      [g3StatsNumAns(values[(modeIdx + 1) % 3]), g3StatsNumAns(values[(modeIdx + 2) % 3]), g3StatsNumAns(maxF), g3StatsNumAns(values[1])][
-        i - 1
-      ],
+      [
+        g3StatsNumAns(values[(modeIdx + 1) % values.length]),
+        g3StatsNumAns(values[(modeIdx + 2) % values.length]),
+        g3StatsNumAns(maxF),
+        g3StatsNumAns(values[0] + 1),
+      ][i - 1],
     );
     return {
       q: `${g3StatsFreqTable("糖果重量（g）", "重量 (g)", values.map((x, i) => ({ val: String(x), f: freqs[i] })))}<br>求<strong>眾數</strong>`,
@@ -5011,20 +5085,17 @@ function g3CentralTendencyDse(fixedType, variant) {
 
   // 6. 分組數據 — 眾數組
   if (type === 6) {
-    const classes = [
-      { lo: 1, hi: 2, f: 9 },
-      { lo: 3, hi: 4, f: 25 },
-      { lo: 5, hi: 6, f: 6 },
-    ];
-    const maxIdx = 1;
+    const classes = g3StatsDseGrouped(v + 3);
+    const maxIdx = classes.reduce((best, c, i) => (c.f > classes[best].f ? i : best), 0);
     const c = classes[maxIdx];
     const ans = `${g3StatsClassRange(c.lo, c.hi)} 小時`;
+    const others = classes.filter((_, i) => i !== maxIdx);
     const opts = createUniqueOpts(ans, i =>
       [
-        `${g3StatsClassRange(classes[0].lo, classes[0].hi)} 小時`,
-        `${g3StatsClassRange(classes[2].lo, classes[2].hi)} 小時`,
+        `${g3StatsClassRange(others[0].lo, others[0].hi)} 小時`,
+        `${g3StatsClassRange(others[1].lo, others[1].hi)} 小時`,
         `${c.lo} 小時`,
-        `3 小時`,
+        `${c.hi} 小時`,
       ][i - 1],
     );
     const rows = classes.map(cl => ({ val: g3StatsClassRange(cl.lo, cl.hi), f: cl.f }));
@@ -5038,13 +5109,12 @@ function g3CentralTendencyDse(fixedType, variant) {
 
   // 7. 累積頻數多邊形 — 估計中位數
   if (type === 7) {
-    const xVals = [0, 2, 4, 6, 8];
-    const cumFreq = [0, 8, 26, 34, 40];
-    const total = 40;
+    const { xVals, cumFreq, total } = g3StatsDseCumPoly(v);
     const median = roundTo(g3StatsMedianFromCumPoly(xVals, cumFreq), 1);
     const ans = g3StatsNumAns(median);
+    const wrongs = g3StatsWrongNums(median, 3);
     const opts = createUniqueOpts(ans, i =>
-      [g3StatsNumAns(2.5), g3StatsNumAns(3.5), g3StatsNumAns(4.5), g3StatsNumAns(2.1)][i - 1],
+      [g3StatsNumAns(wrongs[0]), g3StatsNumAns(wrongs[1]), g3StatsNumAns(wrongs[2]), g3StatsNumAns(xVals[2])][i - 1],
     );
     const diagram = g3StatsCumFreqSvg(xVals, cumFreq, "時間（小時）", total);
     return {
@@ -5057,14 +5127,25 @@ function g3CentralTendencyDse(fixedType, variant) {
 
   // 8. 加權平均數
   if (type === 8) {
-    const scores = v % 2 === 0 ? [80, 70] : [75, 85, 60];
-    const weights = v % 2 === 0 ? [6, 4] : [3, 2, 2];
+    const useThree = v % 3 === 0;
+    const scores = useThree
+      ? [70 + (v % 5), 80 + (v % 4), 65 + (v % 3)]
+      : [75 + (v % 6), 85 + (v % 5)];
+    const weights = useThree
+      ? [2 + (v % 3), 3 + (v % 2), 2 + (v % 2)]
+      : [4 + (v % 3), 6 + (v % 2)];
     const sum = scores.reduce((s, x, i) => s + x * weights[i], 0);
     const wTotal = weights.reduce((a, b) => a + b, 0);
     const mean = sum / wTotal;
     const meanStr = g3StatsNumAns(mean);
+    const wrongs = g3StatsWrongNums(mean, 2, [2, -2, 3, -3]);
     const opts = createUniqueOpts(meanStr, i =>
-      [g3StatsNumAns(mean + 2), g3StatsNumAns(mean - 2), g3StatsNumAns(scores[0]), g3StatsNumAns((scores[0] + scores[1]) / 2)][i - 1],
+      [
+        g3StatsNumAns(wrongs[0]),
+        g3StatsNumAns(wrongs[1]),
+        g3StatsNumAns(scores[0]),
+        g3StatsNumAns(roundTo((scores[0] + scores[1]) / 2, 1)),
+      ][i - 1],
     );
     const parts = scores.map((s, i) => `(${s}\\times${weights[i]})`).join("+");
     return {
@@ -5081,18 +5162,21 @@ function g3CentralTendencyDse(fixedType, variant) {
     const origMedian = 6 + (v % 3);
     const origMode = 4 + (v % 2);
     const useAdd = v % 2 === 0;
-    const k = useAdd ? 3 : 2;
+    const k = useAdd ? 2 + (v % 4) : 2 + (v % 3);
     const newMean = useAdd ? origMean + k : origMean * k;
     const newMedian = useAdd ? origMedian + k : origMedian * k;
     const newMode = useAdd ? origMode + k : origMode * k;
-    const ask = rand(0, 2);
+    const ask = v % 3;
     const labels = ["平均數", "中位數", "眾數"];
     const vals = [newMean, newMedian, newMode];
     const ans = g3StatsNumAns(vals[ask]);
     const opts = createUniqueOpts(ans, i =>
-      [g3StatsNumAns(vals[(ask + 1) % 3]), g3StatsNumAns(vals[(ask + 2) % 3]), g3StatsNumAns(useAdd ? origMean : origMean * k), g3StatsNumAns(newMean + 1)][
-        i - 1
-      ],
+      [
+        g3StatsNumAns(vals[(ask + 1) % 3]),
+        g3StatsNumAns(vals[(ask + 2) % 3]),
+        g3StatsNumAns(useAdd ? origMean + k : origMean),
+        g3StatsNumAns(newMean + (useAdd ? 1 : k)),
+      ][i - 1],
     );
     const op = useAdd ? `加 ${k}` : `乘以 ${k}`;
     const orig = [origMean, origMedian, origMode];
