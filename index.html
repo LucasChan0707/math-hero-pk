@@ -1195,79 +1195,164 @@ function g3QuadrilateralEasy() {
   };
 }
 
-function g3QuadrilateralDse() {
-  const type = rand(1, 5);
-
-  if (type === 1) {
-    const angle2 = rand(100, 130);
-    const ans = 180 - angle2;
-    const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i =>
-      [`$${angle2}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ans + 10}^{\\circ}$`, `$${ans - 10}^{\\circ}$`][i - 1],
-    );
-    return {
-      q: `平行四邊形 $ABCD$ 中，$\\angle A = ${angle2}^{\\circ}$，求鄰角 $\\angle B$ 的大小`,
-      ans: `$${ans}^{\\circ}$`,
-      opts,
-      hint: `平行四邊形鄰角互補：$\\angle B = 180^{\\circ} - ${angle2}^{\\circ} = ${ans}^{\\circ}$。誤選 $${angle2}^{\\circ}$ 是把對角相等誤用於鄰角`,
-    };
-  }
-
-  if (type === 2) {
-    const ao = rand(5, 9);
-    const bo = rand(4, 8);
-    const ac = ao * 2;
-    const bd = bo * 2;
-    const ans = `$${ac}$`;
-    const opts = createUniqueOpts(ans, i => [`$${ao}$`, `$${bd}$`, `$${ac + 2}$`, `$${ac - 2}$`][i - 1]);
-    return {
-      q: `平行四邊形 $ABCD$ 對角線交於 $O$，$AO = ${ao}$、$BO = ${bo}$，求對角線 $AC$ 的長度`,
-      ans,
-      opts,
-      hint: `對角線互相平分：$AC = 2 \\times AO = 2 \\times ${ao} = ${ac}$。誤選 $${ao}$ 是只取半段；誤選 $${bd}$ 是混淆兩條對角線`,
-    };
-  }
-
-  if (type === 3) {
-    const insufficient = G3_PARALLELOGRAM_PROOFS.filter(p => !p.ok);
-    const sufficient = G3_PARALLELOGRAM_PROOFS.filter(p => p.ok);
-    const pick = insufficient[rand(0, insufficient.length - 1)];
-    const distractors = sufficient.slice(0, 3).map(p => p.text);
-    const ans = pick.text;
-    const opts = createUniqueOpts(ans, i => distractors[i - 1]);
-    return {
-      q: `下列哪一項<strong>不能</strong>作為判別四邊形 $ABCD$ 為平行四邊形的充分條件？`,
-      ans,
-      opts,
-      hint: g3QuadMcHint(ans, G3_PARALLELOGRAM_PROOFS, "insufficient"),
-    };
-  }
-
-  if (type === 4) {
-    const angle = rand(100, 140);
-    const ansVal = 180 - angle;
-    const ans = `$${ansVal}^{\\circ}$`;
-    const opts = createUniqueOpts(ans, i =>
-      [`$${angle}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ansVal - 8}^{\\circ}$`, `$${angle - 20}^{\\circ}$`][i - 1],
-    );
-    return {
-      q: `菱形 $ABCD$ 中，$\\angle ABC = ${angle}^{\\circ}$，求 $\\angle BAD$ 的大小`,
-      ans,
-      opts,
-      hint: `菱形為平行四邊形，鄰角互補：$\\angle BAD = 180^{\\circ} - ${angle}^{\\circ} = ${ansVal}^{\\circ}$。亦可先由菱形對角線平分內角再推角度`,
-    };
-  }
-
-  const d1 = rand(10, 16);
-  const ans = `$${d1}\\text{ cm}$`;
+function g3QuadDseRhombusExtAngle(bef) {
+  const bdc = (180 + bef) / 4;
+  const abc = (180 + bef) / 2;
+  const ans = `$${bdc}^{\\circ}$`;
   const opts = createUniqueOpts(ans, i =>
-    [`$${d1 + 5}\\text{ cm}$`, `$${Math.round(d1 / 2)}\\text{ cm}$`, `$${d1 - 4}\\text{ cm}$`, `$${d1 * 2}\\text{ cm}$`][i - 1],
+    [`$${bef}^{\\circ}$`, `$${abc}^{\\circ}$`, `$${bdc + 4}^{\\circ}$`, `$${Math.max(40, bdc - 4)}^{\\circ}$`][i - 1],
   );
   return {
-    q: `矩形 $PQRS$ 中，$PR = ${d1}$ cm，且對角線 $PR$ 與 $QS$ 相交。求 $QS$ 的長度`,
+    q: `圖中，$ABCD$ 為菱形。延長 $AB$ 至 $E$、延長 $BC$ 至 $F$，使 $ABE$ 及 $BCF$ 均為直線，且 $BE = EF$。若 $\\angle BEF = ${bef}^{\\circ}$，求 $\\angle BDC$。`,
     ans,
     opts,
-    hint: `矩形對角線相等，故 $QS = PR = ${d1}$ cm。相交只改變交點位置，不改變對角線全長`,
+    hint: `$BE = EF$ 故 $\\triangle BEF$ 等腰，$\\angle EBF = \\dfrac{180^{\\circ}-${bef}^{\\circ}}{2} = ${(180 - bef) / 2}^{\\circ}$。此為菱形外角，故 $\\angle ABC = 180^{\\circ} - ${(180 - bef) / 2}^{\\circ} = ${abc}^{\\circ}$。菱形對角線平分對角，$\\angle BDC = \\dfrac{${abc}^{\\circ}}{2} = ${bdc}^{\\circ}$。誤選 $${bef}^{\\circ}$ 是直接套用題目角；誤選 $${abc}^{\\circ}$ 是未除以 2`,
   };
+}
+
+const G3_QUAD_DSE_RHOMBUS_AEAF = [
+  { bad: 110, ecf: 42, bec: 76, wrongs: [70, 80, 84] },
+];
+
+function g3QuadDseRhombusAeAf() {
+  const c = G3_QUAD_DSE_RHOMBUS_AEAF[rand(0, G3_QUAD_DSE_RHOMBUS_AEAF.length - 1)];
+  const ans = `$${c.bec}^{\\circ}$`;
+  const opts = createUniqueOpts(ans, i => [`$${c.wrongs[i - 1]}^\\circ$`][i - 1]);
+  return {
+    q: `圖中，$ABCD$ 為菱形。$E$、$F$ 分別在 $AB$、$AD$ 上，且 $AE = AF$。若 $\\angle BAD = ${c.bad}^{\\circ}$、$\\angle ECF = ${c.ecf}^{\\circ}$，求 $\\angle BEC$。`,
+    ans,
+    opts,
+    hint: `$AE = AF$ 故 $\\triangle AEF$ 等腰；$\\angle EAF = \\angle BAD = ${c.bad}^{\\circ}$，得底角 $\\dfrac{180^{\\circ}-${c.bad}^{\\circ}}{2}$。結合菱形對邊平行、$\\angle ECF = ${c.ecf}^{\\circ}$ 及對角線性質，可得 $\\angle BEC = ${c.bec}^{\\circ}$`,
+  };
+}
+
+const G3_QUAD_DSE_AREA_2018 = [
+  { m: 5, n: 3, abf: 120, cdfe: 312 },
+  { m: 5, n: 3, abf: 60, cdfe: 156 },
+  { m: 5, n: 3, abf: 100, cdfe: 260 },
+];
+
+function g3QuadDseAreaParallelogram2018() {
+  const c = G3_QUAD_DSE_AREA_2018[rand(0, G3_QUAD_DSE_AREA_2018.length - 1)];
+  const ans = `$${c.cdfe}\\text{ cm}^2$`;
+  const opts = createUniqueOpts(ans, i =>
+    [
+      `$${Math.round(c.abf * 1.975)}\\text{ cm}^2$`,
+      `$${c.cdfe + 24}\\text{ cm}^2$`,
+      `$${c.cdfe - 18}\\text{ cm}^2$`,
+      `$${Math.round(c.abf * 3.5)}\\text{ cm}^2$`,
+    ][i - 1],
+  );
+  return {
+    q: `圖中，$ABCD$ 為平行四邊形。$E$ 在 $BC$ 上，且 $BE : EC = ${c.m} : ${c.n}$。$AE$ 與 $BD$ 相交於 $F$。若 $\\triangle ABF$ 的面積為 $${c.abf}\\text{ cm}^2$，求四邊形 $CDFE$ 的面積。`,
+    ans,
+    opts,
+    hint: `利用平行四邊形對邊平行，可得 $\\triangle BEF \\sim \\triangle DAF$ 及 $\\triangle ABF$ 與 $\\triangle EBF$ 同高比例。按 DSE 2018 P2Q16 比例推得 $[CDFE] = ${c.abf} \\times \\dfrac{13}{5} = ${c.cdfe}\\text{ cm}^2$。誤把邊比直接當面積比會得約 $${Math.round(c.abf * 1.975)}\\text{ cm}^2$`,
+  };
+}
+
+const G3_QUAD_DSE_AREA_2017 = [
+  { abg: 135, dfgh: 144 },
+  { abg: 90, dfgh: 96 },
+  { abg: 150, dfgh: 160 },
+  { abg: 120, dfgh: 128 },
+];
+
+function g3QuadDseAreaNested2017() {
+  const c = G3_QUAD_DSE_AREA_2017[rand(0, G3_QUAD_DSE_AREA_2017.length - 1)];
+  const ans = `$${c.dfgh}\\text{ cm}^2$`;
+  const opts = createUniqueOpts(ans, i =>
+    [
+      `$${Math.round(c.abg * 0.6)}\\text{ cm}^2$`,
+      `$${Math.round(c.abg * 0.81)}\\text{ cm}^2$`,
+      `$${c.abg}\\text{ cm}^2$`,
+      `$${c.dfgh + 12}\\text{ cm}^2$`,
+    ][i - 1],
+  );
+  return {
+    q: `圖中，$ABCD$ 及 $BEDF$ 均為平行四邊形。$E$ 在 $BC$ 上，且 $BE : EC = 2 : 3$。$AC$ 分別與 $BF$、$DE$ 相交於 $G$、$H$。若 $\\triangle ABG$ 的面積為 $${c.abg}\\text{ cm}^2$，求四邊形 $DFGH$ 的面積。`,
+    ans,
+    opts,
+    hint: `由相似三角形及平行四邊形對角線互相平分，$[DFGH] : [\\triangle ABG] = 16 : 15$（DSE 2017 P2Q16）。故 $[DFGH] = ${c.abg} \\times \\dfrac{16}{15} = ${c.dfgh}\\text{ cm}^2$。誤用 $BE:EC$ 的平方比會得 $${Math.round(c.abg * 0.81)}\\text{ cm}^2$`,
+  };
+}
+
+const G3_QUAD_DSE_AREA_2019 = [
+  { abx: 24, cdyf: 87 },
+  { abx: 32, cdyf: 116 },
+  { abx: 40, cdyf: 145 },
+  { abx: 16, cdyf: 58 },
+];
+
+function g3QuadDseAreaSquare2019() {
+  const c = G3_QUAD_DSE_AREA_2019[rand(0, G3_QUAD_DSE_AREA_2019.length - 1)];
+  const ans = `$${c.cdyf}\\text{ cm}^2$`;
+  const opts = createUniqueOpts(ans, i =>
+    [
+      `$${Math.round(c.abx * 2.25)}\\text{ cm}^2$`,
+      `$${Math.round(c.abx * 3.2)}\\text{ cm}^2$`,
+      `$${Math.round(c.abx * 3.375)}\\text{ cm}^2$`,
+      `$${c.cdyf - 6}\\text{ cm}^2$`,
+    ][i - 1],
+  );
+  return {
+    q: `圖中，$ABCD$ 為平行四邊形，$AEFG$ 為正方形。已知 $BE : EF : FC = 2 : 7 : 3$，$BD$ 分別與 $AE$、$FG$ 相交於 $X$、$Y$。若 $\\triangle ABX$ 的面積為 $${c.abx}\\text{ cm}^2$，求四邊形 $CDYF$ 的面積。`,
+    ans,
+    opts,
+    hint: `設 $BE=2k,\\ EF=7k,\\ FC=3k$，利用 $\\triangle ABX \\sim \\triangle DBX$ 及正方形 $AEFG$ 的平行關係求面積比（DSE 2019 P2Q16）。得 $[CDYF] = ${c.abx} \\times \\dfrac{29}{8} = ${c.cdyf}\\text{ cm}^2$。誤把 $2:7:3$ 直接作面積比會得到 $${Math.round(c.abx * 3.375)}\\text{ cm}^2$`,
+  };
+}
+
+const G3_QUAD_DSE_STATEMENTS = [
+  {
+    q: `$ABCD$ 為平行四邊形，$E$ 為 $AD$ 的中點。若 $\\angle ABE = \\angle CBD = \\angle DBE$，下列何者正確？`,
+    stmts: ["I. $AB = BD$", "II. $\\angle ABC = 135^{\\circ}$", "III. $\\triangle ABE \\cong \\triangle DBE$"],
+    ans: "I、II 及 III",
+    opts: ["只有 I 及 II", "只有 I 及 III", "只有 II 及 III", "I、II 及 III"],
+    hint: `由 $\\angle ABE = \\angle DBE$ 及 $E$ 為 $AD$ 中點，可證 $\\triangle ABE \\cong \\triangle DBE$（III）。進而 $AB=BD$（I），且 $\\angle ABC=135^{\\circ}$（II）。`,
+  },
+  {
+    q: `$ABCD$ 為菱形，對角線 $AC$ 與 $BD$ 交於 $O$。下列何者<strong>必為</strong>正確？`,
+    stmts: ["I. $AO = CO$", "II. $\\angle AOB = 90^{\\circ}$", "III. $AC$ 平分 $\\angle BAD$"],
+    ans: "I、II 及 III",
+    opts: ["只有 I 及 II", "只有 I 及 III", "只有 II 及 III", "I、II 及 III"],
+    hint: `菱形對角線互相垂直（II）、互相平分（I）、且平分內角（III），三式皆成立。`,
+  },
+  {
+    q: `$ABCD$ 為矩形。下列何者足以判別 $PQRS$ 為平行四邊形？`,
+    stmts: [],
+    ans: "對角線互相平分",
+    opts: ["對角線互相平分", "對角線相等", "四邊相等", "有一組對邊平行"],
+    hint: `矩形對角線相等但「對角線相等」不足以判別一般四邊形為平行四邊形；「對角線互相平分」是平行四邊形判別條件。`,
+  },
+];
+
+function g3QuadDseStatement() {
+  const c = G3_QUAD_DSE_STATEMENTS[rand(0, G3_QUAD_DSE_STATEMENTS.length - 1)];
+  const stmtBlock = c.stmts.length
+    ? `<br>${c.stmts[0]}<br>${c.stmts[1]}<br>${c.stmts[2]}`
+    : "";
+  const opts = createUniqueOpts(c.ans, i => c.opts.filter(o => o !== c.ans)[i - 1] ?? c.opts[0]);
+  return {
+    q: c.q + stmtBlock,
+    ans: c.ans,
+    opts,
+    hint: c.hint,
+  };
+}
+
+function g3QuadrilateralDse() {
+  const type = rand(1, 6);
+
+  if (type === 1) {
+    const befChoices = [48, 52, 56, 60, 64];
+    return g3QuadDseRhombusExtAngle(befChoices[rand(0, befChoices.length - 1)]);
+  }
+  if (type === 2) return g3QuadDseRhombusAeAf();
+  if (type === 3) return g3QuadDseAreaParallelogram2018();
+  if (type === 4) return g3QuadDseStatement();
+  if (type === 5) return g3QuadDseAreaNested2017();
+  return g3QuadDseAreaSquare2019();
 }
 
 function g3QuadrilateralQuestion(difficulty) {
