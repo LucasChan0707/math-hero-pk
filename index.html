@@ -1026,6 +1026,254 @@ function g3T4VolumeQuestion(difficulty) {
   return difficulty === "dse" ? g3T4VolumeDse() : g3T4VolumeEasy();
 }
 
+const G3_PARALLELOGRAM_PROOFS = [
+  { text: "兩組對邊分別平行", ok: true, why: "平行四邊形判別條件（定義）" },
+  { text: "兩組對邊分別相等", ok: true, why: "平行四邊形判別條件" },
+  { text: "一組對邊平行且相等", ok: true, why: "平行四邊形判別條件" },
+  { text: "兩組對角分別相等", ok: true, why: "平行四邊形判別條件" },
+  { text: "對角線互相平分", ok: true, why: "平行四邊形判別條件" },
+  { text: "只有一組對邊平行", ok: false, why: "只可判別梯形，不足以判別平行四邊形" },
+  { text: "只有一組對邊相等", ok: false, why: "等腰梯形也可能成立，非充分條件" },
+  { text: "對角線相等", ok: false, why: "等腰梯形對角線也可相等，非充分條件" },
+  { text: "只有一組對角相等", ok: false, why: "部分四邊形（如筝形）也可能成立，非充分條件" },
+];
+
+function g3QuadMcHint(correct, pool, mode) {
+  const okItem = pool.find(p => p.text === correct)!;
+  const wrongItems = pool.filter(p => p.text !== correct);
+  const wrongNote = wrongItems
+    .slice(0, 3)
+    .map(w => `「${w.text}」${mode === "sufficient" ? (w.ok ? "雖成立但非本題所問" : `：${w.why}`) : w.ok ? `：${w.why}` : "雖不成立但非本題所問"}`)
+    .join("；");
+  if (mode === "sufficient") {
+    return `正確：「${correct}」——${okItem.why}。其餘選項常見誤區：${wrongNote}`;
+  }
+  return `正確：「${correct}」——${okItem.why}。其餘選項均為平行四邊形判別的充分條件`;
+}
+
+function g3QuadrilateralEasy() {
+  const type = rand(1, 10);
+
+  if (type === 1) {
+    const ab = rand(5, 12);
+    const bc = rand(4, 10);
+    const ans = `$${ab}$`;
+    const opts = createUniqueOpts(ans, i => [`$${bc}$`, `$${ab + bc}$`, `$${Math.abs(ab - bc)}$`][i - 1]);
+    return {
+      q: `平行四邊形 $ABCD$ 中，$AB = ${ab}$、$BC = ${bc}$，求 $CD$ 的長度`,
+      ans,
+      opts,
+      hint: `平行四邊形對邊相等，故 $CD = AB = ${ab}$。誤選 $${bc}$ 是把鄰邊 $BC$ 當對邊；加減選項是把對邊關係誤當鄰邊處理`,
+    };
+  }
+
+  if (type === 2) {
+    const angle = rand(55, 115);
+    const ans = `$${angle}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${180 - angle}^{\\circ}$`, `$${90}^{\\circ}$`, `$${angle + 15}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: `平行四邊形 $ABCD$ 中，$\\angle A = ${angle}^{\\circ}$，求對角 $\\angle C$ 的大小`,
+      ans,
+      opts,
+      hint: `平行四邊形對角相等，故 $\\angle C = \\angle A = ${angle}^{\\circ}$。誤選 $${180 - angle}^{\\circ}$ 是把鄰角互補（同旁內角）誤用於對角`,
+    };
+  }
+
+  if (type === 3) {
+    const angle = rand(55, 115);
+    const ansVal = 180 - angle;
+    const ans = `$${ansVal}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${angle}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ansVal + 12}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: `平行四邊形 $ABCD$ 中，$\\angle A = ${angle}^{\\circ}$，求鄰角 $\\angle B$ 的大小`,
+      ans,
+      opts,
+      hint: `平行四邊形鄰角互補，$\\angle B = 180^{\\circ} - ${angle}^{\\circ} = ${ansVal}^{\\circ}$。誤選 $${angle}^{\\circ}$ 是把對角相等誤用於鄰角`,
+    };
+  }
+
+  if (type === 4) {
+    const ao = rand(4, 10);
+    const ans = `$${ao}$`;
+    const opts = createUniqueOpts(ans, i => [`$${ao * 2}$`, `$${Math.max(2, ao - 2)}$`, `$${ao + 3}$`][i - 1]);
+    return {
+      q: `平行四邊形 $ABCD$ 的對角線交於 $O$，若 $AO = ${ao}$，求 $CO$ 的長度`,
+      ans,
+      opts,
+      hint: `平行四邊形對角線互相平分，故 $CO = AO = ${ao}$。誤選 $${ao * 2}$ 是把半段對角線誤當整條對角線`,
+    };
+  }
+
+  if (type === 5) {
+    const sufficient = G3_PARALLELOGRAM_PROOFS.filter(p => p.ok);
+    const insufficient = G3_PARALLELOGRAM_PROOFS.filter(p => !p.ok);
+    const pick = sufficient[rand(0, sufficient.length - 1)];
+    const distractors = insufficient.slice(0, 3).map(p => p.text);
+    while (distractors.length < 3) distractors.push(insufficient[distractors.length % insufficient.length].text);
+    const ans = pick.text;
+    const opts = createUniqueOpts(ans, i => distractors[i - 1]);
+    return {
+      q: `下列哪一項<strong>足以</strong>判別四邊形 $ABCD$ 為平行四邊形？`,
+      ans,
+      opts,
+      hint: g3QuadMcHint(ans, G3_PARALLELOGRAM_PROOFS, "sufficient"),
+    };
+  }
+
+  if (type === 6) {
+    const insufficient = G3_PARALLELOGRAM_PROOFS.filter(p => !p.ok);
+    const sufficient = G3_PARALLELOGRAM_PROOFS.filter(p => p.ok);
+    const pick = insufficient[rand(0, insufficient.length - 1)];
+    const distractors = sufficient.slice(0, 3).map(p => p.text);
+    const ans = pick.text;
+    const opts = createUniqueOpts(ans, i => distractors[i - 1]);
+    return {
+      q: `下列哪一項<strong>不能</strong>作為判別四邊形 $ABCD$ 為平行四邊形的充分條件？`,
+      ans,
+      opts,
+      hint: g3QuadMcHint(ans, G3_PARALLELOGRAM_PROOFS, "insufficient"),
+    };
+  }
+
+  if (type === 7) {
+    const d = rand(8, 18);
+    const ans = `$${d}\\text{ cm}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${Math.round(d / 2)}\\text{ cm}$`, `$${d + 4}\\text{ cm}$`, `$${d - 3}\\text{ cm}$`][i - 1],
+    );
+    return {
+      q: `矩形 $ABCD$ 中，對角線 $AC = ${d}$ cm，求 $BD$ 的長度`,
+      ans,
+      opts,
+      hint: `矩形對角線相等，故 $BD = AC = ${d}$ cm。誤選半長或加減值是把對角線當普通線段分割`,
+    };
+  }
+
+  if (type === 8) {
+    const side = rand(6, 14);
+    const perimeter = side * 4;
+    const ans = `$${side}\\text{ cm}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${perimeter}\\text{ cm}$`, `$${side * 2}\\text{ cm}$`, `$${side + 4}\\text{ cm}$`][i - 1],
+    );
+    return {
+      q: `菱形 $ABCD$ 的周界為 $${perimeter}$ cm，求每邊的長度`,
+      ans,
+      opts,
+      hint: `菱形四邊相等，邊長 $= \\dfrac{${perimeter}}{4} = ${side}$ cm。誤選周界是把四邊之和當單邊`,
+    };
+  }
+
+  if (type === 9) {
+    const ans = `$90^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$45^{\\circ}$`, `$180^{\\circ}$`, `$60^{\\circ}$`][i - 1],
+    );
+    return {
+      q: `菱形 $ABCD$ 的對角線 $AC$ 與 $BD$ 交於 $O$，求 $\\angle AOB$ 的大小`,
+      ans,
+      opts,
+      hint: `菱形對角線互相垂直，故 $\\angle AOB = 90^{\\circ}$。誤選 $45^{\\circ}$ 是把「平分內角」誤當「對角線夾角」`,
+    };
+  }
+
+  const fullAngle = rand(32, 60) * 2;
+  const half = fullAngle / 2;
+  const ans = `$${half}^{\\circ}$`;
+  const opts = createUniqueOpts(ans, i =>
+    [`$${fullAngle}^{\\circ}$`, `$${180 - half}^{\\circ}$`, `$${half + 10}^{\\circ}$`][i - 1],
+  );
+  return {
+    q: `菱形 $ABCD$ 中，$\\angle BAD = ${fullAngle}^{\\circ}$，對角線 $AC$ 平分 $\\angle BAD$，求 $\\angle BAC$ 的大小`,
+    ans,
+    opts,
+    hint: `菱形對角線平分內角，故 $\\angle BAC = \\dfrac{${fullAngle}^{\\circ}}{2} = ${half}^{\\circ}$。誤選 $${fullAngle}^{\\circ}$ 是未運用「平分」條件`,
+  };
+}
+
+function g3QuadrilateralDse() {
+  const type = rand(1, 5);
+
+  if (type === 1) {
+    const angle2 = rand(100, 130);
+    const ans = 180 - angle2;
+    const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i =>
+      [`$${angle2}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ans + 10}^{\\circ}$`, `$${ans - 10}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: `平行四邊形 $ABCD$ 中，$\\angle A = ${angle2}^{\\circ}$，求鄰角 $\\angle B$ 的大小`,
+      ans: `$${ans}^{\\circ}$`,
+      opts,
+      hint: `平行四邊形鄰角互補：$\\angle B = 180^{\\circ} - ${angle2}^{\\circ} = ${ans}^{\\circ}$。誤選 $${angle2}^{\\circ}$ 是把對角相等誤用於鄰角`,
+    };
+  }
+
+  if (type === 2) {
+    const ao = rand(5, 9);
+    const bo = rand(4, 8);
+    const ac = ao * 2;
+    const bd = bo * 2;
+    const ans = `$${ac}$`;
+    const opts = createUniqueOpts(ans, i => [`$${ao}$`, `$${bd}$`, `$${ac + 2}$`, `$${ac - 2}$`][i - 1]);
+    return {
+      q: `平行四邊形 $ABCD$ 對角線交於 $O$，$AO = ${ao}$、$BO = ${bo}$，求對角線 $AC$ 的長度`,
+      ans,
+      opts,
+      hint: `對角線互相平分：$AC = 2 \\times AO = 2 \\times ${ao} = ${ac}$。誤選 $${ao}$ 是只取半段；誤選 $${bd}$ 是混淆兩條對角線`,
+    };
+  }
+
+  if (type === 3) {
+    const insufficient = G3_PARALLELOGRAM_PROOFS.filter(p => !p.ok);
+    const sufficient = G3_PARALLELOGRAM_PROOFS.filter(p => p.ok);
+    const pick = insufficient[rand(0, insufficient.length - 1)];
+    const distractors = sufficient.slice(0, 3).map(p => p.text);
+    const ans = pick.text;
+    const opts = createUniqueOpts(ans, i => distractors[i - 1]);
+    return {
+      q: `下列哪一項<strong>不能</strong>作為判別四邊形 $ABCD$ 為平行四邊形的充分條件？`,
+      ans,
+      opts,
+      hint: g3QuadMcHint(ans, G3_PARALLELOGRAM_PROOFS, "insufficient"),
+    };
+  }
+
+  if (type === 4) {
+    const angle = rand(100, 140);
+    const ansVal = 180 - angle;
+    const ans = `$${ansVal}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${angle}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ansVal - 8}^{\\circ}$`, `$${angle - 20}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: `菱形 $ABCD$ 中，$\\angle ABC = ${angle}^{\\circ}$，求 $\\angle BAD$ 的大小`,
+      ans,
+      opts,
+      hint: `菱形為平行四邊形，鄰角互補：$\\angle BAD = 180^{\\circ} - ${angle}^{\\circ} = ${ansVal}^{\\circ}$。亦可先由菱形對角線平分內角再推角度`,
+    };
+  }
+
+  const d1 = rand(10, 16);
+  const ans = `$${d1}\\text{ cm}$`;
+  const opts = createUniqueOpts(ans, i =>
+    [`$${d1 + 5}\\text{ cm}$`, `$${Math.round(d1 / 2)}\\text{ cm}$`, `$${d1 - 4}\\text{ cm}$`, `$${d1 * 2}\\text{ cm}$`][i - 1],
+  );
+  return {
+    q: `矩形 $PQRS$ 中，$PR = ${d1}$ cm，且對角線 $PR$ 與 $QS$ 相交。求 $QS$ 的長度`,
+    ans,
+    opts,
+    hint: `矩形對角線相等，故 $QS = PR = ${d1}$ cm。相交只改變交點位置，不改變對角線全長`,
+  };
+}
+
+function g3QuadrilateralQuestion(difficulty) {
+  return difficulty === "dse" ? g3QuadrilateralDse() : g3QuadrilateralEasy();
+}
+
 function hashCode(s) {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
@@ -1042,7 +1290,7 @@ function mulberry32(seed) {
 }
 
 /** 舊課題中已內建 easy/dse 分難度的 id */
-const LEGACY_DIFFICULTY_TOPIC_IDS = new Set(["g3_t1", "g3_t2", "g3_t3", "g3_t4", "g3_t5", "g3_t6"]);
+const LEGACY_DIFFICULTY_TOPIC_IDS = new Set(["g3_t1", "g3_t2", "g3_t3", "g3_t4", "g3_t5", "g3_t6", "g3_t7"]);
 
 /** 將原有 5 課題包裝為支援 easy/dse（DSE 用不同亂數種子重新生成） */
 function wrapLegacyTopic(topic) {
@@ -1648,7 +1896,13 @@ const rawCurriculumGenerators = {
     },
     {
       id: "g3_t5",
-      title: "5. 直角三角比 (sin, cos, tan)",
+      title: "5. 四邊形",
+      generate: (difficulty = "easy") =>
+        generate10Unique(() => g3QuadrilateralQuestion(difficulty)),
+    },
+    {
+      id: "g3_t6",
+      title: "6. 直角三角比 (sin, cos, tan)",
       generate: (difficulty = "easy") =>
         generate10Unique(() => {
           const dse = difficulty === "dse";
@@ -1689,27 +1943,10 @@ const rawCurriculumGenerators = {
         }),
     },
     {
-      id: "g3_t6",
-      title: "6. 座標幾何 (距離、中點、斜率)",
+      id: "g3_t7",
+      title: "7. 座標幾何 (距離、中點、斜率)",
       generate: (difficulty = "easy") =>
         generate10Unique(() => (difficulty === "dse" ? g3T4DseQuestion() : g3T4EasyQuestion())),
-    },
-    {
-      id: "g3_t7",
-      title: "7. 相似三角形邊長比",
-      generate: () =>
-        generate10Unique(() => {
-          const ratio = rand(2, 5);
-          const side1 = rand(3, 8);
-          const side2 = side1 * ratio;
-          const opts = createUniqueOpts(`$${side2}$`, i => `$${[side1 + ratio, side2 + 2, side1 * 2, side2 - 3][i - 1]}$`);
-          return {
-            q: `兩相似三角形邊長比為 $1 : ${ratio}$，若小三角形對應邊長為 $${side1}$，求大三角形對應邊長`,
-            ans: `$${side2}$`,
-            opts,
-            hint: `對應邊成比例：$${side1} \\times ${ratio} = ${side2}$`,
-          };
-        }),
     },
 
   ],
@@ -2799,7 +3036,24 @@ const extraTopicsByGrade = {
   3: [
     {
       id: "g3_t8",
-      title: "8. 不等式",
+      title: "8. 相似三角形邊長比",
+      generate: () =>
+        generate10Unique(() => {
+          const ratio = rand(2, 5);
+          const side1 = rand(3, 8);
+          const side2 = side1 * ratio;
+          const opts = createUniqueOpts(`$${side2}$`, i => `$${[side1 + ratio, side2 + 2, side1 * 2, side2 - 3][i - 1]}$`);
+          return {
+            q: `兩相似三角形邊長比為 $1 : ${ratio}$，若小三角形對應邊長為 $${side1}$，求大三角形對應邊長`,
+            ans: `$${side2}$`,
+            opts,
+            hint: `對應邊成比例：$${side1} \\times ${ratio} = ${side2}$`,
+          };
+        }),
+    },
+    {
+      id: "g3_t9",
+      title: "9. 不等式",
       generate: (difficulty = "easy") =>
         generate10Unique(() => {
           const dse = difficulty === "dse";
@@ -2834,8 +3088,8 @@ const extraTopicsByGrade = {
         }),
     },
     {
-      id: "g3_t9",
-      title: "9. 有理數與無理數",
+      id: "g3_t10",
+      title: "10. 有理數與無理數",
       generate: (difficulty = "easy") =>
         generate10Unique(() => {
           const dse = difficulty === "dse";
@@ -2875,35 +3129,6 @@ const extraTopicsByGrade = {
             ans: item.type,
             opts,
             hint: `$${item.v}$ 屬於${item.type}`,
-          };
-        }),
-    },
-    {
-      id: "g3_t10",
-      title: "10. 四邊形",
-      generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          if (dse) {
-            const angle2 = rand(100, 130);
-            const ans = 180 - angle2;
-            const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i =>
-              [`$${angle2}^{\\circ}$`, `$${90}^{\\circ}$`, `$${ans + 10}^{\\circ}$`, `$${ans - 10}^{\\circ}$`][i - 1],
-            );
-            return {
-              q: `平行四邊形中，一內角為 $${angle2}^{\\circ}$，求鄰角`,
-              ans: `$${ans}^{\\circ}$`,
-              opts,
-              hint: `平行四邊形鄰角互補：$180 - ${angle2} = ${ans}^{\\circ}$`,
-            };
-          }
-          const ans = 360;
-          const opts = createUniqueOpts(`$${ans}^{\\circ}$`, i => `$${[180, 270, 540, 90][i - 1]}^{\\circ}$`);
-          return {
-            q: `任意四邊形內角和是多少度？`,
-            ans: `$${ans}^{\\circ}$`,
-            opts,
-            hint: `四邊形內角和 $= 360^{\\circ}$`,
           };
         }),
     },
