@@ -4574,7 +4574,7 @@ function roundTo(n, dp) {
   return Math.round(n * f) / f;
 }
 
-function shuffleArray<T>(arr: T[]): T[] {
+function shuffleArray(arr) {
   return [...arr].sort(() => Math.random() - 0.5);
 }
 
@@ -4601,7 +4601,7 @@ function g3StatsDataTable(nums) {
   return `<table style="margin:10px auto;border-collapse:collapse;font-size:15px;color:#dfe6e9"><thead><tr>${th}</tr></thead><tbody><tr>${td}</tr></tbody></table>`;
 }
 
-function g3StatsShuffled(nums)[] {
+function g3StatsShuffled(nums) {
   const sorted = [...nums].sort((a, b) => a - b);
   if (nums.length < 2) return [...nums];
   let out = shuffleArray(nums);
