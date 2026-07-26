@@ -2043,6 +2043,275 @@ function g3QuadrilateralQuestion(difficulty) {
   return difficulty === "dse" ? g3QuadrilateralDse() : g3QuadrilateralEasy();
 }
 
+/** ── 三角形四心（內心、外心、形心、垂心）── */
+const G3_TRI_CENTER_INFO = [
+  { name: "內心", lines: "角平分線", dist: "到三邊等距", note: "內切圓的圓心" },
+  { name: "外心", lines: "垂直平分線", dist: "到三頂點等距", note: "外接圓的圓心" },
+  { name: "形心", lines: "中線", dist: "中線被分成 $2:1$（頂點端較長）", note: "三角形的重心" },
+  { name: "垂心", lines: "高線", dist: "三條高線的交點", note: "鈍角三角形時在三角形外" },
+];
+
+const G3_TRI_STD = { A: [118, 28], B: [38, 138], C: [198, 138] };
+
+function g3TriCenterQ(diagram, text) {
+  return diagram
+    ? `<div class="q-fig">${diagram}</div><p class="q-text" style="margin-top:8px;text-align:center">${text}</p>`
+    : `<p class="q-text" style="text-align:center">${text}</p>`;
+}
+
+function g3TriCenterSvg(extra = "", label = "三角形") {
+  const { A, B, C } = G3_TRI_STD;
+  const pt = p => `${p[0]},${p[1]}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 236 160" role="img" aria-label="${label}" style="${G3_QUAD_SVG_STYLE}">
+<polygon points="${pt(A)} ${pt(B)} ${pt(C)}" fill="rgba(108,92,231,0.15)" stroke="#a29bfe" stroke-width="2.4"/>
+${extra}
+${g3QuadLabel(A[0], A[1] - 12, "A")}
+${g3QuadLabel(B[0] - 10, B[1] + 14, "B")}
+${g3QuadLabel(C[0] + 10, C[1] + 14, "C")}
+</svg>`;
+}
+
+function g3TriCenterMcOpts(correct, pool) {
+  const distractors = pool.filter(t => t !== correct);
+  while (distractors.length < 3) distractors.push(pool[distractors.length % pool.length]);
+  return shuffleOpts([correct, distractors[0], distractors[1], distractors[2]]);
+}
+
+function g3TriangleCentersEasy(fixedType number) {
+  const type = fixedType != null ? fixedType : rand(1, 10);
+  const names = G3_TRI_CENTER_INFO.map(c => c.name);
+  const lineTypes = G3_TRI_CENTER_INFO.map(c => c.lines);
+
+  if (type === 1) {
+    const ans = "內心";
+    return {
+      q: g3TriCenterQ(g3TriCenterSvg(), "三角形 $ABC$ 的三條<strong>角平分線</strong>交於一點，該點稱為什麼？"),
+      ans,
+      opts: g3TriCenterMcOpts(ans, names),
+      hint: `角平分線的交點是<strong>內心</strong>，為內切圓圓心，到三邊等距`,
+    };
+  }
+  if (type === 2) {
+    const ans = "外心";
+    return {
+      q: g3TriCenterQ(g3TriCenterSvg(), "三角形 $ABC$ 的三邊<strong>垂直平分線</strong>交於一點，該點稱為什麼？"),
+      ans,
+      opts: g3TriCenterMcOpts(ans, names),
+      hint: `垂直平分線的交點是<strong>外心</strong>，到三頂點等距，為外接圓圓心`,
+    };
+  }
+  if (type === 3) {
+    const ans = "形心";
+    return {
+      q: g3TriCenterQ(g3TriCenterSvg(), "三角形 $ABC$ 的三條<strong>中線</strong>（頂點連對邊中點）交於一點，該點稱為什麼？"),
+      ans,
+      opts: g3TriCenterMcOpts(ans, names),
+      hint: `中線的交點是<strong>形心</strong>（重心），把每條中線分成 $2:1$（頂點端較長）`,
+    };
+  }
+  if (type === 4) {
+    const ans = "垂心";
+    return {
+      q: g3TriCenterQ(g3TriCenterSvg(), "三角形 $ABC$ 的三條<strong>高線</strong>交於一點，該點稱為什麼？"),
+      ans,
+      opts: g3TriCenterMcOpts(ans, names),
+      hint: `高線的交點是<strong>垂心</strong>。銳角三角形在內，鈍角三角形在外`,
+    };
+  }
+  if (type === 5) {
+    const ans = "外心";
+    return {
+      q: g3TriCenterQ("", "下列哪一個心到三角形<strong>三頂點</strong>的距離相等？"),
+      ans,
+      opts: g3TriCenterMcOpts(ans, names),
+      hint: `<strong>外心</strong>到三頂點等距；內心到三邊等距`,
+    };
+  }
+  if (type === 6) {
+    const ans = "內心";
+    return {
+      q: g3TriCenterQ("", "下列哪一個心到三角形<strong>三邊</strong>的距離相等？"),
+      ans,
+      opts: g3TriCenterMcOpts(ans, names),
+      hint: `<strong>內心</strong>是角平分線交點，到三邊等距；外心到三頂點等距`,
+    };
+  }
+  if (type === 7) {
+    const ans = "$2:1$";
+    const opts = createUniqueOpts(ans, i => ["$1:2$", "$1:1$", "$3:1$"][i - 1]);
+    return {
+      q: g3TriCenterQ("", "形心把每條中線分成兩段，頂點到形心與形心到對邊中點的長度比為？"),
+      ans,
+      opts,
+      hint: `形心分中線為 $2:1$，靠近頂點的一段較長`,
+    };
+  }
+  if (type === 8) {
+    const ans = "斜邊的中點";
+    const opts = createUniqueOpts(ans, i => ["直角頂點", "斜邊的一端", "三角形內任意一點"][i - 1]);
+    return {
+      q: g3TriCenterQ(
+        g3TriCenterSvg(`<polyline points="38,138 118,28 198,138" fill="none" stroke="#fd79a8" stroke-width="1.6" stroke-dasharray="5 3"/>`),
+        "直角三角形 $ABC$（$\\angle B = 90^{\\circ}$）的外心在哪裡？",
+      ),
+      ans,
+      opts,
+      hint: `直角三角形的外接圓以斜邊為直徑，故外心必在<strong>斜邊的中點</strong>`,
+    };
+  }
+  if (type === 9) {
+    const ax = 0;
+    const ay = 0;
+    const bx = rand(4, 8) * 2;
+    const by = 0;
+    const cx = 0;
+    const cy = rand(3, 7) * 2;
+    const gx = roundTo((ax + bx + cx) / 3, 1);
+    const gy = roundTo((ay + by + cy) / 3, 1);
+    const ans = `$(${gx},\\ ${gy})$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$(${gx + 1},\\ ${gy})$`, `$(${gx},\\ ${gy + 1})$`, `$(${roundTo((ax + bx) / 2, 1)},\\ ${roundTo((ay + by) / 2, 1)})$`][i - 1],
+    );
+    return {
+      q: g3TriCenterQ(
+        "",
+        `$A(${ax},\\ ${ay})$、$B(${bx},\\ ${by})$、$C(${cx},\\ ${cy})$ 為三角形頂點，求形心坐標`,
+      ),
+      ans,
+      opts,
+      hint: `形心 $= \\left(\\dfrac{x_A+x_B+x_C}{3},\\ \\dfrac{y_A+y_B+y_C}{3}\\right) = (${gx},\\ ${gy})$`,
+    };
+  }
+
+  const ans = "內心";
+  return {
+    q: g3TriCenterQ("", "下列哪一個心<strong>必定</strong>在三角形內部？"),
+    ans,
+    opts: g3TriCenterMcOpts(ans, names),
+    hint: `<strong>內心</strong>與形心恆在三角形內；外心、垂心在鈍角三角形時可在外部`,
+  };
+}
+
+function g3TriangleCentersDse() {
+  const type = rand(1, 8);
+  const names = G3_TRI_CENTER_INFO.map(c => c.name);
+  const lineTypes = G3_TRI_CENTER_INFO.map(c => c.lines);
+
+  if (type === 1) {
+    const ans = "內心";
+    const wrongLines = ["垂直平分線", "中線", "高線"];
+    const pick = wrongLines[rand(0, 2)];
+    return {
+      q: g3TriCenterQ("", `若 $O$ 為 $\\triangle ABC$ 的 ${pick} 交點，則 $O$ 為三角形的`),
+      ans,
+      opts: g3TriCenterMcOpts(ans, G3_TRI_CENTER_INFO.map(c => c.name)),
+      hint: `角平分線交點才是內心；${pick}交點分別對應外心、形心或垂心`,
+    };
+  }
+  if (type === 2) {
+    const ax = rand(-4, 2);
+    const ay = rand(-2, 3);
+    const bx = ax + rand(4, 8);
+    const by = ay + rand(0, 2);
+    const cx = ax + rand(1, 4);
+    const cy = ay + rand(5, 10);
+    const gx = roundTo((ax + bx + cx) / 3, 1);
+    const gy = roundTo((ay + by + cy) / 3, 1);
+    const ans = `$(${gx},\\ ${gy})$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$(${roundTo((ax + bx) / 2, 1)},\\ ${roundTo((ay + by) / 2, 1)})$`, `$(${gx + 1},\\ ${gy})$`, `$(${gx},\\ ${gy + 1})$`, `$(${ax},\\ ${ay})$`][i - 1],
+    );
+    return {
+      q: g3TriCenterQ("", `$A(${ax},\\ ${ay})$、$B(${bx},\\ ${by})$、$C(${cx},\\ ${cy})$，求 $\\triangle ABC$ 形心的坐標`),
+      ans,
+      opts,
+      hint: `形心坐標 $G = \\left(\\dfrac{${ax}+${bx}+${cx}}{3},\\ \\dfrac{${ay}+${by}+${cy}}{3}\\right) = (${gx},\\ ${gy})$`,
+    };
+  }
+  if (type === 3) {
+    const med = rand(9, 15) * 2;
+    const ag = (med * 2) / 3;
+    const ans = `$${ag}$`;
+    const opts = createUniqueOpts(ans, i => [`$${med / 3}$`, `$${med}$`, `$${ag + 2}$`, `$${ag - 2}$`][i - 1]);
+    return {
+      q: g3TriCenterQ("", `$AM$ 為 $\\triangle ABC$ 的中線，$M$ 在 $BC$ 上，$AM = ${med}$。若 $G$ 為形心，求 $AG$ 的長度`),
+      ans,
+      opts,
+      hint: `形心分中線 $2:1$，$AG : GM = 2 : 1$，故 $AG = \\dfrac{2}{3} \\times ${med} = ${ag}$`,
+    };
+  }
+  if (type === 4) {
+    const ans = "直角頂點";
+    const opts = createUniqueOpts(ans, i => ["斜邊中點", "形心", "外心"][i - 1]);
+    return {
+      q: g3TriCenterQ("", "直角三角形的垂心位於哪裡？"),
+      ans,
+      opts,
+      hint: `直角三角形兩條直角邊互相垂直，兩條高線交於<strong>直角頂點</strong>`,
+    };
+  }
+  if (type === 5) {
+    const info = G3_TRI_CENTER_INFO[rand(0, 3)];
+    const ans = info.lines;
+    const opts = g3TriCenterMcOpts(ans, lineTypes);
+    return {
+      q: g3TriCenterQ("", `三角形的<strong>${info.name}</strong>是哪組特殊線段的交點？`),
+      ans,
+      opts,
+      hint: `${info.name}：${info.lines}的交點。${info.note}`,
+    };
+  }
+  if (type === 6) {
+    const ans = "到三頂點等距";
+    return {
+      q: g3TriCenterQ("", "下列哪一項是外心的性質？"),
+      ans,
+      opts: g3TriCenterMcOpts(ans, ["到三邊等距", "到三頂點等距", "中線被分成 $2:1$", "三條高線的交點"]),
+      hint: `外心是垂直平分線交點，到三頂點等距，為外接圓圓心`,
+    };
+  }
+  if (type === 7) {
+    const ax = 0;
+    const ay = 0;
+    const bx = 8;
+    const by = 0;
+    const cx = 0;
+    const cy = 6;
+    const mx = (bx + cx) / 2;
+    const my = (by + cy) / 2;
+    const ans = `$(${mx},\\ ${my})$`;
+    const opts = createUniqueOpts(ans, i => [`$(${mx + 1},\\ ${my})$`, `$(${ax},\\ ${ay})$`, `$(${roundTo((ax + bx + cx) / 3, 1)},\\ ${roundTo((ay + by + cy) / 3, 1)})$`][i - 1]);
+    return {
+      q: g3TriCenterQ("", `直角三角形 $A(0,0)$、$B(8,0)$、$C(0,6)$，求外心坐標`),
+      ans,
+      opts,
+      hint: `直角三角形外心在斜邊 $BC$ 中點：$\\left(\\dfrac{8+0}{2},\\ \\dfrac{0+6}{2}\\right) = (4,\\ 3)$`,
+    };
+  }
+
+  const ans = "形心";
+  return {
+    q: g3TriCenterQ("", "等腰三角形中，頂角的中線、高線、角平分線及垂直平分線均交於同一點，該點是？"),
+    ans,
+    opts: g3TriCenterMcOpts(ans, names),
+    hint: `等腰三角形對稱軸上的四線重合；其中中線交點為<strong>形心</strong>（四心一般不全重合）`,
+  };
+}
+
+function generateTriCenterEasyQuestions() {
+  const qs = [];
+  for (let t = 1; t <= 10; t++) {
+    try {
+      const q = g3TriangleCentersEasy(t);
+      if (isValidQuestion(q)) qs.push(q);
+      else qs.push(g3TriangleCentersEasy(1));
+    } catch (_err) {
+      qs.push(g3TriangleCentersEasy(1));
+    }
+  }
+  return qs;
+}
+
 function hashCode(s) {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
@@ -2059,7 +2328,7 @@ function mulberry32(seed) {
 }
 
 /** 舊課題中已內建 easy/dse 分難度的 id */
-const LEGACY_DIFFICULTY_TOPIC_IDS = new Set(["g3_t1", "g3_t2", "g3_t3", "g3_t4", "g3_t5", "g3_t6", "g3_t7"]);
+const LEGACY_DIFFICULTY_TOPIC_IDS = new Set(["g3_t1", "g3_t2", "g3_t3", "g3_t4", "g3_t5", "g3_t6", "g3_t7", "g3_t8"]);
 
 /** 將原有 5 課題包裝為支援 easy/dse（DSE 用不同亂數種子重新生成） */
 function wrapLegacyTopic(topic) {
@@ -2673,7 +2942,15 @@ const rawCurriculumGenerators = {
     },
     {
       id: "g3_t6",
-      title: "6. 直角三角比 (sin, cos, tan)",
+      title: "6. 三角形的心",
+      generate: (difficulty = "easy") =>
+        difficulty === "dse"
+          ? generate10Unique(() => g3TriangleCentersDse())
+          : generateTriCenterEasyQuestions(),
+    },
+    {
+      id: "g3_t7",
+      title: "7. 直角三角比 (sin, cos, tan)",
       generate: (difficulty = "easy") =>
         generate10Unique(() => {
           const dse = difficulty === "dse";
@@ -2714,8 +2991,8 @@ const rawCurriculumGenerators = {
         }),
     },
     {
-      id: "g3_t7",
-      title: "7. 座標幾何 (距離、中點、斜率)",
+      id: "g3_t8",
+      title: "8. 座標幾何 (距離、中點、斜率)",
       generate: (difficulty = "easy") =>
         generate10Unique(() => (difficulty === "dse" ? g3T4DseQuestion() : g3T4EasyQuestion())),
     },
@@ -3806,8 +4083,8 @@ const extraTopicsByGrade = {
   ],
   3: [
     {
-      id: "g3_t8",
-      title: "8. 相似三角形邊長比",
+      id: "g3_t9",
+      title: "9. 相似三角形邊長比",
       generate: () =>
         generate10Unique(() => {
           const ratio = rand(2, 5);
@@ -3823,8 +4100,8 @@ const extraTopicsByGrade = {
         }),
     },
     {
-      id: "g3_t9",
-      title: "9. 不等式",
+      id: "g3_t10",
+      title: "10. 不等式",
       generate: (difficulty = "easy") =>
         generate10Unique(() => {
           const dse = difficulty === "dse";
@@ -3855,51 +4132,6 @@ const extraTopicsByGrade = {
             ans: correct,
             opts,
             hint: `$x > \\frac{${rhs}}{${a}} \\implies x > ${xAns}$`,
-          };
-        }),
-    },
-    {
-      id: "g3_t10",
-      title: "10. 有理數與無理數",
-      generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          if (dse) {
-            const surds = [
-              { n: 8, ans: "$2\\sqrt{2}$" },
-              { n: 12, ans: "$2\\sqrt{3}$" },
-              { n: 18, ans: "$3\\sqrt{2}$" },
-              { n: 20, ans: "$2\\sqrt{5}$" },
-              { n: 27, ans: "$3\\sqrt{3}$" },
-              { n: 45, ans: "$3\\sqrt{5}$" },
-              { n: 48, ans: "$4\\sqrt{3}$" },
-              { n: 50, ans: "$5\\sqrt{2}$" },
-            ];
-            const item = surds[rand(0, surds.length - 1)];
-            const simplified = item.ans;
-            const opts = createUniqueOpts(simplified, i =>
-              [`$\\sqrt{${item.n + 1}}$`, `$\\sqrt{${item.n - 1}}$`, `$${item.n}$`, `$\\sqrt{${item.n * 2}}$`][i - 1],
-            );
-            return {
-              q: `化簡：$\\sqrt{${item.n}}$`,
-              ans: simplified,
-              opts,
-              hint: `$\\sqrt{${item.n}} = ${simplified}$`,
-            };
-          }
-          const nums = [
-            { v: "0.75", type: "有理數" },
-            { v: "\\sqrt{4}", type: "有理數" },
-            { v: "\\pi", type: "無理數" },
-            { v: "\\sqrt{2}", type: "無理數" },
-          ];
-          const item = nums[rand(0, nums.length - 1)];
-          const opts = createUniqueOpts(item.type, i => ["有理數", "無理數", "整數", "自然數"].filter(t => t !== item.type)[i - 1] || "有理數");
-          return {
-            q: `$${item.v}$ 是有理數還是無理數？`,
-            ans: item.type,
-            opts,
-            hint: `$${item.v}$ 屬於${item.type}`,
           };
         }),
     },
