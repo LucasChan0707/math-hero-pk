@@ -2527,19 +2527,33 @@ function g3TrigABTrueBearingDiagram(bearingFromA) {
   );
 }
 
-/** 羅盤方位：標北向偏角 θ，不寫 N30°E 等答案 */
-function g3TrigCompassDiagram(bearing) {
+/** 羅盤方位 → 真方位角（度） */
+function g3TrigCompassBearing(fromSouth, offsetDeg, westward) {
+  if (!fromSouth && !westward) return offsetDeg;
+  if (!fromSouth && westward) return (360 - offsetDeg) % 360;
+  if (fromSouth && !westward) return 180 - offsetDeg;
+  return 180 + offsetDeg;
+}
+
+/**
+ * 羅盤方位圖：在 N 或 S 標示題目給定的偏角（如 45°），不標真方位角答案
+ * fromSouth: false → NθE / NθW；true → SθE / SθW
+ */
+function g3TrigCompassOffsetDiagram(fromSouth, offsetDeg, westward) {
   const cx = 120;
   const cy = 90;
   const r = 46;
+  const bearing = g3TrigCompassBearing(fromSouth, offsetDeg, westward);
   const [rx, ry] = g3TrigBearingRay(cx, cy, r - 5, bearing);
-  const arc = g3TrigBearingArcFromNorth(cx, cy, bearing, 32, "θ");
+  const pRef = fromSouth ? [cx, cy + 38] : [cx, cy - 38];
+  const arc = g3TrigAngleMark([cx, cy], pRef, [rx, ry], offsetDeg, 30, true, offsetDeg);
   return (
     g3TrigSvgOpen("羅盤方位") +
     `<circle cx="${cx}" cy="${cy}" r="${r}" fill="rgba(108,92,231,0.12)" stroke="#a29bfe" stroke-width="2"/>` +
     `<line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" stroke="#55efc4" stroke-width="1.5" opacity="0.5"/>` +
     `<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" stroke="#55efc4" stroke-width="1.5" opacity="0.5"/>` +
     `<line x1="${cx}" y1="${cy - r + 4}" x2="${cx}" y2="${cy}" stroke="#74b9ff" stroke-width="2"/>` +
+    `<line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy + r - 4}" stroke="#74b9ff" stroke-width="2" opacity="0.85"/>` +
     `<line x1="${cx}" y1="${cy}" x2="${rx}" y2="${ry}" stroke="#f1c40f" stroke-width="2.6"/>` +
     `<circle cx="${rx}" cy="${ry}" r="4" fill="#f1c40f"/>` +
     arc +
@@ -2563,7 +2577,7 @@ function g3TrigGradientDiagram(vert, horiz, showAngle, opts) {
   const y2 = y0 - drawH;
   const slopeAng = Math.round((Math.atan2(drawH, drawW) * 180) / Math.PI);
   const inner = showAngle
-    ? g3TrigAngleMark([x1, y1], [x0, y1], [x2, y2], slopeAng, 22, true, "θ")
+    ? g3TrigAngleMark([x0, y0], [x1, y1], [x2, y2], slopeAng, 22, true, "θ")
     : "";
   let labels = "";
   if (!o.hideHoriz) labels += g3TrigLabel((x0 + x1) / 2, y0 + 14, `${horiz} m`, "middle");
@@ -2571,6 +2585,7 @@ function g3TrigGradientDiagram(vert, horiz, showAngle, opts) {
   return (
     g3TrigSvgOpen("坡度") +
     `<polygon points="${x0},${y0} ${x1},${y1} ${x2},${y2}" fill="rgba(108,92,231,0.15)" stroke="#a29bfe" stroke-width="2.4"/>` +
+    `<line x1="${x0}" y1="${y0}" x2="${x2}" y2="${y2}" stroke="#fdcb6e" stroke-width="2" stroke-dasharray="5 3"/>` +
     inner +
     labels +
     g3TrigSvgClose()
@@ -2670,7 +2685,7 @@ function g3TrigAppsEasy(fixedType) {
     const lbl = g3TrigPadBearing(bearing);
     const ans = `$${lbl}^{\\circ}$`;
     const opts = createUniqueOpts(ans, i =>
-      [`$${g3TrigPadBearing(bearing + 90 > 360 ? bearing - 270 : bearing + 90)}^{\\circ}$`, `$${g3TrigPadBearing(bearing + 180 > 360 ? bearing - 180 : bearing + 180)}^{\\circ}$`, `$${String(bearing).padStart(2, "0")}^{\\circ}$`][i - 1],
+      [`$${g3TrigPadBearing((bearing + 90) % 360)}^{\\circ}$`, `$${g3TrigPadBearing((bearing + 180) % 360)}^{\\circ}$`, `$${g3TrigPadBearing((bearing + 270) % 360)}^{\\circ}$`][i - 1],
     );
     return {
       q: g3TrigAppsQ(g3TrigTrueBearingDiagram(bearing, "theta"), "求圖中標示方向的<strong>真方位角</strong>（三位數）"),
@@ -2709,7 +2724,7 @@ function g3TrigAppsEasy(fixedType) {
     const ans = lbl;
     const opts = g3TrigMcOpts(ans, [`N${deg}°W`, `S${deg}°E`, `S${deg}°W`]);
     return {
-      q: g3TrigAppsQ(g3TrigCompassDiagram(deg), "圖中方向由北向東偏離，求羅盤方位角"),
+      q: g3TrigAppsQ(g3TrigCompassOffsetDiagram(false, deg, false), `圖中方向為 N${deg}°E，求羅盤方位角`),
       ans,
       opts,
       hint: g3TrigAppsHint(`由<strong>北</strong>向<strong>東</strong>偏 ${deg}° → ${lbl}`, [
@@ -2771,7 +2786,7 @@ function g3TrigAppsEasy(fixedType) {
 }
 
 function g3TrigAppsDse(fixedType, variant) {
-  const type = fixedType != null ? fixedType : rand(1, 8);
+  const type = fixedType != null ? fixedType : rand(1, 12);
   const v = variant != null ? variant : 0;
 
   if (type === 1) {
@@ -2869,32 +2884,44 @@ function g3TrigAppsDse(fixedType, variant) {
   }
 
   if (type === 5) {
-    const deg = rand(25, 55);
-    const ans = `$${g3TrigPadBearing(360 - deg)}^{\\circ}$`;
+    const degPool = [30, 35, 40, 45, 50];
+    const deg = degPool[v % degPool.length];
+    const bearing = g3TrigCompassBearing(true, deg, true);
     const lbl = `S${deg}°W`;
+    const ans = `$${g3TrigPadBearing(bearing)}^{\\circ}$`;
     const opts = createUniqueOpts(ans, i =>
-      [`$${g3TrigPadBearing(deg)}^{\\circ}$`, `$${g3TrigPadBearing(180 + deg)}^{\\circ}$`, `$${g3TrigPadBearing(180 - deg)}^{\\circ}$`][i - 1],
+      [`$${g3TrigPadBearing(180 - deg)}^{\\circ}$`, `$${g3TrigPadBearing(deg)}^{\\circ}$`, `$${g3TrigPadBearing(270 - deg)}^{\\circ}$`][i - 1],
     );
     return {
-      q: g3TrigAppsQ(g3TrigCompassDiagram(360 - deg), `${lbl} 的真方位角是？`),
+      q: g3TrigAppsQ(
+        g3TrigCompassOffsetDiagram(true, deg, true),
+        `圖中方向為 ${lbl}（由 S 向西偏 ${deg}^{\\circ}），求真方位角（三位數）`,
+      ),
       ans,
       opts,
-      hint: g3TrigAppsHint(`S${deg}°W：從 S 向西偏 ${deg}° → $${360 - deg}^{\\circ}$`, [
-        "誤當 N${deg}°E",
-        "加了 180° 錯誤",
-        "象限搞錯",
+      hint: g3TrigAppsHint(`S${deg}°W：由 S（$180^{\\circ}$）向西偏 ${deg}^{\\circ}$ → $180+${deg}=${bearing}^{\\circ}$`, [
+        "誤用 $270-${deg}$ 或 $360-${deg}$",
+        "把偏角當成答案",
+        "象限起點搞錯（應由 S 量度）",
       ]),
     };
   }
 
   if (type === 6) {
-    const n = rand(4, 8);
-    const vert = rand(2, 4);
+    const cases = [
+      { n: 4, vert: 3 },
+      { n: 5, vert: 2 },
+      { n: 6, vert: 4 },
+      { n: 8, vert: 3 },
+    ];
+    const c = cases[v % cases.length];
+    const n = c.n;
+    const vert = c.vert;
     const horiz = vert * n;
     const slopeLen = Math.round(Math.sqrt(vert * vert + horiz * horiz));
     const ans = `$${slopeLen}\\text{ m}$`;
     const opts = createUniqueOpts(ans, i =>
-      [`$${horiz + vert}\\text{ m}$`, `$${horiz}\\text{ m}$`, `$${vert * n + n}\\text{ m}$`][i - 1],
+      [`$${horiz + vert}\\text{ m}$`, `$${horiz}\\text{ m}$`, `$${Math.round(slopeLen * 1.15)}\\text{ m}$`][i - 1],
     );
     return {
       q: g3TrigAppsQ(
@@ -2904,70 +2931,174 @@ function g3TrigAppsDse(fixedType, variant) {
       ans,
       opts,
       hint: g3TrigAppsHint(`水平 $=${horiz}$ m，斜路 $=\\sqrt{${vert}^2+${horiz}^2}=${slopeLen}$ m`, [
-        "垂直+水平相加",
-        "把水平距離當斜路",
-        "只用坡度比例未畢氏",
+        "把垂直與水平距離直接相加",
+        "誤把水平距離當斜路長",
+        "未用畢氏定理求斜邊",
       ]),
     };
   }
 
   if (type === 7) {
-    const n = rand(4, 6);
-    const slopeLen = rand(5, 10) * 10;
+    const cases = [
+      { n: 4, slopeLen: 100 },
+      { n: 5, slopeLen: 130 },
+      { n: 6, slopeLen: 120 },
+    ];
+    const c = cases[v % cases.length];
+    const n = c.n;
+    const slopeLen = c.slopeLen;
     const vert = Math.round(slopeLen / Math.sqrt(n * n + 1));
     const sinWrong = Math.round(slopeLen / n);
     const ans = `$${vert}\\text{ m}$`;
     const opts = createUniqueOpts(ans, i =>
-      [`$${sinWrong}\\text{ m}$`, `$${slopeLen - vert}\\text{ m}$`, `$${vert + 5}\\text{ m}$`][i - 1],
+      [`$${sinWrong}\\text{ m}$`, `$${slopeLen - vert}\\text{ m}$`, `$${vert + 8}\\text{ m}$`][i - 1],
     );
     return {
-      q: g3TrigAppsQ(g3TrigGradientDiagram(vert, vert * n, true, { hideVert: true }), `坡度 $1:${n}$，斜路長 $${slopeLen}$ m，求垂直升高（整數）`),
+      q: g3TrigAppsQ(
+        g3TrigGradientDiagram(vert, vert * n, true, { hideVert: true }),
+        `坡度 $1:${n}$，斜路長 $${slopeLen}$ m，求垂直升高（整數）`,
+      ),
       ans,
       opts,
       hint: g3TrigAppsHint(`垂直 $= \\dfrac{${slopeLen}}{\\sqrt{${n}^2+1}} \\approx ${vert}$ m`, [
-        "誤用 $\\sin$ 或 斜路÷n",
-        "用水平距離代替",
+        "誤用斜路÷n",
+        "把水平距離當垂直升高",
         "未用畢氏定理",
       ]),
     };
   }
 
-  const vert = rand(3, 6);
-  const horiz = vert * rand(4, 6);
-  const pct = roundTo((vert / horiz) * 100, 1);
-  const sinWrong = roundTo((vert / Math.sqrt(vert * vert + horiz * horiz)) * 100, 1);
-  const ans = `$${pct}\\%$`;
-  const opts = createUniqueOpts(ans, i => [`$${sinWrong}\\%$`, `$${pct + 10}\\%$`, `$${horiz / vert}\\%$`][i - 1]);
-  return {
-    q: g3TrigAppsQ(g3TrigGradientDiagram(vert, horiz, true), `垂直 $${vert}$ m、水平 $${horiz}$ m，求坡度百分比（1 位小數）`),
-    ans,
-    opts,
-    hint: g3TrigAppsHint(`$\\dfrac{${vert}}{${horiz}} \\times 100\\% = ${pct}\\%$`, [
-      "誤用斜邊（sin）當坡度",
-      "把 1:n 當 n%",
-      "分子分母倒轉",
-    ]),
-  };
+  if (type === 8) {
+    const cases = [
+      { vert: 4, horiz: 20 },
+      { vert: 5, horiz: 25 },
+      { vert: 3, horiz: 18 },
+    ];
+    const c = cases[v % cases.length];
+    const vert = c.vert;
+    const horiz = c.horiz;
+    const pct = roundTo((vert / horiz) * 100, 1);
+    const sinWrong = roundTo((vert / Math.sqrt(vert * vert + horiz * horiz)) * 100, 1);
+    const ans = `$${pct}\\%$`;
+    const opts = createUniqueOpts(ans, i => [`$${sinWrong}\\%$`, `$${pct + 12}\\%$`, `$${horiz / vert}\\%$`][i - 1]);
+    return {
+      q: g3TrigAppsQ(g3TrigGradientDiagram(vert, horiz, true), `垂直 $${vert}$ m、水平 $${horiz}$ m，求坡度百分比（1 位小數）`),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`$\\dfrac{${vert}}{${horiz}} \\times 100\\% = ${pct}\\%$`, [
+        "誤用斜邊（sin）當坡度",
+        "把 1:n 當 n%",
+        "分子分母倒轉",
+      ]),
+    };
+  }
+
+  if (type === 9) {
+    const horiz = [40, 50, 60, 80][v % 4];
+    const height = [30, 35, 40, 45][v % 4];
+    const angle = Math.round((Math.atan(height / horiz) * 180) / Math.PI);
+    const ans = `$${angle}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${90 - angle}^{\\circ}$`, `$${angle + 10}^{\\circ}$`, `$${Math.round((Math.atan(height / (horiz + 20)) * 180) / Math.PI)}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigElevDiagram(horiz, height, angle, { angleLabel: "θ" }),
+        `觀測者與建築物水平距離 $${horiz}$ m，建築物高 $${height}$ m，求仰角（整數）`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`$\\tan \\theta = \\dfrac{${height}}{${horiz}} \\Rightarrow \\theta \\approx ${angle}^{\\circ}$`, [
+        "用 $\\sin$ 或 $\\cos$ 代替 $\\tan$",
+        "把高度當水平距離",
+        "仰角起點不是水平線",
+      ]),
+    };
+  }
+
+  if (type === 10) {
+    const degPool = [25, 30, 35, 40];
+    const deg = degPool[v % degPool.length];
+    const bearing = g3TrigCompassBearing(false, deg, true);
+    const lbl = `N${deg}°W`;
+    const ans = `$${g3TrigPadBearing(bearing)}^{\\circ}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${g3TrigPadBearing(deg)}^{\\circ}$`, `$${g3TrigPadBearing(180 + deg)}^{\\circ}$`, `$${g3TrigPadBearing(180 - deg)}^{\\circ}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigCompassOffsetDiagram(false, deg, true),
+        `圖中方向為 ${lbl}（由 N 向西偏 ${deg}^{\\circ}），求真方位角（三位數）`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`N${deg}°W：由 N 向西偏 ${deg}^{\\circ}$ → $360-${deg}=${bearing}^{\\circ}$`, [
+        "誤用 $180+${deg}$ 或 $180-${deg}$",
+        "把偏角直接當答案",
+        "順逆時針搞反",
+      ]),
+    };
+  }
+
+  if (type === 11) {
+    const tower = [40, 50, 60, 70][v % 4];
+    const angle = [32, 35, 38, 40][v % 4];
+    const dist = Math.round(tower / Math.tan((angle * Math.PI) / 180));
+    const ans = `$${dist}\\text{ m}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${Math.round(tower * Math.tan((angle * Math.PI) / 180))}\\text{ m}$`, `$${dist + 25}\\text{ m}$`, `$${dist - 20}\\text{ m}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigDepressDiagram(dist, tower, angle, { hideHoriz: true }),
+        `直升機在懸崖上方 $${tower}$ m，俯角 $${angle}^{\\circ}$ 看見海面上的浮標，求水平距離（整數）`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`$\\tan ${angle}^{\\circ} = \\dfrac{${tower}}{\\text{水平}}$ → ${dist}$ m`, [
+        "誤用 $\\sin$",
+        "把高度當水平距離",
+        "俯角量度位置錯誤",
+      ]),
+    };
+  }
+
+  if (type === 12) {
+    const nPool = [5, 6, 8, 10];
+    const n = nPool[v % nPool.length];
+    const vert = [2, 3, 4, 5][v % 4];
+    const horiz = vert * n;
+    const ans = `$${horiz}\\text{ m}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${vert}\\text{ m}$`, `$${horiz + n}\\text{ m}$`, `$${vert * (n + 2)}\\text{ m}$`][i - 1],
+    );
+    return {
+      q: g3TrigAppsQ(
+        g3TrigGradientDiagram(vert, horiz, false, { hideHoriz: true }),
+        `坡度 $1:${n}$，垂直升高 $${vert}$ m，求水平距離（整數）`,
+      ),
+      ans,
+      opts,
+      hint: g3TrigAppsHint(`$1:${n}$ → 水平 $= ${vert} \\times ${n} = ${horiz}$ m`, [
+        "把 n 當成垂直距離",
+        "分子分母倒轉",
+        "用斜路長代替水平距離",
+      ]),
+    };
+  }
+
+  return g3TrigAppsDse(1, v);
 }
 
 function generateTrigAppsDseQuestions() {
   const qs = [];
-  for (let t = 1; t <= 8; t++) {
+  for (let t = 1; t <= 10; t++) {
     try {
       const q = g3TrigAppsDse(t, 0);
       if (isValidQuestion(q)) qs.push(q);
       else qs.push(g3TrigAppsDse(t, 1));
     } catch (_err) {
       qs.push(g3TrigAppsDse(t, 1));
-    }
-  }
-  for (let t = 1; t <= 2; t++) {
-    try {
-      const q = g3TrigAppsDse(t, 1);
-      if (isValidQuestion(q)) qs.push(q);
-      else qs.push(g3TrigAppsDse(t, 2));
-    } catch (_err) {
-      qs.push(g3TrigAppsDse(t, 2));
     }
   }
   return qs;
