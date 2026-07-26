@@ -72,9 +72,9 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;ba
 .q-fig svg{display:block!important;max-width:200px;width:100%;height:auto;margin:0 auto;visibility:visible!important;opacity:1!important}
 .q-text{font-weight:bold;line-height:1.5}
 .avatar-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 14px}
-.av{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;max-height:72px;padding:6px;border:2px solid #4a3e7d;border-radius:16px;cursor:pointer;background:rgba(0,0,0,.25);touch-action:manipulation}
+.av{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:1;max-height:72px;padding:6px;border:2px solid #4a3e7d;border-radius:16px;cursor:pointer;background:rgba(0,0,0,.25);touch-action:manipulation;font-size:32px;line-height:1}
 .av.on{border-color:#f1c40f;background:rgba(241,196,15,.18);box-shadow:0 0 0 2px rgba(241,196,15,.35)}
-.av-img{width:100%;height:100%;object-fit:contain;border-radius:10px;display:block;pointer-events:none}
+.av-emoji{font-size:32px;line-height:1;pointer-events:none}
 .av-slot{display:inline-flex;align-items:center;justify-content:center;overflow:hidden;border-radius:12px;vertical-align:middle}
 .btn:disabled{opacity:.65;cursor:wait;transform:none}
 </style>
@@ -99,12 +99,90 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:2px solid #4a3e7d;ba
     <p class="sub">單檔完整版 · 含 PK 對戰 · 中一至中六</p>
   </div>
   <label style="font-size:13px;color:#a29bfe;font-weight:bold">選擇角色：</label>
-  <div class="avatar-row" id="avRow"></div>
+  <div class="avatar-row" id="avRow">
+    <button type="button" class="av on" data-av="🧑‍🎓" onclick="pickAv(this)"><span class="av-emoji">🧑‍🎓</span></button>
+    <button type="button" class="av" data-av="👦" onclick="pickAv(this)"><span class="av-emoji">👦</span></button>
+    <button type="button" class="av" data-av="👧" onclick="pickAv(this)"><span class="av-emoji">👧</span></button>
+    <button type="button" class="av" data-av="🦸" onclick="pickAv(this)"><span class="av-emoji">🦸</span></button>
+    <button type="button" class="av" data-av="🧙" onclick="pickAv(this)"><span class="av-emoji">🧙</span></button>
+    <button type="button" class="av" data-av="🐱" onclick="pickAv(this)"><span class="av-emoji">🐱</span></button>
+  </div>
   <label style="font-size:13px;color:#a29bfe;font-weight:bold">姓名 / 學號：</label>
-  <input class="inp" id="inpName" placeholder="例如：陳大文 2B-12">
-  <button class="btn" onclick="doLogin()">進入數學王國 ⚔️</button>
-  <p style="font-size:10px;color:#666;text-align:center;margin-top:10px">資料儲存於本機 · PK 需兩位玩家連線</p>
+  <input class="inp" id="inpName" placeholder="例如：陳大文 2B-12" autocomplete="name">
+  <button type="button" class="btn" id="btnLogin" onclick="doLogin()">進入數學王國 ⚔️</button>
+  <p id="loginMsg" style="font-size:11px;color:#ff7675;text-align:center;margin-top:8px;min-height:16px"></p>
+  <p style="font-size:10px;color:#666;text-align:center;margin-top:6px">資料儲存於本機 · PK 需兩位玩家連線</p>
 </div>
+
+<script>
+/* ===== 登入模組（獨立於題庫，題庫載入失敗都可登入）===== */
+var LOGIN_AVATARS = ['🧑‍🎓','👦','👧','🦸','🧙','🐱'];
+var selectedAv = LOGIN_AVATARS[0];
+var USER = null;
+
+function pickAv(el) {
+  selectedAv = el.getAttribute('data-av') || LOGIN_AVATARS[0];
+  var items = document.querySelectorAll('#avRow .av');
+  for (var i = 0; i < items.length; i++) items[i].classList.remove('on');
+  el.classList.add('on');
+}
+
+function loadUser(name) {
+  var key = 'mh_' + name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g, '_');
+  var raw = localStorage.getItem(key);
+  if (raw) {
+    try {
+      var u = JSON.parse(raw);
+      if (!u.avatar || String(u.avatar).indexOf('http') === 0) u.avatar = LOGIN_AVATARS[0];
+      return u;
+    } catch (e) {}
+  }
+  return {
+    name: name, avatar: LOGIN_AVATARS[0], coins: 0, stars: 0,
+    items5050: 0, itemsSkip: 0, coupons: [], history: {},
+    pkWins: 0, pkLosses: 0
+  };
+}
+
+function doLogin() {
+  var msg = document.getElementById('loginMsg');
+  if (msg) msg.textContent = '';
+  try {
+    var nameEl = document.getElementById('inpName');
+    if (!nameEl) { alert('頁面未載入完成'); return; }
+    var name = nameEl.value.trim();
+    if (!name) {
+      if (msg) msg.textContent = '請輸入姓名 / 學號';
+      nameEl.focus();
+      return;
+    }
+    var btn = document.getElementById('btnLogin');
+    if (btn) { btn.disabled = true; btn.textContent = '登入中...'; }
+    USER = loadUser(name);
+    USER.avatar = selectedAv || LOGIN_AVATARS[0];
+    if (typeof saveUser === 'function') saveUser();
+    else localStorage.setItem('mh_' + name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g, '_'), JSON.stringify(USER));
+    var topBar = document.getElementById('topBar');
+    var navBar = document.getElementById('navBar');
+    if (topBar) topBar.style.display = 'flex';
+    if (navBar) navBar.style.display = 'flex';
+    if (typeof enterGameHome === 'function') {
+      enterGameHome();
+    } else {
+      var screens = document.querySelectorAll('.screen');
+      for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
+      var home = document.getElementById('scrHome');
+      if (home) home.classList.add('active');
+    }
+  } catch (e) {
+    if (msg) msg.textContent = '登入失敗，請再試';
+    alert('登入失敗：' + (e.message || e));
+  } finally {
+    var btn2 = document.getElementById('btnLogin');
+    if (btn2) { btn2.disabled = false; btn2.textContent = '進入數學王國 ⚔️'; }
+  }
+}
+</script>
 
 <!-- 主選單 -->
 <div class="screen" id="scrHome">
@@ -287,10 +365,10 @@ function generate10Unique(builderFn) {
     let qData = null;
     try {
       qData = builderFn();
-    } catch {
+    } catch (_err) {
       continue;
     }
-    if (!qData?.q || !qData.ans || !Array.isArray(qData.opts) || qData.opts.length !== 4) continue;
+    if (!(qData && qData.q) || !qData.ans || !Array.isArray(qData.opts) || qData.opts.length !== 4) continue;
     if (new Set(qData.opts).size !== 4 || !qData.opts.includes(qData.ans)) continue;
     const key = qData.ans + "\0" + qData.q.length;
     if (qSet.has(key) && qList.length >= 6) continue;
@@ -686,10 +764,10 @@ function g3QuadParaDiagram(opts = {}) {
     ...(F ? { F: [F[0] + 9, F[1] - 9, "start"] } : {}),
     ...(opts.diagonals ? { O: [O[0] + 11, O[1], "start"] } : {}),
   });
-  if (opts.sideLabels?.ab != null) {
+  if ((opts.sideLabels && opts.sideLabels.ab) != null) {
     parts.push(g3QuadLabel((A[0] + B[0]) / 2 - 18, (A[1] + B[1]) / 2, String(opts.sideLabels.ab), "end"));
   }
-  if (opts.sideLabels?.bc != null) {
+  if ((opts.sideLabels && opts.sideLabels.bc) != null) {
     parts.push(g3QuadLabel((B[0] + C[0]) / 2, B[1] + 16, String(opts.sideLabels.bc), "middle"));
   }
   if (opts.aoLabel != null) {
@@ -4467,15 +4545,7 @@ function calcRewards(diff, correct, total, first) {
   return { coins, stars };
 }
 
-const AVATARS = [
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero1&backgroundColor=b6e3f4',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero2&backgroundColor=c0aede',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero3&backgroundColor=ffd5dc',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero4&backgroundColor=d1f4d1',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero5&backgroundColor=ffdfbf',
-  'https://api.dicebear.com/7.x/adventurer/svg?seed=Hero6&backgroundColor=e8d5ff',
-];
-let selectedAv = AVATARS[0];
+const AVATARS = typeof LOGIN_AVATARS !== 'undefined' ? LOGIN_AVATARS : ['🧑‍🎓','👦','👧','🦸','🧙','🐱'];
 let startingSingle = false;
 const GRADE_NAMES = {1:'中一',2:'中二',3:'中三',4:'中四',5:'中五',6:'中六'};
 const SHOP = [
@@ -4483,25 +4553,10 @@ const SHOP = [
   { id:'skip', name:'⏭️ 跳過卡', cost:50, type:'skip' }
 ];
 
-// ========== 用戶狀態 ==========
-let USER = null;
+// USER / selectedAv / loadUser / doLogin / pickAv 由登入模組定義
 let grade = 1, topicId = 'g1_t1', difficulty = 'easy';
 let quiz = { qs:[], idx:0, score:0, correct:0, hidden:[], used5050:false };
 
-function loadUser(name) {
-  const key = 'mh_' + name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g,'_');
-  const raw = localStorage.getItem(key);
-  if (raw) {
-    const u = JSON.parse(raw);
-    if (!u.avatar || String(u.avatar).indexOf('http') !== 0) u.avatar = AVATARS[0];
-    return u;
-  }
-  return {
-    name, avatar: AVATARS[0], coins:0, stars:0,
-    items5050:0, itemsSkip:0, coupons:[],
-    history:{}, pkWins:0, pkLosses:0
-  };
-}
 function saveUser() {
   if (!USER) return;
   const key = 'mh_' + USER.name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g,'_');
@@ -4522,35 +4577,14 @@ function saveLB() {
 function avatarHtml(av, size) {
   size = size || 36;
   if (av && String(av).indexOf('http') === 0) {
-    return '<img src="' + av + '" width="' + size + '" height="' + size + '" class="av-img" alt="" style="width:' + size + 'px;height:' + size + 'px">';
+    return '<img src="' + av + '" width="' + size + '" height="' + size + '" alt="" style="width:' + size + 'px;height:' + size + 'px;border-radius:10px">';
   }
-  return '<span style="font-size:' + size + 'px;line-height:1">' + (av || '🧙') + '</span>';
+  return '<span style="font-size:' + size + 'px;line-height:1">' + (av || '🧑‍🎓') + '</span>';
 }
 
 function setAvatarEl(el, av, size) {
   if (!el) return;
   el.innerHTML = avatarHtml(av, size);
-}
-
-function pickAv(el) {
-  selectedAv = el.dataset.av || AVATARS[0];
-  document.querySelectorAll('#avRow .av').forEach(x => x.classList.remove('on'));
-  el.classList.add('on');
-}
-
-function initAvatars() {
-  const row = document.getElementById('avRow');
-  if (!row) return;
-  row.innerHTML = '';
-  AVATARS.forEach(a => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'av' + (a === selectedAv ? ' on' : '');
-    b.dataset.av = a;
-    b.innerHTML = avatarHtml(a, 52);
-    b.onclick = () => pickAv(b);
-    row.appendChild(b);
-  });
 }
 
 function updateHeader() {
@@ -4592,20 +4626,21 @@ function renderMath(el) {
   }
 }
 
-function doLogin() {
-  const name = document.getElementById('inpName').value.trim();
-  if (!name) { alert('請輸入姓名'); return; }
-  USER = loadUser(name);
-  USER.avatar = selectedAv || AVATARS[0];
-  saveUser();
-  document.getElementById('topBar').style.display = 'flex';
-  document.getElementById('navBar').style.display = 'flex';
-  showScreen('scrHome');
+function enterGameHome() {
+  try {
+    updateHeader();
+    showScreen('scrHome');
+  } catch (e) {
+    console.error(e);
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('scrHome').classList.add('active');
+  }
 }
 
 function initUI() {
-  initAvatars();
   const gt = document.getElementById('gradeTabs');
+  if (!gt) return;
+  gt.innerHTML = '';
   for (let g = 1; g <= 6; g++) {
     const b = document.createElement('button');
     b.className = 'grade-tab' + (g === 1 ? ' on' : '');
@@ -4614,7 +4649,7 @@ function initUI() {
       grade = g;
       document.querySelectorAll('.grade-tab').forEach(x => x.classList.remove('on'));
       b.classList.add('on');
-      topicId = (curriculumGenerators[g]||[])[0]?.id || 'g1_t1';
+      topicId = ((curriculumGenerators[g]||[])[0] && (curriculumGenerators[g]||[])[0].id) || 'g1_t1';
       renderTopics();
     };
     gt.appendChild(b);
@@ -4630,10 +4665,11 @@ function setDiff(d) {
 
 function renderTopics() {
   const list = document.getElementById('topicList');
+  if (!list || !USER) return;
   list.innerHTML = '';
   const topics = curriculumGenerators[grade] || [];
   topics.forEach(t => {
-    const cleared = USER.history[t.id + '_' + difficulty];
+    const cleared = (USER.history || {})[t.id + '_' + difficulty];
     const d = document.createElement('div');
     d.className = 'topic-card' + (t.id === topicId ? ' on' : '');
     d.innerHTML = '<span>' + t.title + (cleared ? ' ✅' : '') + '</span><span style="font-size:11px;color:#ff7675">GO</span>';
@@ -5173,8 +5209,8 @@ function drawGacha() {
 function closeGachaModal() { document.getElementById('gachaModal').classList.remove('show'); renderCoupons(); }
 function renderCoupons() {
   const el = document.getElementById('couponList');
-  el.innerHTML = (USER?.coupons||[]).length ? '' : '<p style="color:#a29bfe;font-size:12px;text-align:center">尚無獎券</p>';
-  (USER?.coupons||[]).forEach((c,i) => {
+  el.innerHTML = (USER && USER.coupons || []).length ? '' : '<p style="color:#a29bfe;font-size:12px;text-align:center">尚無獎券</p>';
+  (USER && USER.coupons || []).forEach((c,i) => {
     el.innerHTML += '<div style="background:rgba(108,92,231,.2);border:1px dashed #f1c40f;border-radius:12px;padding:10px;margin-bottom:6px;font-size:12px">' +
       c.icon + ' <b>' + c.name + '</b><br><span style="color:#a29bfe">' + c.desc + '</span></div>';
   });
@@ -5204,7 +5240,11 @@ function renderLB() {
   ).join('') || '<p style="color:#a29bfe;text-align:center">暂无</p>';
 }
 
-initUI();
+try {
+  initUI();
+} catch (_bootErr) {
+  console.error('initUI failed', _bootErr);
+}
 </script>
 </body>
 </html>
