@@ -484,7 +484,7 @@ ${trigLabelText(hypLabelX, hypLabelY, hypParts, "#ffeaa7", "middle")}
 </svg>`;
 }
 
-const G3_QUAD_SVG_STYLE = 'max-width:280px;width:100%;height:auto;display:block;margin:0 auto';
+const G3_QUAD_SVG_STYLE = 'max-width:300px;width:100%;height:auto;display:block;margin:0 auto';
 const G3_QUAD_LABEL_STYLE =
   'font-size:14px;font-weight:700;font-family:system-ui,-apple-system,sans-serif;fill:#ffffff';
 
@@ -494,6 +494,15 @@ function g3QuadPt(p) {
 
 function g3QuadLabel(x, y, text, anchor = "middle", dy = 0) {
   return `<text x="${x}" y="${y + dy}" style="${G3_QUAD_LABEL_STYLE}" text-anchor="${anchor}" dominant-baseline="middle">${text}</text>`;
+}
+
+function g3QuadVSub(a, b) {
+  return [a[0] - b[0], a[1] - b[1]];
+}
+
+function g3QuadVNorm(v) {
+  const l = Math.hypot(v[0], v[1]) || 1;
+  return [v[0] / l, v[1] / l];
 }
 
 function g3QuadIntersect(p1, p2, p3, p4) {
@@ -516,6 +525,45 @@ function g3QuadOnSeg(p1, p2, left, right) {
   return [p1[0] + t * (p2[0] - p1[0]), p1[1] + t * (p2[1] - p1[1])];
 }
 
+/** 在 vertex 處畫內角弧（p1-vertex-p2）及度數標籤；依 label 選正確弧段 */
+function g3QuadAngleMark(vertex, p1, p2, label, radius = 24) {
+  const v1 = g3QuadVNorm(g3QuadVSub(p1, vertex));
+  const v2 = g3QuadVNorm(g3QuadVSub(p2, vertex));
+  const a1 = Math.atan2(v1[1], v1[0]);
+  const a2 = Math.atan2(v2[1], v2[0]);
+  let diff = a2 - a1;
+  while (diff <= -Math.PI) diff += 2 * Math.PI;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  const target = Number(label);
+  const degShort = (Math.abs(diff) * 180) / Math.PI;
+  const degLong = 360 - degShort;
+  if (Math.abs(degShort - target) > Math.abs(degLong - target)) {
+    diff = diff > 0 ? diff - 2 * Math.PI : diff + 2 * Math.PI;
+  }
+  const sx = vertex[0] + radius * Math.cos(a1);
+  const sy = vertex[1] + radius * Math.sin(a1);
+  const ex = vertex[0] + radius * Math.cos(a1 + diff);
+  const ey = vertex[1] + radius * Math.sin(a1 + diff);
+  const sweep = diff >= 0 ? 1 : 0;
+  const large = Math.abs(diff) > Math.PI ? 1 : 0;
+  const mid = a1 + diff / 2;
+  const labelR = radius + 14;
+  const lx = vertex[0] + labelR * Math.cos(mid);
+  const ly = vertex[1] + labelR * Math.sin(mid);
+  return (
+    `<path d="M ${sx} ${sy} A ${radius} ${radius} 0 ${large} ${sweep} ${ex} ${ey}" fill="none" stroke="#f1c40f" stroke-width="2.4"/>` +
+    g3QuadLabel(lx, ly, `${label}°`, "middle")
+  );
+}
+
+/** 直角標記：corner 為直角頂點，u/v 為兩邊單位方向 */
+function g3QuadRightMark(corner, u, v, size = 11) {
+  const p1 = [corner[0] + u[0] * size, corner[1] + u[1] * size];
+  const p2 = [p1[0] + v[0] * size, p1[1] + v[1] * size];
+  const p3 = [corner[0] + v[0] * size, corner[1] + v[1] * size];
+  return `<polyline points="${g3QuadPt(p1)} ${g3QuadPt(p2)} ${g3QuadPt(p3)}" fill="none" stroke="#f1c40f" stroke-width="1.8"/>`;
+}
+
 function g3QuadWrap(W, H, inner, label = "四邊形") {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${label}" style="${G3_QUAD_SVG_STYLE}">${inner}</svg>`;
 }
@@ -524,248 +572,289 @@ function g3QuadQ(diagram, text) {
   return `<div class="q-fig">${diagram}</div><p class="q-text" style="margin-top:8px;text-align:center">${text}</p>`;
 }
 
-/** DSE 常用：A 左上、D 右上、C 右下、B 左下 */
-function g3QuadParaPoints() {
+/** A 左上、B 左下、C 右下、D 右上（順時針） */
+function g3QuadParaPoints(slant = 0) {
+  const s = slant;
   return {
-    A: [58, 30],
-    D: [208, 30],
-    C: [178, 118],
-    B: [28, 118],
+    A: [62 + s, 32],
+    B: [28 - s, 122],
+    C: [178 - s, 122],
+    D: [212 + s, 32],
   };
 }
 
-function g3QuadRhombusPoints() {
+function g3QuadRhombusPoints(stretch = 1) {
+  const cx = 118;
+  const cy = 78;
+  const hw = 68 * stretch;
+  const hh = 54;
   return {
-    A: [112, 24],
-    B: [42, 78],
-    C: [112, 132],
-    D: [182, 78],
+    A: [cx, cy - hh],
+    B: [cx - hw, cy],
+    C: [cx, cy + hh],
+    D: [cx + hw, cy],
   };
 }
 
 function g3QuadRectPoints() {
-  return {
-    A: [45, 32],
-    D: [205, 32],
-    C: [205, 118],
-    B: [45, 118],
+  return { A: [48, 34], B: [48, 120], C: [212, 120], D: [212, 34] };
+}
+
+function g3QuadPoly(parts, pts, order = "ADCB") {
+  const seq = order.split("").map(k => pts[k]);
+  parts.push(
+    `<polygon points="${seq.map(g3QuadPt).join(" ")}" fill="rgba(108,92,231,0.28)" stroke="#d6d4ff" stroke-width="3"/>`,
+  );
+}
+
+function g3QuadLabelCorners(parts, pts, extra = {}) {
+  const off = {
+    A: [-10, -10, "end"],
+    B: [-12, 12, "end"],
+    C: [12, 12, "start"],
+    D: [12, -10, "start"],
   };
+  for (const k of ["A", "B", "C", "D"]) {
+    if (extra[k]) parts.push(g3QuadLabel(extra[k][0], extra[k][1], k, extra[k][2] || "middle"));
+    else parts.push(g3QuadLabel(pts[k][0] + off[k][0], pts[k][1] + off[k][1], k, off[k][2]));
+  }
+  for (const k of ["E", "F", "G", "H", "O", "X", "Y"]) {
+    if (extra[k]) parts.push(g3QuadLabel(extra[k][0], extra[k][1], k, extra[k][2] || "middle"));
+  }
 }
 
 function g3QuadParaDiagram(opts = {}) {
-  const { A, B, C, D } = g3QuadParaPoints();
+  const pts = g3QuadParaPoints(opts.slant || 0);
+  const { A, B, C, D } = pts;
   const O = g3QuadMid(A, C);
   const parts = [];
-  parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(D)} ${g3QuadPt(C)} ${g3QuadPt(B)}" fill="rgba(108,92,231,0.28)" stroke="#d6d4ff" stroke-width="3"/>`,
-  );
+  g3QuadPoly(parts, pts, "ABCD");
 
   let E = null;
   let F = null;
   if (opts.eRatio) {
     E = g3QuadOnSeg(B, C, opts.eRatio[0], opts.eRatio[1]);
-    parts.push(`<circle cx="${E[0]}" cy="${E[1]}" r="3.2" fill="#ffeaa7"/>`);
+    parts.push(`<circle cx="${E[0]}" cy="${E[1]}" r="3.5" fill="#ffeaa7"/>`);
     if (opts.drawAE !== false) {
-      parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${E[0]}" y2="${E[1]}" stroke="#55efc4" stroke-width="1.8" stroke-dasharray="5 3"/>`);
+      parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${E[0]}" y2="${E[1]}" stroke="#55efc4" stroke-width="2" stroke-dasharray="5 3"/>`);
     }
   }
   if (opts.diagonals) {
-    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.6" opacity="0.85"/>`);
-    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#fd79a8" stroke-width="1.6" opacity="0.85"/>`);
-    parts.push(`<circle cx="${O[0]}" cy="${O[1]}" r="3.2" fill="#f1c40f"/>`);
+    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.8" opacity="0.9"/>`);
+    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="1.8" opacity="0.9"/>`);
+    parts.push(`<circle cx="${O[0]}" cy="${O[1]}" r="3.5" fill="#f1c40f"/>`);
     if (opts.rightAngleAtO) {
-      const s = 9;
-      parts.push(
-        `<polyline points="${O[0]},${O[1] - s} ${O[0] + s},${O[1] - s} ${O[0] + s},${O[1]}" fill="none" stroke="#f1c40f" stroke-width="1.4"/>`,
-      );
+      const u = g3QuadVNorm(g3QuadVSub(A, O));
+      const v = g3QuadVNorm(g3QuadVSub(B, O));
+      parts.push(g3QuadRightMark(O, u, v));
     }
   }
   if (E && opts.drawBD !== false) {
-    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="1.8"/>`);
+    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="2"/>`);
     F = g3QuadIntersect(A, E, B, D);
-    parts.push(`<circle cx="${F[0]}" cy="${F[1]}" r="3.2" fill="#ff7675"/>`);
+    parts.push(`<circle cx="${F[0]}" cy="${F[1]}" r="3.5" fill="#ff7675"/>`);
     if (opts.highlight === "abf") {
-      parts.push(`<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(F)}" fill="rgba(255,118,117,0.35)" stroke="#ff7675" stroke-width="1.5"/>`);
+      parts.push(`<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(F)}" fill="rgba(255,118,117,0.38)" stroke="#ff7675" stroke-width="1.6"/>`);
     }
     if (opts.highlight === "cdfe") {
-      parts.push(`<polygon points="${g3QuadPt(C)} ${g3QuadPt(D)} ${g3QuadPt(F)} ${g3QuadPt(E)}" fill="rgba(85,239,196,0.28)" stroke="#55efc4" stroke-width="1.5"/>`);
+      parts.push(`<polygon points="${g3QuadPt(C)} ${g3QuadPt(D)} ${g3QuadPt(F)} ${g3QuadPt(E)}" fill="rgba(85,239,196,0.32)" stroke="#55efc4" stroke-width="1.6"/>`);
     }
   }
 
-  if (opts.angleAt === "A" && opts.angleVal != null) {
-    parts.push(
-      `<path d="M ${A[0] + 18} ${A[1]} A 18 18 0 0 1 ${A[0] + 14} ${A[1] + 10}" fill="none" stroke="#f1c40f" stroke-width="1.5"/>`,
-    );
-    parts.push(g3QuadLabel(A[0] + 24, A[1] + 16, `${opts.angleVal}°`, "start"));
+  const angleVert = opts.angleAt || "A";
+  if (opts.angleVal != null) {
+    const vMap = {
+      A: [D, B],
+      B: [A, C],
+      C: [B, D],
+      D: [C, A],
+    };
+    const [p1, p2] = vMap[angleVert];
+    parts.push(g3QuadAngleMark(pts[angleVert], pts[p1], pts[p2], opts.angleVal, angleVert === "A" || angleVert === "C" ? 26 : 22));
   }
 
-  parts.push(g3QuadLabel(A[0] - 8, A[1] - 8, "A", "end"));
-  parts.push(g3QuadLabel(B[0] - 10, B[1] + 10, "B", "end"));
-  parts.push(g3QuadLabel(C[0] + 10, C[1] + 10, "C", "start"));
-  parts.push(g3QuadLabel(D[0] + 10, D[1] - 8, "D", "start"));
-  if (E) parts.push(g3QuadLabel(E[0], E[1] + 14, "E", "middle"));
-  if (F) parts.push(g3QuadLabel(F[0] + 8, F[1] - 8, "F", "start"));
-  if (opts.diagonals) parts.push(g3QuadLabel(O[0] + 10, O[1], "O", "start"));
+  g3QuadLabelCorners(parts, pts, {
+    ...(E ? { E: [E[0], E[1] + 15, "middle"] } : {}),
+    ...(F ? { F: [F[0] + 9, F[1] - 9, "start"] } : {}),
+    ...(opts.diagonals ? { O: [O[0] + 11, O[1], "start"] } : {}),
+  });
   if (opts.sideLabels?.ab != null) {
-    parts.push(g3QuadLabel((A[0] + B[0]) / 2 - 16, (A[1] + B[1]) / 2, String(opts.sideLabels.ab), "end"));
+    parts.push(g3QuadLabel((A[0] + B[0]) / 2 - 18, (A[1] + B[1]) / 2, String(opts.sideLabels.ab), "end"));
   }
   if (opts.sideLabels?.bc != null) {
     parts.push(g3QuadLabel((B[0] + C[0]) / 2, B[1] + 16, String(opts.sideLabels.bc), "middle"));
   }
   if (opts.aoLabel != null) {
     const m = g3QuadMid(A, O);
-    parts.push(g3QuadLabel(m[0] - 12, m[1], String(opts.aoLabel), "end"));
+    parts.push(g3QuadLabel(m[0] - 14, m[1], String(opts.aoLabel), "end"));
   }
 
-  return g3QuadWrap(236, 145, parts.join(""), "平行四邊形");
+  return g3QuadWrap(244, 150, parts.join(""), "平行四邊形");
 }
 
 function g3QuadRhombusDiagram(opts = {}) {
-  const { A, B, C, D } = g3QuadRhombusPoints();
+  const pts = g3QuadRhombusPoints(opts.stretch || 1);
+  const { A, B, C, D } = pts;
   const O = g3QuadMid(A, C);
   const parts = [];
-  parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(C)} ${g3QuadPt(D)}" fill="rgba(108,92,231,0.28)" stroke="#d6d4ff" stroke-width="3"/>`,
-  );
+  g3QuadPoly(parts, pts, "ABCD");
 
   if (opts.diagonals) {
-    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.6" opacity="0.85"/>`);
-    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#fd79a8" stroke-width="1.6" opacity="0.85"/>`);
-    parts.push(`<circle cx="${O[0]}" cy="${O[1]}" r="3.2" fill="#f1c40f"/>`);
+    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.8" opacity="0.9"/>`);
+    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="1.8" opacity="0.9"/>`);
+    parts.push(`<circle cx="${O[0]}" cy="${O[1]}" r="3.5" fill="#f1c40f"/>`);
     if (opts.rightAngleAtO) {
-      const s = 9;
-      parts.push(
-        `<polyline points="${O[0] - s},${O[1]} ${O[0] - s},${O[1] - s} ${O[0]},${O[1] - s}" fill="none" stroke="#f1c40f" stroke-width="1.4"/>`,
-      );
+      parts.push(g3QuadRightMark(O, g3QuadVNorm(g3QuadVSub(B, O)), g3QuadVNorm(g3QuadVSub(A, O))));
     }
   }
 
   let E = null;
   let Fpt = null;
+  let uAb = null;
+  let uBc = null;
   if (opts.eOnAb != null) {
     E = g3QuadOnSeg(A, B, opts.eOnAb, 100 - opts.eOnAb);
-    parts.push(`<circle cx="${E[0]}" cy="${E[1]}" r="3.2" fill="#ffeaa7"/>`);
+    parts.push(`<circle cx="${E[0]}" cy="${E[1]}" r="3.5" fill="#ffeaa7"/>`);
   }
   if (opts.fOnAd != null) {
     Fpt = g3QuadOnSeg(A, D, opts.fOnAd, 100 - opts.fOnAd);
-    parts.push(`<circle cx="${Fpt[0]}" cy="${Fpt[1]}" r="3.2" fill="#ffeaa7"/>`);
+    parts.push(`<circle cx="${Fpt[0]}" cy="${Fpt[1]}" r="3.5" fill="#ffeaa7"/>`);
   }
   if (E && Fpt) {
-    parts.push(`<line x1="${C[0]}" y1="${C[1]}" x2="${E[0]}" y2="${E[1]}" stroke="#55efc4" stroke-width="1.6"/>`);
-    parts.push(`<line x1="${C[0]}" y1="${C[1]}" x2="${Fpt[0]}" y2="${Fpt[1]}" stroke="#55efc4" stroke-width="1.6"/>`);
+    parts.push(`<line x1="${C[0]}" y1="${C[1]}" x2="${E[0]}" y2="${E[1]}" stroke="#55efc4" stroke-width="1.8"/>`);
+    parts.push(`<line x1="${C[0]}" y1="${C[1]}" x2="${Fpt[0]}" y2="${Fpt[1]}" stroke="#55efc4" stroke-width="1.8"/>`);
+    parts.push(`<line x1="${E[0]}" y1="${E[1]}" x2="${Fpt[0]}" y2="${Fpt[1]}" stroke="#55efc4" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.7"/>`);
   }
 
   if (opts.extendBe) {
-    const dir = [B[0] - A[0], B[1] - A[1]];
-    const len = Math.hypot(dir[0], dir[1]) || 1;
-    E = [B[0] + (dir[0] / len) * 42, B[1] + (dir[1] / len) * 42];
-    const dirF = [C[0] - B[0], C[1] - B[1]];
-    const lenF = Math.hypot(dirF[0], dirF[1]) || 1;
-    Fpt = [C[0] + (dirF[0] / lenF) * 38, C[1] + (dirF[1] / lenF) * 38];
-    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${E[0]}" y2="${E[1]}" stroke="#636e72" stroke-width="1.4" stroke-dasharray="4 3"/>`);
-    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#636e72" stroke-width="1.4"/>`);
-    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${Fpt[0]}" y2="${Fpt[1]}" stroke="#636e72" stroke-width="1.4" stroke-dasharray="4 3"/>`);
-    parts.push(`<line x1="${E[0]}" y1="${E[1]}" x2="${Fpt[0]}" y2="${Fpt[1]}" stroke="#ffeaa7" stroke-width="1.8"/>`);
-    parts.push(`<circle cx="${E[0]}" cy="${E[1]}" r="3.2" fill="#ffeaa7"/>`);
-    parts.push(`<circle cx="${Fpt[0]}" cy="${Fpt[1]}" r="3.2" fill="#ffeaa7"/>`);
+    uAb = g3QuadVNorm(g3QuadVSub(B, A));
+    uBc = g3QuadVNorm(g3QuadVSub(C, B));
+    E = [B[0] + uAb[0] * 48, B[1] + uAb[1] * 48];
+    Fpt = [C[0] + uBc[0] * 44, C[1] + uBc[1] * 44];
+    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${E[0]}" y2="${E[1]}" stroke="#888" stroke-width="1.5" stroke-dasharray="5 3"/>`);
+    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#888" stroke-width="1.5"/>`);
+    parts.push(`<line x1="${C[0]}" y1="${C[1]}" x2="${Fpt[0]}" y2="${Fpt[1]}" stroke="#888" stroke-width="1.5" stroke-dasharray="5 3"/>`);
+    parts.push(`<line x1="${E[0]}" y1="${E[1]}" x2="${Fpt[0]}" y2="${Fpt[1]}" stroke="#ffeaa7" stroke-width="2.2"/>`);
+    parts.push(`<circle cx="${E[0]}" cy="${E[1]}" r="3.5" fill="#ffeaa7"/>`);
+    parts.push(`<circle cx="${Fpt[0]}" cy="${Fpt[1]}" r="3.5" fill="#ffeaa7"/>`);
     if (opts.befAngle != null) {
-      parts.push(g3QuadLabel(E[0] - 6, E[1] + 18, `${opts.befAngle}°`, "middle"));
+      parts.push(g3QuadAngleMark(E, B, Fpt, opts.befAngle, 20));
     }
   }
 
   if (opts.angleAtA != null) {
-    parts.push(g3QuadLabel(A[0], A[1] - 12, `${opts.angleAtA}°`, "middle"));
+    parts.push(g3QuadAngleMark(A, B, D, opts.angleAtA, 30));
+  }
+  if (opts.markHalfAngleAtA != null) {
+    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${O[0]}" y2="${O[1]}" stroke="#fdcb6e" stroke-width="1.6" stroke-dasharray="4 2"/>`);
+    parts.push(g3QuadAngleMark(A, B, O, opts.markHalfAngleAtA, 17));
   }
 
-  parts.push(g3QuadLabel(A[0], A[1] - 14, "A", "middle"));
-  parts.push(g3QuadLabel(B[0] - 12, B[1], "B", "end"));
-  parts.push(g3QuadLabel(C[0], C[1] + 14, "C", "middle"));
-  parts.push(g3QuadLabel(D[0] + 12, D[1], "D", "start"));
-  if (E && opts.extendBe) parts.push(g3QuadLabel(E[0] + (E[0] > B[0] ? 10 : -10), E[1] + 12, "E", E[0] > B[0] ? "start" : "end"));
-  if (Fpt && opts.extendBe) parts.push(g3QuadLabel(Fpt[0] + 10, Fpt[1], "F", "start"));
-  if (E && opts.eOnAb != null) parts.push(g3QuadLabel(E[0] - 10, E[1], "E", "end"));
-  if (Fpt && opts.fOnAd != null) parts.push(g3QuadLabel(Fpt[0] + 10, Fpt[1], "F", "start"));
-  if (opts.diagonals) parts.push(g3QuadLabel(O[0] + 10, O[1], "O", "start"));
+  g3QuadLabelCorners(parts, pts, {
+    ...(E && opts.extendBe && uAb ? { E: [E[0] + uAb[0] * 12, E[1] + uAb[1] * 12, "start"] } : {}),
+    ...(Fpt && opts.extendBe && uBc ? { F: [Fpt[0] + uBc[0] * 12, Fpt[1] + uBc[1] * 12, "start"] } : {}),
+    ...(E && opts.eOnAb != null ? { E: [E[0] - 12, E[1], "end"] } : {}),
+    ...(Fpt && opts.fOnAd != null ? { F: [Fpt[0] + 12, Fpt[1], "start"] } : {}),
+    ...(opts.diagonals ? { O: [O[0] + 11, O[1], "start"] } : {}),
+  });
 
-  return g3QuadWrap(224, 158, parts.join(""), "菱形");
+  return g3QuadWrap(236, 162, parts.join(""), "菱形");
 }
 
 function g3QuadRectDiagram(opts = {}) {
-  const { A, B, C, D } = g3QuadRectPoints();
+  const pts = g3QuadRectPoints();
+  const { A, B, C, D } = pts;
   const parts = [];
-  parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(D)} ${g3QuadPt(C)} ${g3QuadPt(B)}" fill="rgba(108,92,231,0.28)" stroke="#d6d4ff" stroke-width="3"/>`,
-  );
+  g3QuadPoly(parts, pts, "ABCD");
   if (opts.diagonals) {
-    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.6" opacity="0.85"/>`);
-    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="1.6" opacity="0.85"/>`);
+    parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.8" opacity="0.9"/>`);
+    parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="1.8" opacity="0.9"/>`);
     if (opts.diagLabel != null) {
-      parts.push(g3QuadLabel((A[0] + C[0]) / 2 + 8, (A[1] + C[1]) / 2, String(opts.diagLabel), "start"));
+      parts.push(g3QuadLabel((A[0] + C[0]) / 2 + 10, (A[1] + C[1]) / 2 - 4, String(opts.diagLabel), "start"));
     }
   }
-  parts.push(g3QuadLabel(A[0] - 8, A[1] - 8, "A", "end"));
-  parts.push(g3QuadLabel(B[0] - 8, B[1] + 12, "B", "end"));
-  parts.push(g3QuadLabel(C[0] + 10, C[1] + 12, "C", "start"));
-  parts.push(g3QuadLabel(D[0] + 10, D[1] - 8, "D", "start"));
-  return g3QuadWrap(250, 145, parts.join(""), "矩形");
+  if (opts.rightAngles) {
+    for (const k of ["A", "B", "C", "D"]) {
+      const n = { A: ["D", "B"], B: ["A", "C"], C: ["B", "D"], D: ["C", "A"] };
+      const u = g3QuadVNorm(g3QuadVSub(pts[n[k][0]], pts[k]));
+      const v = g3QuadVNorm(g3QuadVSub(pts[n[k][1]], pts[k]));
+      parts.push(g3QuadRightMark(pts[k], u, v, 9));
+    }
+  }
+  g3QuadLabelCorners(parts, pts);
+  return g3QuadWrap(260, 148, parts.join(""), "矩形");
 }
 
-function g3QuadNestedParaDiagram() {
-  const { A, B, C, D } = g3QuadParaPoints();
-  const E = g3QuadOnSeg(B, C, 2, 3);
-  const F = g3QuadOnSeg(A, D, 2, 3);
+function g3QuadNestedParaDiagram(be = 2, ec = 3) {
+  const pts = g3QuadParaPoints(4);
+  const { A, B, C, D } = pts;
+  const E = g3QuadOnSeg(B, C, be, ec);
+  const F = g3QuadOnSeg(A, D, be, ec);
   const parts = [];
-  parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(D)} ${g3QuadPt(C)} ${g3QuadPt(B)}" fill="rgba(108,92,231,0.14)" stroke="#a29bfe" stroke-width="2.2"/>`,
-  );
-  parts.push(
-    `<polygon points="${g3QuadPt(B)} ${g3QuadPt(E)} ${g3QuadPt(F)} ${g3QuadPt(D)}" fill="rgba(85,239,196,0.16)" stroke="#55efc4" stroke-width="1.8" stroke-dasharray="5 3"/>`,
-  );
-  parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.5" opacity="0.8"/>`);
-  parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${F[0]}" y2="${F[1]}" stroke="#74b9ff" stroke-width="1.5"/>`);
-  parts.push(`<line x1="${E[0]}" y1="${E[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="1.5"/>`);
+  g3QuadPoly(parts, pts, "ABCD");
+  parts.push(`<line x1="${A[0]}" y1="${A[1]}" x2="${C[0]}" y2="${C[1]}" stroke="#fd79a8" stroke-width="1.8"/>`);
+  parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${F[0]}" y2="${F[1]}" stroke="#74b9ff" stroke-width="1.6"/>`);
+  parts.push(`<line x1="${E[0]}" y1="${E[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="1.6"/>`);
   const G = g3QuadIntersect(A, C, B, F);
   const H = g3QuadIntersect(A, C, E, D);
-  parts.push(`<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(G)}" fill="rgba(255,118,117,0.32)" stroke="#ff7675" stroke-width="1.4"/>`);
-  parts.push(`<polygon points="${g3QuadPt(D)} ${g3QuadPt(F)} ${g3QuadPt(G)} ${g3QuadPt(H)}" fill="rgba(253,203,110,0.25)" stroke="#fdcb6e" stroke-width="1.4"/>`);
-  parts.push(g3QuadLabel(A[0] - 8, A[1] - 8, "A", "end"));
-  parts.push(g3QuadLabel(B[0] - 10, B[1] + 10, "B", "end"));
-  parts.push(g3QuadLabel(C[0] + 10, C[1] + 10, "C", "start"));
-  parts.push(g3QuadLabel(D[0] + 10, D[1] - 8, "D", "start"));
-  parts.push(g3QuadLabel(E[0], E[1] + 14, "E", "middle"));
-  parts.push(g3QuadLabel(F[0], F[1] - 12, "F", "middle"));
-  parts.push(g3QuadLabel(G[0] - 8, G[1] + 10, "G", "end"));
-  parts.push(g3QuadLabel(H[0] + 8, H[1] - 8, "H", "start"));
-  return g3QuadWrap(236, 145, parts.join(""), "嵌套平行四邊形");
+  parts.push(`<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(G)}" fill="rgba(255,118,117,0.38)" stroke="#ff7675" stroke-width="1.5"/>`);
+  parts.push(`<polygon points="${g3QuadPt(D)} ${g3QuadPt(F)} ${g3QuadPt(G)} ${g3QuadPt(H)}" fill="rgba(253,203,110,0.3)" stroke="#fdcb6e" stroke-width="1.5"/>`);
+  g3QuadLabelCorners(parts, pts, {
+    E: [E[0], E[1] + 15, "middle"],
+    F: [F[0], F[1] - 13, "middle"],
+    G: [G[0] - 10, G[1] + 10, "end"],
+    H: [H[0] + 10, H[1] - 9, "start"],
+  });
+  return g3QuadWrap(244, 150, parts.join(""), "嵌套平行四邊形");
 }
 
-function g3QuadSquareInParaDiagram() {
-  const { A, B, C, D } = g3QuadParaPoints();
-  const E = g3QuadOnSeg(B, C, 2, 10);
-  const F = g3QuadOnSeg(B, C, 9, 3);
-  const G = g3QuadOnSeg(A, D, 9, 3);
+/** DSE 2019：A.x = E.x（AE 垂直），EF 沿上底，AEFG 為真正正方形 */
+function g3QuadSquareInParaDiagram(variant = 0) {
+  const topLen = variant === 1 ? 216 : 240;
+  const topY = 28;
+  const side = (topLen * 7) / 12;
+  const botY = topY + side;
+  const leftX = 24;
+  const B = [leftX + topLen, topY];
+  const C = [leftX, topY];
+  const A = [B[0] - (topLen * 2) / 12, botY];
+  const E = [A[0], topY];
+  const F = [B[0] - (topLen * 9) / 12, topY];
+  const D = [C[0] + (A[0] - B[0]), botY];
+  const sqG = [A[0] - side, botY];
+  const sqF = [E[0] - side, topY];
   const parts = [];
+  parts.push(`<polygon points="${g3QuadPt(C)} ${g3QuadPt(B)} ${g3QuadPt(A)} ${g3QuadPt(D)}" fill="rgba(108,92,231,0.2)" stroke="#d6d4ff" stroke-width="3"/>`);
   parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(D)} ${g3QuadPt(C)} ${g3QuadPt(B)}" fill="rgba(108,92,231,0.14)" stroke="#a29bfe" stroke-width="2.2"/>`,
+    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(E)} ${g3QuadPt(sqF)} ${g3QuadPt(sqG)}" fill="rgba(85,239,196,0.35)" stroke="#55efc4" stroke-width="2.5"/>`,
   );
-  parts.push(
-    `<polygon points="${g3QuadPt(A)} ${g3QuadPt(E)} ${g3QuadPt(F)} ${g3QuadPt(G)}" fill="rgba(85,239,196,0.22)" stroke="#55efc4" stroke-width="1.8"/>`,
-  );
-  parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="1.6"/>`);
+  const uAe = g3QuadVNorm(g3QuadVSub(E, A));
+  const uEf = g3QuadVNorm(g3QuadVSub(sqF, E));
+  const uFg = g3QuadVNorm(g3QuadVSub(sqG, sqF));
+  const uGa = g3QuadVNorm(g3QuadVSub(A, sqG));
+  for (const [corner, u, v] of [
+    [A, uGa, uAe],
+    [E, uAe, uEf],
+    [sqF, uEf, uFg],
+    [sqG, uFg, uGa],
+  ]) {
+    parts.push(g3QuadRightMark(corner, u, v, 10));
+  }
+  parts.push(`<line x1="${B[0]}" y1="${B[1]}" x2="${D[0]}" y2="${D[1]}" stroke="#74b9ff" stroke-width="2"/>`);
   const X = g3QuadIntersect(A, E, B, D);
-  const Y = g3QuadIntersect(F, G, B, D);
-  parts.push(`<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(X)}" fill="rgba(255,118,117,0.32)" stroke="#ff7675" stroke-width="1.4"/>`);
-  parts.push(`<polygon points="${g3QuadPt(C)} ${g3QuadPt(D)} ${g3QuadPt(Y)} ${g3QuadPt(F)}" fill="rgba(253,203,110,0.25)" stroke="#fdcb6e" stroke-width="1.4"/>`);
-  parts.push(g3QuadLabel(A[0] - 8, A[1] - 8, "A", "end"));
-  parts.push(g3QuadLabel(B[0] - 10, B[1] + 10, "B", "end"));
-  parts.push(g3QuadLabel(C[0] + 10, C[1] + 10, "C", "start"));
-  parts.push(g3QuadLabel(D[0] + 10, D[1] - 8, "D", "start"));
-  parts.push(g3QuadLabel(E[0], E[1] + 14, "E", "middle"));
-  parts.push(g3QuadLabel(F[0], F[1] + 14, "F", "middle"));
-  parts.push(g3QuadLabel(G[0], G[1] - 12, "G", "middle"));
-  parts.push(g3QuadLabel(X[0] - 8, X[1], "X", "end"));
-  parts.push(g3QuadLabel(Y[0] + 8, Y[1], "Y", "start"));
-  return g3QuadWrap(236, 145, parts.join(""), "平行四邊形與正方形");
+  const Y = g3QuadIntersect(sqF, sqG, B, D);
+  parts.push(`<polygon points="${g3QuadPt(A)} ${g3QuadPt(B)} ${g3QuadPt(X)}" fill="rgba(255,118,117,0.38)" stroke="#ff7675" stroke-width="1.5"/>`);
+  parts.push(`<polygon points="${g3QuadPt(C)} ${g3QuadPt(D)} ${g3QuadPt(Y)} ${g3QuadPt(sqF)}" fill="rgba(253,203,110,0.32)" stroke="#fdcb6e" stroke-width="1.5"/>`);
+  parts.push(g3QuadLabel(C[0] - 8, C[1] - 8, "C", "end"));
+  parts.push(g3QuadLabel(B[0] + 10, B[1] - 8, "B", "start"));
+  parts.push(g3QuadLabel(D[0] - 10, D[1] + 12, "D", "end"));
+  parts.push(g3QuadLabel(A[0] + 10, A[1] + 12, "A", "start"));
+  parts.push(g3QuadLabel(E[0], E[1] - 12, "E", "middle"));
+  parts.push(g3QuadLabel(F[0], F[1] - 12, "F", "middle"));
+  parts.push(g3QuadLabel(sqG[0] - 10, sqG[1] + 12, "G", "end"));
+  parts.push(g3QuadLabel(X[0] - 10, X[1], "X", "end"));
+  parts.push(g3QuadLabel(Y[0] + 10, Y[1], "Y", "start"));
+  return g3QuadWrap(268, 148, parts.join(""), "平行四邊形內正方形");
 }
 
 function trigDseHint(opp, adj, hyp, hideSide, ratioName, val) {
@@ -1343,38 +1432,59 @@ function g3QuadrilateralEasy() {
   if (type === 1) {
     const ab = rand(5, 12);
     const bc = rand(4, 10);
-    const ans = `$${ab}$`;
-    const opts = createUniqueOpts(ans, i => [`$${bc}$`, `$${ab + bc}$`, `$${Math.abs(ab - bc)}$`][i - 1]);
+    const ask = rand(1, 2);
+    const slant = rand(-6, 6);
+    if (ask === 1) {
+      const ans = `$${ab}$`;
+      const opts = createUniqueOpts(ans, i => [`$${bc}$`, `$${ab + bc}$`, `$${Math.abs(ab - bc)}$`][i - 1]);
+      return {
+        q: g3QuadQ(
+          g3QuadParaDiagram({ slant, sideLabels: { ab, bc } }),
+          `平行四邊形 $ABCD$ 中，$AB = ${ab}$、$BC = ${bc}$，求 $CD$ 的長度`,
+        ),
+        ans,
+        opts,
+        hint: `平行四邊形對邊相等，故 $CD = AB = ${ab}$。誤選 $${bc}$ 是把鄰邊 $BC$ 當對邊；加減選項是把對邊關係誤當鄰邊處理`,
+      };
+    }
+    const ans = `$${bc}$`;
+    const opts = createUniqueOpts(ans, i => [`$${ab}$`, `$${ab + bc}$`, `$${Math.abs(ab - bc)}$`][i - 1]);
     return {
       q: g3QuadQ(
-        g3QuadParaDiagram({ sideLabels: { ab, bc } }),
-        `平行四邊形 $ABCD$ 中，$AB = ${ab}$、$BC = ${bc}$，求 $CD$ 的長度`,
+        g3QuadParaDiagram({ slant, sideLabels: { ab, bc } }),
+        `平行四邊形 $ABCD$ 中，$AB = ${ab}$、$BC = ${bc}$，求 $AD$ 的長度`,
       ),
       ans,
       opts,
-      hint: `平行四邊形對邊相等，故 $CD = AB = ${ab}$。誤選 $${bc}$ 是把鄰邊 $BC$ 當對邊；加減選項是把對邊關係誤當鄰邊處理`,
+      hint: `平行四邊形對邊相等，故 $AD = BC = ${bc}$。誤選 $${ab}$ 是把 $AB$ 與 $AD$ 混淆`,
     };
   }
 
   if (type === 2) {
     const angle = rand(55, 115);
+    const verts = ["A", "B", "C", "D"];
+    const v = verts[rand(0, 3)];
     const ans = `$${angle}^{\\circ}$`;
     const opts = createUniqueOpts(ans, i =>
       [`$${180 - angle}^{\\circ}$`, `$${90}^{\\circ}$`, `$${angle + 15}^{\\circ}$`][i - 1],
     );
+    const opp = { A: "C", B: "D", C: "A", D: "B" }[v];
     return {
       q: g3QuadQ(
-        g3QuadParaDiagram({ angleAt: "A", angleVal: angle }),
-        `平行四邊形 $ABCD$ 中，$\\angle A = ${angle}^{\\circ}$，求對角 $\\angle C$ 的大小`,
+        g3QuadParaDiagram({ angleAt: v, angleVal: angle, slant: rand(-5, 5) }),
+        `平行四邊形 $ABCD$ 中，$\\angle ${v} = ${angle}^{\\circ}$，求對角 $\\angle ${opp}$ 的大小`,
       ),
       ans,
       opts,
-      hint: `平行四邊形對角相等，故 $\\angle C = \\angle A = ${angle}^{\\circ}$。誤選 $${180 - angle}^{\\circ}$ 是把鄰角互補（同旁內角）誤用於對角`,
+      hint: `平行四邊形對角相等，故 $\\angle ${opp} = \\angle ${v} = ${angle}^{\\circ}$。誤選 $${180 - angle}^{\\circ}$ 是把鄰角互補誤用於對角`,
     };
   }
 
   if (type === 3) {
     const angle = rand(55, 115);
+    const verts = ["A", "B", "C", "D"];
+    const v = verts[rand(0, 3)];
+    const adj = { A: "B", B: "C", C: "D", D: "A" }[v];
     const ansVal = 180 - angle;
     const ans = `$${ansVal}^{\\circ}$`;
     const opts = createUniqueOpts(ans, i =>
@@ -1382,27 +1492,30 @@ function g3QuadrilateralEasy() {
     );
     return {
       q: g3QuadQ(
-        g3QuadParaDiagram({ angleAt: "A", angleVal: angle }),
-        `平行四邊形 $ABCD$ 中，$\\angle A = ${angle}^{\\circ}$，求鄰角 $\\angle B$ 的大小`,
+        g3QuadParaDiagram({ angleAt: v, angleVal: angle, slant: rand(-5, 5) }),
+        `平行四邊形 $ABCD$ 中，$\\angle ${v} = ${angle}^{\\circ}$，求鄰角 $\\angle ${adj}$ 的大小`,
       ),
       ans,
       opts,
-      hint: `平行四邊形鄰角互補，$\\angle B = 180^{\\circ} - ${angle}^{\\circ} = ${ansVal}^{\\circ}$。誤選 $${angle}^{\\circ}$ 是把對角相等誤用於鄰角`,
+      hint: `平行四邊形鄰角互補，$\\angle ${adj} = 180^{\\circ} - ${angle}^{\\circ} = ${ansVal}^{\\circ}$。誤選 $${angle}^{\\circ}$ 是把對角相等誤用於鄰角`,
     };
   }
 
   if (type === 4) {
     const ao = rand(4, 10);
+    const askCo = rand(0, 1) === 0;
     const ans = `$${ao}$`;
     const opts = createUniqueOpts(ans, i => [`$${ao * 2}$`, `$${Math.max(2, ao - 2)}$`, `$${ao + 3}$`][i - 1]);
     return {
       q: g3QuadQ(
-        g3QuadParaDiagram({ diagonals: true, aoLabel: ao }),
-        `平行四邊形 $ABCD$ 的對角線交於 $O$，若 $AO = ${ao}$，求 $CO$ 的長度`,
+        g3QuadParaDiagram({ diagonals: true, aoLabel: ao, slant: rand(-4, 4) }),
+        askCo
+          ? `平行四邊形 $ABCD$ 的對角線交於 $O$，若 $AO = ${ao}$，求 $CO$ 的長度`
+          : `平行四邊形 $ABCD$ 的對角線交於 $O$，若 $BO = ${ao}$，求 $DO$ 的長度`,
       ),
       ans,
       opts,
-      hint: `平行四邊形對角線互相平分，故 $CO = AO = ${ao}$。誤選 $${ao * 2}$ 是把半段對角線誤當整條對角線`,
+      hint: `平行四邊形對角線互相平分，故 ${askCo ? "$CO = AO$" : "$DO = BO$"} $= ${ao}$。誤選 $${ao * 2}$ 是把半段對角線誤當整條`,
     };
   }
 
@@ -1415,7 +1528,7 @@ function g3QuadrilateralEasy() {
     const ans = pick.text;
     const opts = createUniqueOpts(ans, i => distractors[i - 1]);
     return {
-      q: g3QuadQ(g3QuadParaDiagram(), `下列哪一項<strong>足以</strong>判別四邊形 $ABCD$ 為平行四邊形？`),
+      q: g3QuadQ(g3QuadParaDiagram({ slant: rand(-8, 8) }), `下列哪一項<strong>足以</strong>判別四邊形 $ABCD$ 為平行四邊形？`),
       ans,
       opts,
       hint: g3QuadMcHint(ans, G3_PARALLELOGRAM_PROOFS, "sufficient"),
@@ -1429,8 +1542,12 @@ function g3QuadrilateralEasy() {
     const distractors = sufficient.slice(0, 3).map(p => p.text);
     const ans = pick.text;
     const opts = createUniqueOpts(ans, i => distractors[i - 1]);
+    const useRect = rand(0, 1) === 0;
     return {
-      q: g3QuadQ(g3QuadParaDiagram(), `下列哪一項<strong>不能</strong>作為判別四邊形 $ABCD$ 為平行四邊形的充分條件？`),
+      q: g3QuadQ(
+        useRect ? g3QuadRectDiagram({ diagonals: true }) : g3QuadParaDiagram({ slant: rand(-8, 8), diagonals: rand(0, 1) === 0 }),
+        `下列哪一項<strong>不能</strong>作為判別四邊形 $ABCD$ 為平行四邊形的充分條件？`,
+      ),
       ans,
       opts,
       hint: g3QuadMcHint(ans, G3_PARALLELOGRAM_PROOFS, "insufficient"),
@@ -1445,7 +1562,7 @@ function g3QuadrilateralEasy() {
     );
     return {
       q: g3QuadQ(
-        g3QuadRectDiagram({ diagonals: true, diagLabel: d }),
+        g3QuadRectDiagram({ diagonals: true, diagLabel: d, rightAngles: true }),
         `矩形 $ABCD$ 中，對角線 $AC = ${d}$ cm，求 $BD$ 的長度`,
       ),
       ans,
@@ -1462,7 +1579,7 @@ function g3QuadrilateralEasy() {
       [`$${perimeter}\\text{ cm}$`, `$${side * 2}\\text{ cm}$`, `$${side + 4}\\text{ cm}$`][i - 1],
     );
     return {
-      q: g3QuadQ(g3QuadRhombusDiagram(), `菱形 $ABCD$ 的周界為 $${perimeter}$ cm，求每邊的長度`),
+      q: g3QuadQ(g3QuadRhombusDiagram({ stretch: rand(88, 112) / 100 }), `菱形 $ABCD$ 的周界為 $${perimeter}$ cm，求每邊的長度`),
       ans,
       opts,
       hint: `菱形四邊相等，邊長 $= \\dfrac{${perimeter}}{4} = ${side}$ cm。誤選周界是把四邊之和當單邊`,
@@ -1492,10 +1609,10 @@ function g3QuadrilateralEasy() {
     [`$${fullAngle}^{\\circ}$`, `$${180 - half}^{\\circ}$`, `$${half + 10}^{\\circ}$`][i - 1],
   );
   return {
-    q: g3QuadQ(
-      g3QuadRhombusDiagram({ diagonals: true, angleAtA: fullAngle }),
-      `菱形 $ABCD$ 中，$\\angle BAD = ${fullAngle}^{\\circ}$，對角線 $AC$ 平分 $\\angle BAD$，求 $\\angle BAC$ 的大小`,
-    ),
+      q: g3QuadQ(
+        g3QuadRhombusDiagram({ diagonals: true, angleAtA: fullAngle, markHalfAngleAtA: half }),
+        `菱形 $ABCD$ 中，$\\angle BAD = ${fullAngle}^{\\circ}$，對角線 $AC$ 平分 $\\angle BAD$，求 $\\angle BAC$ 的大小`,
+      ),
     ans,
     opts,
     hint: `菱形對角線平分內角，故 $\\angle BAC = \\dfrac{${fullAngle}^{\\circ}}{2} = ${half}^{\\circ}$。誤選 $${fullAngle}^{\\circ}$ 是未運用「平分」條件`,
@@ -1509,9 +1626,10 @@ function g3QuadDseRhombusExtAngle(bef) {
   const opts = createUniqueOpts(ans, i =>
     [`$${bef}^{\\circ}$`, `$${abc}^{\\circ}$`, `$${bdc + 4}^{\\circ}$`, `$${Math.max(40, bdc - 4)}^{\\circ}$`][i - 1],
   );
+  const stretch = bef >= 58 ? 1.08 : bef <= 50 ? 0.92 : 1;
   return {
     q: g3QuadQ(
-      g3QuadRhombusDiagram({ extendBe: true, befAngle: bef }),
+      g3QuadRhombusDiagram({ extendBe: true, befAngle: bef, stretch }),
       `圖中，$ABCD$ 為菱形。延長 $AB$ 至 $E$、延長 $BC$ 至 $F$，使 $ABE$ 及 $BCF$ 均為直線，且 $BE = EF$。若 $\\angle BEF = ${bef}^{\\circ}$，求 $\\angle BDC$。`,
     ),
     ans,
@@ -1540,9 +1658,9 @@ function g3QuadDseRhombusAeAf() {
 }
 
 const G3_QUAD_DSE_AREA_2018 = [
-  { m: 5, n: 3, abf: 120, cdfe: 312 },
-  { m: 5, n: 3, abf: 60, cdfe: 156 },
-  { m: 5, n: 3, abf: 100, cdfe: 260 },
+  { m: 5, n: 3, abf: 120, cdfe: 312, slant: 0, highlight: "abf", hintMult: "\\dfrac{13}{5}" },
+  { m: 3, n: 2, abf: 90, cdfe: 186, slant: 6, highlight: "cdfe", hintMult: "\\dfrac{62}{30}" },
+  { m: 2, n: 3, abf: 50, cdfe: 155, slant: -5, highlight: "abf", hintMult: "\\dfrac{31}{10}" },
 ];
 
 function g3QuadDseAreaParallelogram2018() {
@@ -1558,20 +1676,18 @@ function g3QuadDseAreaParallelogram2018() {
   );
   return {
     q: g3QuadQ(
-      g3QuadParaDiagram({ eRatio: [c.m, c.n], diagonals: true, highlight: "abf" }),
+      g3QuadParaDiagram({ eRatio: [c.m, c.n], diagonals: true, highlight: c.highlight, slant: c.slant }),
       `圖中，$ABCD$ 為平行四邊形。$E$ 在 $BC$ 上，且 $BE : EC = ${c.m} : ${c.n}$。$AE$ 與 $BD$ 相交於 $F$。若 $\\triangle ABF$ 的面積為 $${c.abf}\\text{ cm}^2$，求四邊形 $CDFE$ 的面積。`,
     ),
     ans,
     opts,
-    hint: `利用平行四邊形對邊平行，可得 $\\triangle BEF \\sim \\triangle DAF$ 及 $\\triangle ABF$ 與 $\\triangle EBF$ 同高比例。按 DSE 2018 P2Q16 比例推得 $[CDFE] = ${c.abf} \\times \\dfrac{13}{5} = ${c.cdfe}\\text{ cm}^2$。誤把邊比直接當面積比會得約 $${Math.round(c.abf * 1.975)}\\text{ cm}^2$`,
+    hint: `利用平行四邊形對邊平行及相似三角形求面積比。$[CDFE] = ${c.abf} \\times ${c.hintMult} = ${c.cdfe}\\text{ cm}^2$。誤把邊比直接當面積比會得約 $${Math.round(c.abf * 1.975)}\\text{ cm}^2$`,
   };
 }
 
 const G3_QUAD_DSE_AREA_2017 = [
-  { abg: 135, dfgh: 144 },
-  { abg: 90, dfgh: 96 },
-  { abg: 150, dfgh: 160 },
-  { abg: 120, dfgh: 128 },
+  { be: 2, ec: 3, abg: 135, dfgh: 144 },
+  { be: 3, ec: 2, abg: 120, dfgh: 128 },
 ];
 
 function g3QuadDseAreaNested2017() {
@@ -1587,20 +1703,19 @@ function g3QuadDseAreaNested2017() {
   );
   return {
     q: g3QuadQ(
-      g3QuadNestedParaDiagram(),
-      `圖中，$ABCD$ 及 $BEDF$ 均為平行四邊形。$E$ 在 $BC$ 上，且 $BE : EC = 2 : 3$。$AC$ 分別與 $BF$、$DE$ 相交於 $G$、$H$。若 $\\triangle ABG$ 的面積為 $${c.abg}\\text{ cm}^2$，求四邊形 $DFGH$ 的面積。`,
+      g3QuadNestedParaDiagram(c.be, c.ec),
+      `圖中，$ABCD$ 及 $BEDF$ 均為平行四邊形。$E$ 在 $BC$ 上，且 $BE : EC = ${c.be} : ${c.ec}$。$AC$ 分別與 $BF$、$DE$ 相交於 $G$、$H$。若 $\\triangle ABG$ 的面積為 $${c.abg}\\text{ cm}^2$，求四邊形 $DFGH$ 的面積。`,
     ),
     ans,
     opts,
-    hint: `由相似三角形及平行四邊形對角線互相平分，$[DFGH] : [\\triangle ABG] = 16 : 15$（DSE 2017 P2Q16）。故 $[DFGH] = ${c.abg} \\times \\dfrac{16}{15} = ${c.dfgh}\\text{ cm}^2$。誤用 $BE:EC$ 的平方比會得 $${Math.round(c.abg * 0.81)}\\text{ cm}^2$`,
+    hint: `由相似三角形及平行四邊形對角線互相平分，$[DFGH] : [\\triangle ABG] = 16 : 15$（DSE 2017 P2Q16）。故 $[DFGH] = ${c.abg} \\times \\dfrac{16}{15} = ${c.dfgh}\\text{ cm}^2$`,
   };
 }
 
 const G3_QUAD_DSE_AREA_2019 = [
-  { abx: 24, cdyf: 87 },
-  { abx: 32, cdyf: 116 },
-  { abx: 40, cdyf: 145 },
-  { abx: 16, cdyf: 58 },
+  { abx: 24, cdyf: 87, variant: 0 },
+  { abx: 32, cdyf: 116, variant: 0 },
+  { abx: 40, cdyf: 145, variant: 1 },
 ];
 
 function g3QuadDseAreaSquare2019() {
@@ -1616,7 +1731,7 @@ function g3QuadDseAreaSquare2019() {
   );
   return {
     q: g3QuadQ(
-      g3QuadSquareInParaDiagram(),
+      g3QuadSquareInParaDiagram(c.variant),
       `圖中，$ABCD$ 為平行四邊形，$AEFG$ 為正方形。已知 $BE : EF : FC = 2 : 7 : 3$，$BD$ 分別與 $AE$、$FG$ 相交於 $X$、$Y$。若 $\\triangle ABX$ 的面積為 $${c.abx}\\text{ cm}^2$，求四邊形 $CDYF$ 的面積。`,
     ),
     ans,
@@ -1670,7 +1785,7 @@ function g3QuadDseStatement() {
 }
 
 function g3QuadrilateralDse() {
-  const type = rand(1, 6);
+  const type = rand(1, 7);
 
   if (type === 1) {
     const befChoices = [48, 52, 56, 60, 64];
@@ -1680,7 +1795,20 @@ function g3QuadrilateralDse() {
   if (type === 3) return g3QuadDseAreaParallelogram2018();
   if (type === 4) return g3QuadDseStatement();
   if (type === 5) return g3QuadDseAreaNested2017();
-  return g3QuadDseAreaSquare2019();
+  if (type === 6) return g3QuadDseAreaSquare2019();
+  const ao = rand(5, 9);
+  const ac = ao * 2;
+  const ans = `$${ac}$`;
+  const opts = createUniqueOpts(ans, i => [`$${ao}$`, `$${ao + 3}$`, `$${ac + 2}$`, `$${ac - 2}$`][i - 1]);
+  return {
+    q: g3QuadQ(
+      g3QuadParaDiagram({ eRatio: [2, 3], diagonals: true, highlight: "cdfe", slant: rand(-4, 4) }),
+      `圖中，$ABCD$ 為平行四邊形，$E$ 在 $BC$ 上且 $BE:EC=2:3$，對角線 $AC$ 交 $BD$ 於 $O$。若 $AO = ${ao}$，求 $AC$ 的長度。`,
+    ),
+    ans,
+    opts,
+    hint: `對角線互相平分：$AC = 2 \\times AO = 2 \\times ${ao} = ${ac}$`,
+  };
 }
 
 function g3QuadrilateralQuestion(difficulty) {
