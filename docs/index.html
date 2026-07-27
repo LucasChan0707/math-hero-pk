@@ -16,20 +16,21 @@ body{background:#05040f;color:#fff;min-height:100vh;display:flex;justify-content
     radial-gradient(circle at 10% 80%,rgba(0,180,160,.12),transparent 40%),
     radial-gradient(circle at 90% 70%,rgba(241,196,15,.08),transparent 35%)}
 .app{width:100%;max-width:520px;background:linear-gradient(180deg,#141028 0%,#0a0718 45%,#06050f 100%);
-  border:2px solid #c9a227;border-radius:20px;padding:14px;min-height:720px;
+  border:2px solid #c9a227;border-radius:20px;padding:14px;min-height:720px;max-height:100dvh;
   box-shadow:0 0 0 1px rgba(201,162,39,.35),0 18px 50px rgba(0,0,0,.85),inset 0 1px 0 rgba(255,255,255,.06);
-  position:relative;overflow:hidden}
+  position:relative;overflow:hidden;display:flex;flex-direction:column}
 .app::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.03),transparent 40%);
   pointer-events:none;border-radius:18px}
 .app>*{position:relative;z-index:1}
-.screen{display:none;flex-direction:column;flex:1;min-height:0;animation:fadeIn .25s ease}
+.app>.modal{z-index:500}
+.screen{display:none;flex-direction:column;flex:1;min-height:0;animation:fadeIn .25s ease;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .screen.active{display:flex}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes pulseGlow{0%,100%{box-shadow:0 0 8px rgba(241,196,15,.25)}50%{box-shadow:0 0 16px rgba(241,196,15,.5)}}
 .top-bar{display:flex;justify-content:space-between;align-items:center;
   background:linear-gradient(180deg,rgba(30,24,55,.95),rgba(15,12,30,.92));
   padding:8px 12px;border-radius:14px;margin-bottom:10px;
-  border:1px solid rgba(201,162,39,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+  border:1px solid rgba(201,162,39,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);flex-shrink:0}
 .coin-badge{background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#2d3436;padding:4px 10px;
   border-radius:20px;font-weight:900;font-size:11px;border:1px solid rgba(0,0,0,.15)}
 .star-badge{background:linear-gradient(135deg,#ff7675,#d63031);color:#fff;padding:4px 10px;
@@ -57,8 +58,13 @@ body{background:#05040f;color:#fff;min-height:100vh;display:flex;justify-content
   border:1px solid rgba(108,92,231,.25)}
 .grade-tab.on{background:linear-gradient(180deg,#6c5ce7,#4834a8);color:#fff;
   border-color:#f1c40f;box-shadow:0 0 12px rgba(108,92,231,.35)}
-.quest-map{max-height:300px;overflow-y:auto;flex:1;padding:4px 2px;margin:0 -2px;
+.quest-map{min-height:260px;max-height:min(420px,45vh);overflow-y:auto;overflow-x:hidden;
+  flex:0 0 auto;padding:6px 4px;margin:0 0 10px;-webkit-overflow-scrolling:touch;
+  border:1px solid rgba(108,92,231,.35);border-radius:14px;background:rgba(0,0,0,.25);
   scrollbar-width:thin;scrollbar-color:#6c5ce7 transparent}
+.map-scroll-hint{font-size:10px;color:#8be9fd;text-align:center;padding:6px 4px 2px;flex-shrink:0}
+.home-actions{flex-shrink:0;margin-top:4px}
+.companion-strip,.daily-panel,.game-panel,.selected-quest{flex-shrink:0}
 .quest-node{position:relative;display:flex;align-items:stretch;gap:10px;padding:10px 10px 10px 8px;
   margin-bottom:10px;border-radius:14px;cursor:pointer;
   background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
@@ -113,7 +119,7 @@ body{background:#05040f;color:#fff;min-height:100vh;display:flex;justify-content
 .progress>div{height:100%;background:linear-gradient(90deg,#55efc4,#f1c40f,#ff7675);transition:width .35s;
   box-shadow:0 0 10px rgba(241,196,15,.35)}
 .nav{display:flex;justify-content:space-around;background:linear-gradient(180deg,rgba(10,8,20,.95),rgba(5,4,12,.98));
-  padding:8px 4px;border-radius:14px;margin-top:10px;border:1px solid rgba(201,162,39,.25)}
+  padding:8px 4px;border-radius:14px;margin-top:10px;border:1px solid rgba(201,162,39,.25);flex-shrink:0}
 .nav-item{text-align:center;font-size:10px;color:#a29bfe;cursor:pointer;padding:6px 8px;border-radius:10px;min-width:56px}
 .nav-item.on{color:#f1c40f;font-weight:900;background:rgba(241,196,15,.1);border:1px solid rgba(241,196,15,.25)}
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;
@@ -162,10 +168,81 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(108,9
 .daily-quest-btn{flex:0 0 auto;font-size:10px;font-weight:900;padding:6px 10px;border-radius:8px;border:none;
   cursor:pointer;background:linear-gradient(180deg,#00b894,#55efc4);color:#000}
 .daily-quest-btn.claimed{background:rgba(255,255,255,.1);color:#666;cursor:default}
+.weekly-panel{background:linear-gradient(180deg,rgba(116,185,255,.08),rgba(10,8,22,.88));
+  border:1px solid rgba(116,185,255,.35);border-radius:14px;padding:10px 12px;margin-bottom:10px;flex-shrink:0}
+.weekly-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;font-weight:700}
+.weekly-row:last-child{border-bottom:none}
+.weekly-row.done{color:#dfe6e9}
+.class-badge{font-size:10px;color:#8be9fd;background:rgba(139,233,253,.1);padding:3px 8px;border-radius:99px;border:1px solid rgba(139,233,253,.25)}
+.quest-node.boss{border-color:rgba(241,196,15,.55);background:linear-gradient(90deg,rgba(241,196,15,.12),rgba(10,8,22,.9))}
+.quest-node.boss .quest-node-badge{background:linear-gradient(180deg,#f1c40f,#e67e22);color:#1a1200}
+.title-pick-btn{display:inline-block;margin:4px;padding:8px 10px;border-radius:10px;border:1px solid rgba(108,92,231,.35);
+  background:rgba(0,0,0,.3);color:#fff;font-size:11px;font-weight:800;cursor:pointer}
+.title-pick-btn.on{border-color:#f1c40f;background:rgba(241,196,15,.15)}
+.admin-coupon-row{background:rgba(0,0,0,.25);border:1px dashed rgba(241,196,15,.35);border-radius:10px;padding:10px;margin-bottom:6px;font-size:12px}
+.lb-toggle{display:flex;gap:6px;margin-bottom:10px}
+.lb-toggle button{flex:1;padding:8px;border-radius:10px;border:1px solid rgba(108,92,231,.35);background:rgba(0,0,0,.3);color:#a29bfe;font-weight:800;font-size:11px;cursor:pointer}
+.lb-toggle button.on{background:linear-gradient(180deg,#6c5ce7,#4834a8);color:#fff}
+.coupon-code{font-family:monospace;font-size:11px;color:#f1c40f;letter-spacing:1px;margin-top:4px}
 .companion-strip{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:10px;
   background:linear-gradient(90deg,rgba(108,92,231,.15),rgba(241,196,15,.08));
   border:1px solid rgba(201,162,39,.35);border-radius:14px;cursor:pointer}
-.companion-strip-emoji{font-size:36px;line-height:1;flex:0 0 44px;text-align:center}
+.companion-strip-avatar{flex:0 0 52px;width:52px;height:52px;display:flex;align-items:center;justify-content:center}
+.char-svg{display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+.companion-card-avatar{height:64px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.companion-hero-avatar{height:88px;display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.gear-slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0}
+.gear-slot{padding:8px 6px;border-radius:12px;border:1px dashed rgba(255,255,255,.2);text-align:center;min-height:68px;font-size:10px;color:#a29bfe}
+.gear-slot-name{font-size:10px;font-weight:800;color:#fff;margin-top:4px}
+.gear-list{display:flex;flex-direction:column;gap:6px;max-height:150px;overflow-y:auto;margin-bottom:8px}
+.gear-item{display:flex;align-items:center;gap:8px;padding:8px;border-radius:10px;background:rgba(0,0,0,.25);cursor:pointer;border:1px solid transparent;font-size:11px}
+.gear-item.on{border-color:#55efc4;background:rgba(85,239,196,.08)}
+.gear-item.locked{opacity:.45;cursor:default}
+.gear-pk-tag{font-size:9px;color:#f1c40f;background:rgba(241,196,15,.12);padding:2px 6px;border-radius:99px;margin-left:auto;white-space:nowrap}
+.companion-strip.pulse-select{animation:pulseGlow 2s ease infinite;border-color:#ff9ff3}
+.pk-gear-row{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap}
+.pk-gear-row .btn-sm{flex:1;min-width:46%;margin-top:0;font-size:11px;padding:8px}
+.char-stage{display:flex;align-items:center;justify-content:center;position:relative}
+.char-png{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))}
+.char-anim-idle{animation:charFloat 2.4s ease-in-out infinite}
+.char-anim-wave{animation:charWave 1.2s ease-in-out infinite}
+.char-anim-happy{animation:charHappy .6s ease}
+@keyframes charFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes charWave{0%,100%{transform:rotate(0deg)}25%{transform:rotate(-4deg) translateY(-3px)}75%{transform:rotate(4deg) translateY(-3px)}}
+@keyframes charHappy{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+.ach-popup{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);pointer-events:none}
+.ach-popup-card{background:linear-gradient(135deg,#4a3bb5,#251b4d);border:2px solid #f1c40f;border-radius:18px;padding:20px 24px;text-align:center;max-width:280px}
+.ach-popup-label{font-size:11px;color:#8be9fd;font-weight:800}
+.ach-popup-emoji{font-size:48px;margin:8px 0}
+.ach-popup-name{font-size:18px;font-weight:900;color:#fff}
+.ach-popup-desc{font-size:11px;color:#a29bfe;margin:6px 0}
+.ach-popup-reward{font-size:14px;color:#f1c40f;font-weight:900}
+.ach-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;margin-bottom:8px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.08)}
+.ach-row.unlocked{border-color:rgba(85,239,196,.35);background:rgba(85,239,196,.06)}
+.ach-row-emoji{font-size:28px;flex:0 0 36px;text-align:center}
+.ach-row-body{flex:1;min-width:0}
+.ach-row-name{font-size:13px;font-weight:900;color:#fff}
+.ach-row-desc{font-size:10px;color:#a29bfe}
+.ach-row-reward{font-size:11px;color:#f1c40f;font-weight:800}
+.level-up-overlay{position:fixed;inset:0;z-index:550;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.7);pointer-events:none}
+.level-up-card{background:linear-gradient(180deg,#f1c40f,#e67e22);color:#1a1200;border-radius:20px;padding:24px 32px;text-align:center;box-shadow:0 0 40px rgba(241,196,15,.5)}
+.level-up-title{font-size:28px;font-weight:900;margin-top:8px}
+.level-up-sub{font-size:13px;font-weight:800;margin-top:4px}
+.fx-flash{position:absolute;inset:0;border-radius:18px;pointer-events:none;z-index:50;animation:fxFlash .4s ease forwards}
+.fx-flash.ok{background:rgba(85,239,196,.25)}
+@keyframes fxFlash{from{opacity:1}to{opacity:0}}
+.pop-in{animation:popIn .45s ease}
+.gacha-shake{animation:gachaShake .55s ease}
+@keyframes gachaShake{0%,100%{transform:rotate(0)}20%{transform:rotate(-3deg)}40%{transform:rotate(3deg)}60%{transform:rotate(-2deg)}80%{transform:rotate(2deg)}}
+.grade-badge{display:inline-block;font-size:10px;font-weight:900;padding:2px 7px;border-radius:99px;margin-left:4px}
+.grade-S{background:#f1c40f;color:#1a1200}
+.grade-A{background:#55efc4;color:#000}
+.grade-B{background:#74b9ff;color:#000}
+.grade-C{background:#636e72;color:#fff}
+.star-dual{font-size:10px;color:#a29bfe;margin-top:2px}
+.star-dual b{color:#f1c40f}
+.tutorial-steps{font-size:12px;color:#dfe6e9;line-height:1.65;text-align:left;margin:12px 0}
+.tutorial-steps li{margin-bottom:8px}
 .companion-strip-body{flex:1;min-width:0}
 .companion-strip-name{font-size:13px;font-weight:900;color:#fff}
 .companion-strip-meta{font-size:10px;color:#a29bfe;margin-top:2px}
@@ -187,6 +264,54 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(108,9
   padding:10px 16px;font-size:12px;font-weight:800;color:#ffeaa7;box-shadow:0 8px 24px rgba(0,0,0,.6);
   animation:lootPop .4s ease;pointer-events:none;max-width:90%}
 @keyframes lootPop{from{opacity:0;transform:translateX(-50%) translateY(12px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.audio-btns{display:flex;gap:4px;margin-top:4px;justify-content:flex-end}
+.audio-btn{border:none;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:4px 8px;font-size:14px;cursor:pointer;line-height:1}
+.audio-btn.audio-off{opacity:.45}
+.char-tier-aura{position:absolute;inset:-8%;border-radius:50%;pointer-events:none;z-index:0}
+.char-tier-aura.tier-2{background:radial-gradient(circle,rgba(241,196,15,.35),transparent 70%);animation:tierPulse 2.2s ease infinite}
+.char-tier-aura.tier-3{background:radial-gradient(circle,rgba(255,118,117,.4),rgba(241,196,15,.2),transparent 72%);animation:tierPulse 1.6s ease infinite}
+.char-tier-2 .char-png{filter:brightness(1.06) saturate(1.15)}
+.char-tier-3 .char-png{filter:brightness(1.1) saturate(1.25) drop-shadow(0 0 6px rgba(241,196,15,.45))}
+@keyframes tierPulse{0%,100%{transform:scale(1);opacity:.85}50%{transform:scale(1.06);opacity:1}}
+.hero-tier-2{border-color:rgba(241,196,15,.55)!important;box-shadow:0 0 20px rgba(241,196,15,.15)}
+.hero-tier-3{border-color:rgba(255,118,117,.55)!important;box-shadow:0 0 28px rgba(241,196,15,.25)}
+.evolve-overlay{position:fixed;inset:0;z-index:560;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);padding:16px}
+.evolve-card{text-align:center;padding:20px 16px;border-radius:20px;border:2px solid #f1c40f;background:linear-gradient(180deg,#2d1b69,#0a0718);max-width:320px;width:100%}
+.evolve-label{font-size:13px;font-weight:900;color:#f1c40f;letter-spacing:.08em}
+.evolve-stage-old{font-size:11px;color:#a29bfe;margin-top:6px}
+.evolve-stage-new{font-size:16px;font-weight:900;color:#fff;margin-top:10px}
+.evolve-lv{font-size:12px;color:#55efc4;margin-top:4px}
+.evolve-arrow{font-size:20px;margin:6px 0}
+.evolve-avatars{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px 0}
+.evolve-av-wrap{position:relative}
+.evolve-av-new{transform:scale(1.08)}
+.evolve-spark{font-size:22px;color:#f1c40f;animation:tierPulse 1s ease infinite}
+.gacha-flip-wrap{perspective:900px;padding:8px 0 12px}
+.gacha-flip-card{position:relative;width:100%;min-height:220px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,.2,.2,1)}
+.gacha-flip-card.flipped{transform:rotateY(180deg)}
+.gacha-flip-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+.gacha-flip-front{background:linear-gradient(135deg,#4a3bb5,#251b4d);border:2px solid #6c5ce7}
+.gacha-flip-back{transform:rotateY(180deg);background:linear-gradient(180deg,#1a1030,#0a0718);border:2px solid #f1c40f;overflow:hidden}
+.gacha-flip-front-mark{font-size:56px;margin-bottom:8px}
+.gacha-glow{position:absolute;inset:-20%;pointer-events:none;opacity:.6}
+.gacha-glow.rarity-N{background:radial-gradient(circle,rgba(116,185,255,.25),transparent 65%)}
+.gacha-glow.rarity-R{background:radial-gradient(circle,rgba(85,239,196,.35),transparent 65%);animation:tierPulse 1.8s ease infinite}
+.gacha-glow.rarity-SSR{background:radial-gradient(circle,rgba(241,196,15,.55),rgba(255,118,117,.25),transparent 60%);animation:ssrGlow 1.2s ease infinite}
+.gacha-flip-card.rarity-SSR .gacha-flip-back{border-color:#f1c40f;box-shadow:0 0 40px rgba(241,196,15,.45),inset 0 0 30px rgba(255,215,0,.12)}
+.gacha-flip-card.rarity-R .gacha-flip-back{border-color:#55efc4;box-shadow:0 0 24px rgba(85,239,196,.25)}
+@keyframes ssrGlow{0%,100%{transform:scale(1) rotate(0deg);opacity:.7}50%{transform:scale(1.08) rotate(6deg);opacity:1}}
+.gacha-particle-box{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.gacha-particle{position:absolute;bottom:10%;width:6px;height:6px;border-radius:50%;animation:gachaParticle 1.2s ease forwards}
+@keyframes gachaParticle{from{transform:translateY(0) scale(1);opacity:1}to{transform:translateY(-120px) scale(0);opacity:0}}
+.grade-s-overlay{position:fixed;inset:0;z-index:570;display:flex;align-items:center;justify-content:center;pointer-events:none;background:rgba(0,0,0,.55)}
+.grade-s-burst{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(241,196,15,.55),rgba(255,215,0,.15),transparent 58%);animation:gradeSBurst 2.5s ease forwards}
+.grade-s-rays{position:absolute;inset:-10%;background:conic-gradient(from 0deg,transparent,rgba(241,196,15,.25),transparent,rgba(255,215,0,.2),transparent);animation:ssrGlow 3s linear infinite}
+.grade-s-content{position:relative;text-align:center;z-index:2}
+.grade-s-crown{font-size:64px;filter:drop-shadow(0 0 12px rgba(241,196,15,.8))}
+.grade-s-title{font-size:42px;font-weight:900;color:#f1c40f;text-shadow:0 0 20px rgba(241,196,15,.8),0 2px 0 #b9770e;margin-top:8px}
+.grade-s-sub{font-size:14px;font-weight:800;color:#ffeaa7;margin-top:6px}
+@keyframes gradeSBurst{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.15)}}
+.grade-a-flash{position:absolute;inset:0;border-radius:18px;background:rgba(85,239,196,.22);pointer-events:none;z-index:40;animation:fxFlash .55s ease forwards}
 </style>
 </head>
 <body>
@@ -198,7 +323,12 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(108,9
     <div id="hdrTitle" style="font-size:9px;color:#f1c40f">見習冒險者</div></div>
   </div>
   <div><span class="coin-badge">🪙 <span id="hdrCoins">0</span></span>
-  <span class="star-badge">⭐ <span id="hdrStars">0</span></span></div>
+  <span class="star-badge">⭐ <span id="hdrStars">0</span></span>
+  <div class="star-dual">累積 <b id="hdrLifetime">0</b> · 可用 <b id="hdrSpend">0</b></div>
+  <div class="audio-btns">
+    <button type="button" class="audio-btn audio-off" id="btnBgm" onclick="toggleBgm()" title="開啟 BGM">🎵✕</button>
+    <button type="button" class="audio-btn" id="btnSfx" onclick="toggleSfx()" title="關閉音效">🔊</button>
+  </div></div>
 </div>
 
 <!-- 登入 -->
@@ -222,6 +352,8 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(108,9
     </div>
     <label style="font-size:12px;color:#a29bfe;font-weight:800;margin-top:6px;display:block">姓名 / 學號</label>
     <input class="inp" id="inpName" placeholder="例如：陳大文 2B-12" autocomplete="name">
+    <label style="font-size:12px;color:#a29bfe;font-weight:800;margin-top:10px;display:block">班級代碼（選填）</label>
+    <input class="inp" id="inpClassCode" placeholder="例：3A-MATH" maxlength="16" style="text-transform:uppercase">
   </div>
   <button type="button" class="btn gold" id="btnLogin" onclick="doLogin()">🎮 開始冒險</button>
   <p id="loginMsg" style="font-size:11px;color:#ff7675;text-align:center;margin-top:8px;min-height:16px"></p>
@@ -256,7 +388,11 @@ function loadUser(name) {
     items5050: 0, itemsSkip: 0, coupons: [], history: {},
     pkWins: 0, pkLosses: 0,
     companionId: null, companions: {}, streak: 0, lastLoginDate: null,
-    daily: null, lifetimeCorrect: 0
+    daily: null, lifetimeCorrect: 0,
+    equipped: { head: null, body: null, acc: null }, unlockedGear: [],
+    lifetimeStars: 0, achievements: {}, clearGrades: {}, stats: {}, tutorialDone: false,
+    classCode: '', gachaPity: 0, displayTitleId: null, bgmEnabled: false, sfxEnabled: true,
+    weekly: { weekKey: '', weeklyCorrect: 0, weeklyClears: 0, weeklyPkWins: 0, claimed: {} }
   };
 }
 
@@ -267,6 +403,20 @@ function migrateUser(u) {
   if (u.streak == null) u.streak = 0;
   if (u.lastLoginDate == null) u.lastLoginDate = null;
   if (u.lifetimeCorrect == null) u.lifetimeCorrect = 0;
+  if (!u.equipped) u.equipped = { head: null, body: null, acc: null };
+  if (!u.unlockedGear) u.unlockedGear = [];
+  if (u.lifetimeStars == null) u.lifetimeStars = u.stars || 0;
+  if (!u.achievements) u.achievements = {};
+  if (!u.clearGrades) u.clearGrades = {};
+  if (!u.stats) u.stats = {};
+  if (u.tutorialDone == null) u.tutorialDone = false;
+  if (u.classCode == null) u.classCode = '';
+  if (u.gachaPity == null) u.gachaPity = 0;
+  if (u.itemsSkip == null) u.itemsSkip = 0;
+  if (u.displayTitleId == null) u.displayTitleId = null;
+  if (u.bgmEnabled == null) u.bgmEnabled = false;
+  if (u.sfxEnabled == null) u.sfxEnabled = true;
+  if (!u.weekly) u.weekly = { weekKey: '', weeklyCorrect: 0, weeklyClears: 0, weeklyPkWins: 0, claimed: {} };
   return u;
 }
 
@@ -286,6 +436,8 @@ function doLogin() {
     if (btn) { btn.disabled = true; btn.textContent = '登入中...'; }
     USER = loadUser(name);
     USER.avatar = selectedAv || LOGIN_AVATARS[0];
+    var classInp = document.getElementById('inpClassCode');
+    if (classInp && classInp.value.trim()) USER.classCode = classInp.value.trim().toUpperCase().slice(0, 16);
     USER = migrateUser(USER);
     if (typeof saveUser === 'function') saveUser();
     else localStorage.setItem('mh_' + name.replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g, '_'), JSON.stringify(USER));
@@ -313,8 +465,8 @@ function doLogin() {
 
 <!-- 主選單 -->
 <div class="screen" id="scrHome">
-  <div class="companion-strip" id="companionStrip" onclick="showScreen('scrCompanion')">
-    <div class="companion-strip-emoji" id="homeCompanionEmoji">🥚</div>
+  <div class="companion-strip" id="companionStrip" onclick="openCompanionPick()">
+    <div class="companion-strip-avatar" id="homeCompanionAvatar"></div>
     <div class="companion-strip-body">
       <div class="companion-strip-name" id="homeCompanionName">選擇育成夥伴</div>
       <div class="companion-strip-meta" id="homeCompanionMeta">點擊選擇你嘅夥伴</div>
@@ -330,6 +482,12 @@ function doLogin() {
     <div id="dailyQuestList"></div>
     <button class="btn-sm btn gold" id="btnDailyQuest" onclick="startDailyQuest()" style="margin-top:8px">⚡ 每日快打（3 題）</button>
   </div>
+  <div class="weekly-panel" id="weeklyPanel"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0">
+    <span class="class-badge" id="classBadge">🏫 未加入班級</span>
+    <button class="btn-sm btn sec" onclick="saveClassCode()" style="width:auto;padding:6px 12px;margin:0;font-size:10px">更新班級</button>
+  </div>
+  <input class="inp" id="homeClassCode" placeholder="班級代碼（例 3A-MATH）" maxlength="16" style="text-transform:uppercase;margin-bottom:8px;flex-shrink:0;font-size:12px;padding:10px">
   <div class="game-panel" style="padding:10px 12px">
     <div class="panel-head">
       <span class="panel-title">🗺️ 課題地圖</span>
@@ -346,25 +504,44 @@ function doLogin() {
     <div class="selected-quest-title" id="selectedQuestTitle">—</div>
     <div class="selected-quest-sub" id="selectedQuestSub">選擇一課開始挑戰</div>
   </div>
+  <p class="map-scroll-hint" id="mapScrollHint">↓ 向下滑動查看全部課題</p>
   <div class="quest-map" id="topicList"></div>
+  <div class="home-actions">
   <button class="btn gold" id="btnStartSingle" onclick="startSingle()">⚔️ 開始單人挑戰（10 題）</button>
   <button class="btn sec" onclick="showScreen('scrPKLobby')">🔥 PK 對戰（5 回合）</button>
+  </div>
+</div>
+
+<!-- 成就 -->
+<div class="screen" id="scrAchievements">
+  <p class="title-main" style="margin-top:4px">🏅 成就牆</p>
+  <p class="sub">累積星 <b id="achLifetimeStars">0</b> · 可用星 <b id="achSpendStars">0</b></p>
+  <div class="game-panel" style="padding:10px;margin-bottom:8px">
+    <div class="panel-title" style="font-size:12px;margin-bottom:6px">👑 顯示稱號</div>
+    <div id="titlePicker"></div>
+  </div>
+  <div id="achList" style="flex:1;overflow-y:auto;padding:4px 0"></div>
+  <button class="btn sec" onclick="showScreen('scrHome')">← 返回</button>
 </div>
 
 <!-- 育成夥伴 -->
 <div class="screen" id="scrCompanion">
   <p class="title-main" style="margin-top:4px">🐾 育成夥伴</p>
-  <p class="sub">揀一個你鍾意嘅夥伴 · 答啱題目幫佢升級</p>
+  <p class="sub">揀角色 · 扮靚 · PK 裝備加成的</p>
   <div class="companion-hero" id="companionHero">
-    <div class="companion-hero-emoji" id="compHeroEmoji">🥚</div>
+    <div class="companion-hero-avatar" id="compHeroAvatar"></div>
     <div id="compHeroName" style="font-size:16px;font-weight:900;color:#fff">未選擇</div>
     <div id="compHeroLv" style="font-size:12px;color:#a29bfe;margin-top:4px">Lv.1 · 0 EXP</div>
     <div class="companion-exp" style="height:8px;margin-top:10px;max-width:240px;margin-left:auto;margin-right:auto">
       <div id="compHeroExpBar" style="width:0%"></div>
     </div>
-    <p id="compHeroDesc" style="font-size:11px;color:#8be9fd;margin-top:10px;line-height:1.5">完成每日 3 題可餵食夥伴</p>
+    <p id="compHeroDesc" style="font-size:11px;color:#8be9fd;margin-top:10px;line-height:1.5">升級解鎖裝備 · 裝備喺 PK 有特別效果</p>
   </div>
-  <div class="panel-head" style="margin-bottom:6px"><span class="panel-title">選擇夥伴</span><span class="panel-tag">8 款</span></div>
+  <div class="panel-head" style="margin-bottom:4px"><span class="panel-title">🎽 裝備欄</span><span class="panel-tag" id="gearBonusTag">PK 加成</span></div>
+  <div class="gear-slots" id="gearSlots"></div>
+  <div class="panel-head" style="margin-bottom:4px"><span class="panel-title">🎒 已解鎖裝備</span><span class="panel-tag">點擊穿戴</span></div>
+  <div class="gear-list" id="gearList"></div>
+  <div class="panel-head" style="margin-bottom:6px"><span class="panel-title">選擇夥伴</span><span class="panel-tag">6 款</span></div>
   <div class="companion-grid" id="companionGrid"></div>
   <button class="btn sec" onclick="showScreen('scrHome')">← 返回主選單</button>
 </div>
@@ -381,6 +558,7 @@ function doLogin() {
     <div id="qzText" class="q-text"></div>
   </div>
   <button class="btn-sm btn gold" id="btn5050" onclick="use5050()">🌓 50/50 卡 (<span id="cnt5050">0</span>)</button>
+  <button class="btn-sm btn sec" id="btnSkip" onclick="useSkipCard()">⏭️ 跳過卡 (<span id="cntSkip">0</span>)</button>
   <div class="opt-grid" id="qzOpts"></div>
   <div class="explain" id="qzExplain"></div>
   <button class="btn sec" id="btnNext" style="display:none" onclick="nextQuizQ()">下一題 →</button>
@@ -389,6 +567,7 @@ function doLogin() {
 <!-- 單人結算 -->
 <div class="screen" id="scrResult">
   <div style="text-align:center;padding:20px 0">
+    <div id="resGradeBadge" class="grade-badge grade-A" style="font-size:16px;padding:6px 16px;margin-bottom:8px">A 級</div>
     <div id="resEmoji" style="font-size:56px">🏆</div>
     <div class="title-main" id="resTitle">挑戰完成！</div>
     <p id="resEval" style="color:#ffeaa7;font-weight:bold;margin:8px 0"></p>
@@ -401,7 +580,7 @@ function doLogin() {
 <!-- PK 大廳 -->
 <div class="screen" id="scrPKLobby">
   <p class="title-main">🔥 PK 對戰大廳</p>
-  <p class="sub">建立房間或輸入代碼加入 · 支援跨 WiFi / 4G 對戰</p>
+  <p class="sub">建立房間或輸入代碼加入 · 有伺服器時自動用 Server PK</p>
   <button class="btn" onclick="pkCreate()">建立房間（我是房主）</button>
   <p style="text-align:center;color:#a29bfe;margin:12px 0;font-size:13px">— 或 —</p>
   <input class="inp" id="pkJoinCode" placeholder="輸入 8 位房間代碼" maxlength="8" style="text-transform:uppercase">
@@ -431,6 +610,10 @@ function doLogin() {
       <div id="pkQText" style="font-size:15px;font-weight:bold;text-align:center"></div>
     </div>
     <div class="opt-grid" id="pkOpts"></div>
+    <div class="pk-gear-row">
+      <button class="btn-sm btn gold" id="pkGear5050" onclick="pkUseGear5050()" style="display:none">🌓 裝備 50/50</button>
+      <button class="btn-sm btn sec" id="pkGearFocus" onclick="pkUseGearFocus()" style="display:none">🎯 裝備 專注</button>
+    </div>
     <button class="btn" id="pkSubmit" onclick="pkSubmitAns()" style="display:none">提交答案 ⚔️</button>
     <div class="explain" id="pkExplain"></div>
     <button class="btn sec" id="pkNextR" style="display:none" onclick="pkNextRound()">下一回合 →</button>
@@ -462,36 +645,84 @@ function doLogin() {
 <!-- 排行榜 -->
 <div class="screen" id="scrLB">
   <p class="title-main">🏆 排行榜</p>
-  <p class="sub">本機紀錄</p>
+  <div class="lb-toggle">
+    <button id="lbBtnClass" class="on" onclick="setLbMode('class')">班級本週</button>
+    <button id="lbBtnLocal" onclick="setLbMode('local')">本機累積</button>
+  </div>
+  <p class="sub" id="lbSub">加入班級代碼後同步</p>
   <div id="lbList"></div>
+  <button class="btn-sm btn sec" onclick="showScreen('scrAdmin')" style="margin-top:8px">🎫 老師兌換</button>
+  <button class="btn sec" onclick="showScreen('scrHome')">← 返回</button>
+</div>
+
+<!-- 老師兌換 -->
+<div class="screen" id="scrAdmin">
+  <p class="title-main">🎫 老師兌換台</p>
+  <p class="sub">輸入 PIN 同學生券號 · 預設 PIN：math2024</p>
+  <input class="inp" id="adminPin" type="password" placeholder="老師 PIN">
+  <input class="inp" id="adminCouponCode" placeholder="券號 MH-XXXXXX" style="text-transform:uppercase;margin-top:8px">
+  <button class="btn gold" onclick="adminRedeemCoupon()">✅ 確認兌換</button>
+  <p id="adminMsg" style="font-size:11px;color:#55efc4;text-align:center;margin:8px 0;min-height:16px"></p>
+  <button class="btn-sm btn sec" onclick="renderAdminCoupons(document.getElementById('adminPin').value)">刷新待兌換列表</button>
+  <div id="adminCouponList" style="margin-top:10px;max-height:240px;overflow-y:auto"></div>
+  <button class="btn sec" onclick="showScreen('scrLB')">← 返回</button>
 </div>
 
 <div class="nav" id="navBar" style="display:none">
   <div class="nav-item on" onclick="nav('scrHome',this)"><div style="font-size:18px">⚔️</div>挑戰</div>
   <div class="nav-item" onclick="nav('scrCompanion',this)"><div style="font-size:18px">🐾</div>夥伴</div>
+  <div class="nav-item" onclick="nav('scrAchievements',this)"><div style="font-size:18px">🏅</div>成就</div>
   <div class="nav-item" onclick="nav('scrGacha',this)"><div style="font-size:18px">🎴</div>抽卡</div>
   <div class="nav-item" onclick="nav('scrShop',this)"><div style="font-size:18px">🎁</div>商店</div>
   <div class="nav-item" onclick="nav('scrLB',this)"><div style="font-size:18px">🏆</div>榜</div>
 </div>
 
-<div class="modal" id="companionPickModal">
-  <div class="modal-card" style="max-width:340px;text-align:left">
+<div class="modal" id="tutorialModal">
+  <div class="modal-card" style="max-width:340px;text-align:left" onclick="event.stopPropagation()">
+    <div style="text-align:center;margin-bottom:8px"><div style="font-size:14px;font-weight:900;color:#f1c40f">🎮 歡迎來到數學勇者地城</div></div>
+    <ol class="tutorial-steps">
+      <li>📋 每日做 <b>3 題</b> 完成委託，養成夥伴</li>
+      <li>🗺️ 課題地圖 <b>向下滑</b> 揀課題，跟課本順序通關</li>
+      <li>⭐ 累積星永不減；抽卡用可用星</li>
+      <li>🏅 衝 <b>S/A/B 評級</b> 解鎖成就</li>
+      <li>🗓️ <b>本週任務</b> 同班級排行榜（輸入班級代碼）</li>
+      <li>👹 第 4、8 課同最後一課係 <b>BOSS</b>（中三共 11 課）</li>
+    </ol>
+    <button class="btn gold" onclick="closeTutorial(true)">開始冒險！</button>
+  </div>
+</div>
+
+<div class="modal" id="companionPickModal" onclick="if(event.target===this)closeCompanionPickModal()">
+  <div class="modal-card" style="max-width:340px;text-align:left" onclick="event.stopPropagation()">
     <div style="text-align:center;margin-bottom:12px">
-      <div style="font-size:14px;font-weight:900;color:#f1c40f">🐾 選擇你的育成夥伴</div>
-      <p style="font-size:11px;color:#a29bfe;margin-top:6px">男女同學都有唔同喜好 · 隨時可以換夥伴（各自獨立等級）</p>
+      <div style="font-size:14px;font-weight:900;color:#f1c40f">🐾 選擇育成角色</div>
+      <p style="font-size:11px;color:#a29bfe;margin-top:6px">女生可愛系 · 男生運動/怪獸 · 各自獨立等級</p>
     </div>
     <div class="companion-grid" id="companionPickGrid" style="max-height:320px;overflow-y:auto"></div>
     <button class="btn sec btn-sm" onclick="closeCompanionPickModal()" style="margin-top:10px">稍後再選</button>
   </div>
 </div>
 
-<div class="modal" id="gachaModal">
-  <div class="modal-card" id="gachaCard">
-    <div id="gachaTier" style="font-size:12px;font-weight:900"></div>
-    <div id="gachaIcon" style="font-size:48px;margin:12px 0"></div>
-    <div id="gachaName" style="font-size:18px;font-weight:900"></div>
-    <p id="gachaDesc" style="font-size:11px;margin:12px 0;opacity:.9"></p>
-    <button class="btn" onclick="closeGachaModal()">收入囊中 🎒</button>
+<div class="modal" id="gachaModal" onclick="if(event.target===this)closeGachaModal()">
+  <div class="modal-card" id="gachaCard" style="max-width:300px" onclick="event.stopPropagation()">
+    <div class="gacha-flip-wrap">
+      <div class="gacha-flip-card" id="gachaFlipCard">
+        <div class="gacha-flip-face gacha-flip-front">
+          <div class="gacha-flip-front-mark">🎴</div>
+          <div style="font-size:14px;font-weight:900;color:#dfe6e9">數學勇者卡包</div>
+          <div style="font-size:11px;color:#a29bfe;margin-top:6px">點擊揭曉...</div>
+        </div>
+        <div class="gacha-flip-face gacha-flip-back">
+          <div class="gacha-glow" id="gachaGlow"></div>
+          <div class="gacha-particle-box" id="gachaParticleBox"></div>
+          <div id="gachaTier" style="font-size:12px;font-weight:900;position:relative;z-index:2"></div>
+          <div id="gachaIcon" style="font-size:48px;margin:12px 0;position:relative;z-index:2"></div>
+          <div id="gachaName" style="font-size:18px;font-weight:900;position:relative;z-index:2"></div>
+          <p id="gachaDesc" style="font-size:11px;margin:8px 0;opacity:.9;position:relative;z-index:2"></p>
+        </div>
+      </div>
+    </div>
+    <button class="btn" id="gachaClaimBtn" style="display:none" onclick="closeGachaModal()">收入囊中 🎒</button>
   </div>
 </div>
 </div>
@@ -6630,40 +6861,160 @@ const SHOP = [
   { id:'skip', name:'⏭️ 跳過卡', cost:50, type:'skip' }
 ];
 
-const SHOP = [
-  { id:'5050', name:'🌓 50/50 刪除卡', cost:30, type:'5050' },
-  { id:'skip', name:'⏭️ 跳過卡', cost:50, type:'skip' }
-];
-
-// ========== 育成夥伴 & 每日委託 ==========
+// ========== 育成角色 & 裝備 & 每日委託 ==========
 const COMPANIONS = [
-  { id:'dragon', name:'小數龍', emoji:'🐉', tag:'熱血', desc:'火焰系夥伴，答啱題目會噴火慶祝' },
-  { id:'cat', name:'幾何貓', emoji:'🐱', tag:'可愛', desc:'軟綿綿嘅幾何專家，最啱鍾意治癒風格' },
-  { id:'robot', name:'代數機械人', emoji:'🤖', tag:'科幻', desc:'精準計算型 AI，邏輯型學生最愛' },
-  { id:'fairy', name:'統計精靈', emoji:'🧚', tag:'魔法', desc:'用魔法整理數據，夢幻風格' },
-  { id:'wolf', name:'方程狼', emoji:'🐺', tag:'型格', desc:'孤高解題高手， cool 路線' },
-  { id:'panda', name:'概率熊貓', emoji:'🐼', tag:'治癒', desc:'慢慢嚟都會變強，零壓力育成' },
-  { id:'phoenix', name:'函數鳳凰', emoji:'🔥', tag:'帥氣', desc:'從錯誤中重生，越戰越強' },
-  { id:'unicorn', name:'立體獨角獸', emoji:'🦄', tag:'夢幻', desc:'立體幾何守護者，夢幻獨角系' }
+  { id:'gothic_bunny', name:'酷酷兔', tag:'暗黑可愛', style:'cute', desc:'暗黑系可愛兔仔，粉黑配色' },
+  { id:'sweet_cat', name:'甜心貓娘', tag:'甜美', style:'cute', desc:'蝴蝶結貓娘，軟萌治癒風' },
+  { id:'bball', name:'籃球少年', tag:'運動', style:'sport', desc:'橙色球衣 #23，球場 MVP' },
+  { id:'football', name:'足球員', tag:'運動', style:'sport', desc:'綠色球衣 10 號，腳法一流' },
+  { id:'monster', name:'小怪獸', tag:'型格', style:'cool', desc:'紫綠小怪獸，越答越強' },
+  { id:'mecha', name:'機械戰士', tag:'科幻', style:'cool', desc:'藍色機甲，精準運算模式' }
 ];
+const GEAR = [
+  { id:'head_star', slot:'head', name:'星星髮箍', icon:'⭐', unlockLevel:2, pk:'time', pkVal:3, desc:'PK 每回合 +3 秒' },
+  { id:'head_hood', slot:'head', name:'神秘兜帽', icon:'🎀', unlockLevel:2, pk:'focus', pkVal:1, desc:'PK 移除 2 錯答案（每場 1 次）' },
+  { id:'body_gold', slot:'body', name:'黃金球衣', icon:'👕', unlockLevel:3, pk:'5050', pkVal:1, desc:'PK 每場 1 次 50/50' },
+  { id:'body_armor', slot:'body', name:'算術護甲', icon:'🛡️', unlockLevel:3, pk:'shield', pkVal:1, desc:'PK 抵消 1 次答錯' },
+  { id:'acc_band', slot:'acc', name:'幸運護腕', icon:'⌚', unlockLevel:4, pk:'time', pkVal:2, desc:'PK 每回合 +2 秒' },
+  { id:'acc_cape', slot:'acc', name:'公式披風', icon:'🧣', unlockLevel:5, pk:'hint', pkVal:1, desc:'PK 答錯顯示提示' }
+];
+const CHAR_BASE = {
+  gothic_bunny: '<g><ellipse cx="50" cy="54" rx="30" ry="28" fill="#1a1030"/><ellipse cx="32" cy="20" rx="9" ry="20" fill="#1a1030"/><ellipse cx="68" cy="20" rx="9" ry="20" fill="#1a1030"/><ellipse cx="32" cy="22" rx="5" ry="13" fill="#ff9ff3"/><ellipse cx="68" cy="22" rx="5" ry="13" fill="#ff9ff3"/><ellipse cx="50" cy="58" rx="24" ry="22" fill="#ffeaa7"/><ellipse cx="41" cy="56" rx="5" ry="6" fill="#2d3436"/><ellipse cx="59" cy="56" rx="5" ry="6" fill="#2d3436"/><ellipse cx="41" cy="57" rx="2" ry="2.5" fill="#fff"/><ellipse cx="59" cy="57" rx="2" ry="2.5" fill="#fff"/><path d="M46 66 Q50 69 54 66" stroke="#ff7675" stroke-width="2" fill="none"/><circle cx="38" cy="63" r="4" fill="#ff9ff3" opacity=".55"/><circle cx="62" cy="63" r="4" fill="#ff9ff3" opacity=".55"/><text x="50" y="40" text-anchor="middle" font-size="11" fill="#ff9ff3">♥</text></g>',
+  sweet_cat: '<g><ellipse cx="50" cy="58" rx="26" ry="24" fill="#ffb8d0"/><polygon points="30,38 24,18 38,32" fill="#ffb8d0"/><polygon points="70,38 76,18 62,32" fill="#ffb8d0"/><ellipse cx="50" cy="60" rx="20" ry="18" fill="#ffeaa7"/><ellipse cx="42" cy="58" rx="4" ry="5" fill="#2d3436"/><ellipse cx="58" cy="58" rx="4" ry="5" fill="#2d3436"/><ellipse cx="50" cy="66" rx="3" ry="2" fill="#ff7675"/><path d="M44 52 Q50 48 56 52" stroke="#d63031" stroke-width="1.5" fill="none"/><circle cx="38" cy="62" r="3.5" fill="#ff7675" opacity=".45"/><circle cx="62" cy="62" r="3.5" fill="#ff7675" opacity=".45"/><ellipse cx="50" cy="28" rx="12" ry="8" fill="#ff7675"/></g>',
+  bball: '<g><circle cx="50" cy="32" r="16" fill="#ffeaa7"/><rect x="34" y="48" width="32" height="34" rx="8" fill="#e17055"/><text x="50" y="68" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">23</text><rect x="38" y="80" width="10" height="14" rx="3" fill="#2d3436"/><rect x="52" y="80" width="10" height="14" rx="3" fill="#2d3436"/><circle cx="72" cy="62" r="12" fill="#d35400"/><path d="M72 50 L72 74 M60 62 L84 62" stroke="#1a1a1a" stroke-width="1.5"/></g>',
+  football: '<g><circle cx="50" cy="32" r="16" fill="#ffeaa7"/><rect x="34" y="48" width="32" height="34" rx="6" fill="#00b894"/><text x="50" y="68" text-anchor="middle" font-size="14" fill="#fff" font-weight="bold">10</text><rect x="38" y="80" width="10" height="14" rx="3" fill="#fff"/><rect x="52" y="80" width="10" height="14" rx="3" fill="#fff"/><ellipse cx="74" cy="66" rx="11" ry="13" fill="#fff"/><path d="M74 56 L74 76 M64 66 L84 66" stroke="#2d3436" stroke-width="1"/></g>',
+  monster: '<g><ellipse cx="50" cy="58" rx="28" ry="26" fill="#6c5ce7"/><ellipse cx="34" cy="38" rx="8" ry="14" fill="#a29bfe"/><ellipse cx="66" cy="38" rx="8" ry="14" fill="#a29bfe"/><circle cx="42" cy="56" r="7" fill="#fff"/><circle cx="58" cy="56" r="7" fill="#fff"/><circle cx="42" cy="56" r="3.5" fill="#2d3436"/><circle cx="58" cy="56" r="3.5" fill="#2d3436"/><path d="M40 70 Q50 78 60 70" stroke="#fff" stroke-width="2" fill="none"/></g>',
+  mecha: '<g><rect x="30" y="24" width="40" height="32" rx="8" fill="#0984e3"/><rect x="36" y="30" width="28" height="14" rx="4" fill="#74b9ff"/><circle cx="42" cy="37" r="4" fill="#00cec9"/><circle cx="58" cy="37" r="4" fill="#00cec9"/><rect x="36" y="56" width="28" height="28" rx="6" fill="#636e72"/><rect x="22" y="58" width="12" height="22" rx="4" fill="#0984e3"/><rect x="66" y="58" width="12" height="22" rx="4" fill="#0984e3"/><rect x="40" y="82" width="10" height="12" rx="2" fill="#2d3436"/><rect x="50" y="82" width="10" height="12" rx="2" fill="#2d3436"/></g>'
+};
+const GEAR_LAYER = {
+  head_star: '<g><text x="28" y="22" font-size="10" fill="#f1c40f">★</text><text x="50" y="14" font-size="12" fill="#f1c40f">★</text><text x="68" y="22" font-size="10" fill="#f1c40f">★</text></g>',
+  head_hood: '<g><path d="M22 48 Q50 8 78 48" fill="none" stroke="#2d3436" stroke-width="4" opacity=".35"/></g>',
+  body_gold: '<g><rect x="36" y="50" width="28" height="22" rx="4" fill="#f1c40f" opacity=".35"/><text x="50" y="65" text-anchor="middle" font-size="10" fill="#fff">★</text></g>',
+  body_armor: '<g><rect x="28" y="52" width="10" height="16" rx="3" fill="#b2bec3"/><rect x="62" y="52" width="10" height="16" rx="3" fill="#b2bec3"/></g>',
+  acc_band: '<g><rect x="18" y="62" width="8" height="6" rx="2" fill="#ff7675"/><rect x="74" y="62" width="8" height="6" rx="2" fill="#ff7675"/></g>',
+  acc_cape: '<g><path d="M24 52 Q50 72 76 52 L70 88 Q50 92 30 88 Z" fill="#d63031" opacity=".45"/></g>'
+};
 const COMPANION_EXP_LEVELS = [0, 15, 40, 80, 150, 250, 400, 600];
 const COMPANION_STAGE = ['初見', '幼年期', '成長期', '覺醒期', '成熟期', '完全體', '傳說', '神話'];
 const DAILY_TARGET = 3;
 const DAILY_SIGNIN_STARS = 3;
 const DAILY_PRACTICE_STARS = 5;
 const DAILY_FEED_STARS = 3;
+const OLD_COMPANION_MAP = { dragon:'monster', cat:'sweet_cat', robot:'mecha', fairy:'gothic_bunny', wolf:'monster', panda:'sweet_cat', phoenix:'mecha', unicorn:'gothic_bunny' };
+var CHAR_PNG = {
+  gothic_bunny:'assets/characters/gothic_bunny.png',
+  sweet_cat:'assets/characters/sweet_cat.png',
+  bball:'assets/characters/bball.png',
+  football:'assets/characters/football.png',
+  monster:'assets/characters/monster.png',
+  mecha:'assets/characters/mecha.png'
+};
+var STAGE_HERO_BG = [
+  'linear-gradient(180deg,rgba(108,92,231,.22),rgba(0,0,0,.25))',
+  'linear-gradient(180deg,rgba(241,196,15,.18),rgba(108,92,231,.15))',
+  'linear-gradient(180deg,rgba(255,118,117,.2),rgba(241,196,15,.15),rgba(108,92,231,.12))'
+];
 
+function getCompanionVisualTier(level) {
+  level = level || 1;
+  if (level >= 7) return 3;
+  if (level >= 4) return 2;
+  return 1;
+}
+function getCharPngForLevel(charId, level) {
+  if (!charId || !CHAR_PNG[charId]) return '';
+  var tier = getCompanionVisualTier(level);
+  if (tier === 1) return CHAR_PNG[charId];
+  return 'assets/characters/' + charId + '_s' + tier + '.png';
+}
+function getCompanionStageName(level) {
+  return COMPANION_STAGE[(level || 1) - 1] || '初見';
+}
+function applyCompanionHeroStage(level) {
+  var hero = document.getElementById('companionHero');
+  if (!hero) return;
+  var tier = getCompanionVisualTier(level);
+  hero.style.background = STAGE_HERO_BG[tier - 1] || STAGE_HERO_BG[0];
+  hero.classList.remove('hero-tier-1', 'hero-tier-2', 'hero-tier-3');
+  hero.classList.add('hero-tier-' + tier);
+}
+
+function grantStars(n) {
+  if (!USER || n <= 0) return;
+  if (typeof addStars === 'function') addStars(n, n);
+  else { USER.stars = (USER.stars || 0) + n; USER.lifetimeStars = (USER.lifetimeStars || USER.stars || 0) + n; }
+}
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function todayKey() {
   var d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 function yesterdayKey() {
-  var d = new Date(); d.setDate(d.getDate()-1);
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  var d = new Date(); d.setDate(d.getDate() - 1);
+  return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
 }
 function getCompanionDef(id) {
   for (var i = 0; i < COMPANIONS.length; i++) if (COMPANIONS[i].id === id) return COMPANIONS[i];
-  return COMPANIONS[0];
+  return null;
+}
+function getGearDef(id) {
+  for (var i = 0; i < GEAR.length; i++) if (GEAR[i].id === id) return GEAR[i];
+  return null;
+}
+function ensureUserGear() {
+  if (!USER.equipped) USER.equipped = { head: null, body: null, acc: null };
+  if (!USER.unlockedGear) USER.unlockedGear = [];
+}
+function isGearUnlocked(id) {
+  ensureUserGear();
+  return USER.unlockedGear.indexOf(id) >= 0;
+}
+function migrateCompanionIds() {
+  if (!USER || !USER.companionId) return;
+  if (getCompanionDef(USER.companionId)) return;
+  USER.companionId = OLD_COMPANION_MAP[USER.companionId] || null;
+}
+function renderCharacterSvgInner(charId, size) {
+  if (!charId || !CHAR_BASE[charId]) {
+    return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" class="char-svg"><text x="50" y="58" text-anchor="middle" font-size="28">🥚</text></svg>';
+  }
+  ensureUserGear();
+  var layers = '';
+  if (USER && USER.equipped && USER.equipped.acc && isGearUnlocked(USER.equipped.acc) && GEAR_LAYER[USER.equipped.acc]) layers += GEAR_LAYER[USER.equipped.acc];
+  if (USER && USER.equipped && USER.equipped.body && isGearUnlocked(USER.equipped.body) && GEAR_LAYER[USER.equipped.body]) layers += GEAR_LAYER[USER.equipped.body];
+  layers += CHAR_BASE[charId];
+  if (USER && USER.equipped && USER.equipped.head && isGearUnlocked(USER.equipped.head) && GEAR_LAYER[USER.equipped.head]) layers += GEAR_LAYER[USER.equipped.head];
+  return '<svg viewBox="0 0 100 100" width="' + size + '" height="' + size + '" class="char-svg">' + layers + '</svg>';
+}
+function renderCharacterHtml(charId, size, anim, level) {
+  size = size || 52;
+  anim = anim || 'idle';
+  level = level || 1;
+  if (charId && USER && USER.companions && USER.companions[charId]) {
+    level = USER.companions[charId].level || level;
+  }
+  var tier = getCompanionVisualTier(level);
+  var wrap = 'char-stage char-anim-' + anim + ' char-tier-' + tier;
+  var png = getCharPngForLevel(charId, level);
+  var basePng = charId && CHAR_PNG[charId];
+  if (png) {
+    return '<div class="' + wrap + '" style="width:' + size + 'px;height:' + size + 'px">' +
+      (tier >= 2 ? '<div class="char-tier-aura tier-' + tier + '"></div>' : '') +
+      '<img src="' + png + '" class="char-png" alt="" data-base="' + (basePng || '') + '" onerror="var b=this.getAttribute(\'data-base\');if(b&&this.src.indexOf(\'_s\')>=0){this.src=b}else{this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.style.display=\'flex\'}">' +
+      '<div class="char-stage char-svg-fallback" style="display:none;width:100%;height:100%">' + renderCharacterSvgInner(charId, size) + '</div></div>';
+  }
+  return '<div class="' + wrap + '" style="width:' + size + 'px;height:' + size + 'px">' + renderCharacterSvgInner(charId, size) + '</div>';
+}
+function triggerCompanionAnim(anim) {
+  var el = document.getElementById('homeCompanionAvatar');
+  if (!el) return;
+  var inner = el.querySelector('.char-stage') || el;
+  inner.classList.remove('char-anim-idle','char-anim-wave','char-anim-happy');
+  inner.classList.add('char-anim-' + (anim || 'happy'));
+  setTimeout(function() {
+    inner.classList.remove('char-anim-happy','char-anim-wave');
+    inner.classList.add('char-anim-idle');
+  }, anim === 'wave' ? 1400 : 800);
 }
 function ensureCompanionData(id) {
   if (!USER.companions) USER.companions = {};
@@ -6683,6 +7034,55 @@ function companionExpProgress(exp, level) {
   if (nxt <= cur) return 100;
   return Math.min(100, Math.round((exp - cur) / (nxt - cur) * 100));
 }
+function checkGearUnlocks() {
+  if (!USER || !USER.companionId) return;
+  ensureUserGear();
+  var lv = ensureCompanionData(USER.companionId).level || 1;
+  GEAR.forEach(function(g) {
+    if (lv >= g.unlockLevel && USER.unlockedGear.indexOf(g.id) < 0) {
+      USER.unlockedGear.push(g.id);
+      showLootToast('🎁 解鎖裝備：' + g.name + '（' + g.desc + '）');
+    }
+  });
+}
+function getPkGearEffects() {
+  var fx = { timeBonus: 0, has5050: false, shield: false, focus: false, hint: false };
+  if (!USER) return fx;
+  ensureUserGear();
+  ['head', 'body', 'acc'].forEach(function(slot) {
+    var gid = USER.equipped[slot];
+    if (!gid || !isGearUnlocked(gid)) return;
+    var g = getGearDef(gid);
+    if (!g) return;
+    if (g.pk === 'time') fx.timeBonus += g.pkVal;
+    if (g.pk === '5050') fx.has5050 = true;
+    if (g.pk === 'shield') fx.shield = true;
+    if (g.pk === 'focus') fx.focus = true;
+    if (g.pk === 'hint') fx.hint = true;
+  });
+  return fx;
+}
+function getPkBonusSummary() {
+  var fx = getPkGearEffects();
+  var parts = [];
+  if (fx.timeBonus) parts.push('+' + fx.timeBonus + '秒');
+  if (fx.has5050) parts.push('50/50');
+  if (fx.shield) parts.push('護盾');
+  if (fx.focus) parts.push('專注');
+  if (fx.hint) parts.push('提示');
+  return parts.length ? parts.join(' · ') : '無';
+}
+function equipGear(gearId) {
+  if (!USER || !isGearUnlocked(gearId)) return;
+  var g = getGearDef(gearId);
+  if (!g) return;
+  ensureUserGear();
+  if (USER.equipped[g.slot] === gearId) USER.equipped[g.slot] = null;
+  else USER.equipped[g.slot] = gearId;
+  saveUser();
+  renderCompanionScreen();
+  renderCompanionHome();
+}
 function ensureDailyState() {
   if (!USER) return null;
   var tk = todayKey();
@@ -6697,6 +7097,9 @@ function ensureDailyState() {
 function processDailyLogin() {
   if (!USER) return;
   migrateUser(USER);
+  if (typeof migrateProgression === 'function') migrateProgression(USER);
+  ensureUserGear();
+  migrateCompanionIds();
   var tk = todayKey();
   var yk = yesterdayKey();
   if (USER.lastLoginDate === tk) { ensureDailyState(); return; }
@@ -6709,7 +7112,7 @@ function processDailyLogin() {
     var bonus = DAILY_SIGNIN_STARS;
     if (USER.streak >= 7) bonus += 10;
     else if (USER.streak >= 3) bonus += 5;
-    USER.stars += bonus;
+    grantStars(bonus);
     USER.daily.claimedSignin = true;
     saveUser();
     showLootToast('📋 每日簽到 +' + bonus + '⭐' + (USER.streak >= 3 ? ' （連續 ' + USER.streak + ' 日）' : ''));
@@ -6724,10 +7127,20 @@ function addCompanionExp(amount) {
   if (!USER || !USER.companionId || amount <= 0) return;
   var c = ensureCompanionData(USER.companionId);
   c.exp = (c.exp || 0) + amount;
+  var prevLv = c.level || 1;
   var newLv = companionLevelFromExp(c.exp);
-  var leveled = newLv > (c.level || 1);
+  var leveled = newLv > prevLv;
   c.level = newLv;
-  if (leveled) showLootToast(getCompanionDef(USER.companionId).emoji + ' ' + getCompanionDef(USER.companionId).name + ' 升級 Lv.' + newLv + '！');
+  if (leveled) {
+    checkGearUnlocks();
+    if (typeof fxCompanionEvolve === 'function') fxCompanionEvolve(USER.companionId, prevLv, newLv);
+    else {
+      var cdef = getCompanionDef(USER.companionId);
+      if (typeof fxLevelUp === 'function') fxLevelUp((cdef ? cdef.name : '') + ' Lv.' + newLv);
+      else showLootToast((cdef ? cdef.name : '') + ' 升級 Lv.' + newLv + '！');
+      triggerCompanionAnim('wave');
+    }
+  }
 }
 function recordDailyQuestion(wasCorrect) {
   if (!USER) return;
@@ -6745,17 +7158,17 @@ function recordDailyQuestion(wasCorrect) {
 function rollDailyLoot() {
   var r = Math.random();
   if (r < 0.05) { USER.items5050 = (USER.items5050 || 0) + 1; return '🌓 50/50 卡 ×1'; }
-  if (r < 0.25) { var s = 2 + Math.floor(Math.random() * 2); USER.stars += s; return '⭐ +' + s; }
+  if (r < 0.25) { var s = 2 + Math.floor(Math.random() * 2); grantStars(s); return '⭐ +' + s; }
   var e = 3 + Math.floor(Math.random() * 3);
   addCompanionExp(e);
-  return getCompanionDef(USER.companionId || 'dragon').emoji + ' 夥伴 EXP +' + e;
+  return '夥伴 EXP +' + e;
 }
 function checkDailyQuestRewards() {
   if (!USER) return;
   var daily = ensureDailyState();
   if (daily.questionsDone >= DAILY_TARGET && !daily.claimedPractice) {
     daily.claimedPractice = true;
-    USER.stars += DAILY_PRACTICE_STARS;
+    grantStars(DAILY_PRACTICE_STARS);
     var loot = rollDailyLoot();
     showLootToast('📋 每日練習完成！+' + DAILY_PRACTICE_STARS + '⭐ · ' + loot);
   }
@@ -6764,7 +7177,7 @@ function checkDailyQuestRewards() {
     var c = ensureCompanionData(USER.companionId);
     if (!c.fedToday) {
       c.fedToday = true;
-      USER.stars += DAILY_FEED_STARS;
+      grantStars(DAILY_FEED_STARS);
       addCompanionExp(5);
       showLootToast('🍖 餵食 ' + getCompanionDef(USER.companionId).name + '！+' + DAILY_FEED_STARS + '⭐ · EXP +5');
     }
@@ -6789,7 +7202,7 @@ function renderDailyPanel() {
   var quests = [
     { icon:'📅', name:'每日簽到', prog: daily.claimedSignin ? '已完成' : '登入即可', done: daily.claimedSignin },
     { icon:'✏️', name:'每日練習（' + DAILY_TARGET + ' 題）', prog: qDone + '/' + DAILY_TARGET + ' 題', done: daily.claimedPractice },
-    { icon:'🍖', name:'餵食夥伴', prog: USER.companionId ? (daily.claimedFeed ? '已餵食' : qDone + '/' + DAILY_TARGET + ' 題') : '請先選夥伴', done: daily.claimedFeed }
+    { icon:'🍖', name:'餵食夥伴', prog: USER.companionId ? (daily.claimedFeed ? '已餵食' : qDone + '/' + DAILY_TARGET + ' 題') : '請先選角色', done: daily.claimedFeed }
   ];
   list.innerHTML = '';
   quests.forEach(function(q) {
@@ -6804,36 +7217,72 @@ function renderDailyPanel() {
 }
 function renderCompanionHome() {
   if (!USER) return;
-  var emojiEl = document.getElementById('homeCompanionEmoji');
+  var avEl = document.getElementById('homeCompanionAvatar');
   var nameEl = document.getElementById('homeCompanionName');
   var metaEl = document.getElementById('homeCompanionMeta');
   var barEl = document.getElementById('homeCompanionExpBar');
-  if (!emojiEl) return;
+  var strip = document.getElementById('companionStrip');
+  if (!avEl) return;
   if (!USER.companionId) {
-    emojiEl.textContent = '🥚';
-    nameEl.textContent = '選擇育成夥伴';
-    metaEl.textContent = '8 款夥伴任你揀 · 點擊開始';
+    avEl.innerHTML = renderCharacterHtml(null, 48);
+    nameEl.textContent = '選擇育成角色';
+    metaEl.textContent = '6 款角色 · 扮靚裝備 · 點擊開始';
     if (barEl) barEl.style.width = '0%';
+    if (strip) strip.classList.add('pulse-select');
     return;
   }
+  if (strip) strip.classList.remove('pulse-select');
   var def = getCompanionDef(USER.companionId);
   var c = ensureCompanionData(USER.companionId);
-  var stage = COMPANION_STAGE[(c.level || 1) - 1] || '初見';
-  emojiEl.textContent = def.emoji;
+  avEl.innerHTML = renderCharacterHtml(USER.companionId, 48, 'idle', c.level || 1);
   nameEl.textContent = def.name + ' Lv.' + (c.level || 1);
-  metaEl.textContent = stage + ' · EXP ' + (c.exp || 0) + (c.fedToday ? ' · 今日已餵食' : '');
+  metaEl.textContent = getCompanionStageName(c.level) + ' · PK: ' + getPkBonusSummary() + (c.fedToday ? ' · 已餵食' : '');
   if (barEl) barEl.style.width = companionExpProgress(c.exp || 0, c.level || 1) + '%';
+}
+function renderGearUI() {
+  if (!USER) return;
+  ensureUserGear();
+  var slots = document.getElementById('gearSlots');
+  var list = document.getElementById('gearList');
+  var tag = document.getElementById('gearBonusTag');
+  if (tag) tag.textContent = getPkBonusSummary();
+  if (slots) {
+    slots.innerHTML = '';
+    [{ id:'head', label:'頭部' }, { id:'body', label:'身體' }, { id:'acc', label:'配件' }].forEach(function(s) {
+      var gid = USER.equipped[s.id];
+      var g = gid ? getGearDef(gid) : null;
+      var box = document.createElement('div');
+      box.className = 'gear-slot';
+      box.innerHTML = '<div>' + s.label + '</div><div style="font-size:18px;margin:4px 0">' + (g ? g.icon : '—') + '</div><div class="gear-slot-name">' + (g ? g.name : '未裝備') + '</div>';
+      slots.appendChild(box);
+    });
+  }
+  if (list) {
+    list.innerHTML = '';
+    GEAR.forEach(function(g) {
+      var unlocked = isGearUnlocked(g.id);
+      var on = USER.equipped[g.slot] === g.id;
+      var row = document.createElement('div');
+      row.className = 'gear-item' + (on ? ' on' : '') + (unlocked ? '' : ' locked');
+      row.innerHTML = '<span style="font-size:18px">' + g.icon + '</span><span><b>' + g.name + '</b><br><span style="font-size:10px;color:#a29bfe">Lv.' + g.unlockLevel + ' 解鎖 · ' + g.desc + '</span></span><span class="gear-pk-tag">PK</span>';
+      if (unlocked) row.onclick = function() { equipGear(g.id); };
+      list.appendChild(row);
+    });
+  }
 }
 function renderCompanionScreen() {
   if (!USER) return;
   renderCompanionGrid('companionGrid', true);
+  renderGearUI();
   var def = USER.companionId ? getCompanionDef(USER.companionId) : null;
   var c = USER.companionId ? ensureCompanionData(USER.companionId) : null;
-  document.getElementById('compHeroEmoji').textContent = def ? def.emoji : '🥚';
-  document.getElementById('compHeroName').textContent = def ? def.name : '未選擇夥伴';
-  document.getElementById('compHeroLv').textContent = def ? ('Lv.' + (c.level||1) + ' · ' + (COMPANION_STAGE[(c.level||1)-1]||'') + ' · EXP ' + (c.exp||0)) : '揀一個夥伴開始育成';
+  var heroAv = document.getElementById('compHeroAvatar');
+  if (heroAv) heroAv.innerHTML = renderCharacterHtml(USER.companionId, 80, 'idle', c ? c.level : 1);
+  applyCompanionHeroStage(c ? c.level : 1);
+  document.getElementById('compHeroName').textContent = def ? def.name : '未選擇角色';
+  document.getElementById('compHeroLv').textContent = def ? ('Lv.' + (c.level||1) + ' · ' + (COMPANION_STAGE[(c.level||1)-1]||'') + ' · EXP ' + (c.exp||0)) : '揀角色 · 升級解鎖裝備';
   document.getElementById('compHeroExpBar').style.width = def ? (companionExpProgress(c.exp||0, c.level||1) + '%') : '0%';
-  document.getElementById('compHeroDesc').textContent = def ? def.desc : '男女同學都有唔同喜好 · 每個夥伴獨立等級';
+  document.getElementById('compHeroDesc').textContent = def ? (def.desc + ' · PK 加成：' + getPkBonusSummary()) : '女生可愛系 / 男生運動怪獸系';
 }
 function renderCompanionGrid(containerId, showLevel) {
   var grid = document.getElementById(containerId);
@@ -6843,11 +7292,11 @@ function renderCompanionGrid(containerId, showLevel) {
     var c = ensureCompanionData(def.id);
     var card = document.createElement('div');
     card.className = 'companion-card' + (USER.companionId === def.id ? ' on' : '');
-    card.innerHTML = '<div class="companion-card-emoji">' + def.emoji + '</div>' +
+    card.innerHTML = '<div class="companion-card-avatar">' + renderCharacterHtml(def.id, 56, 'idle', c.level || 1) + '</div>' +
       '<div class="companion-card-name">' + def.name + '</div>' +
       '<div class="companion-card-tag">' + def.tag + '</div>' +
       (showLevel ? '<div class="companion-card-lv">Lv.' + (c.level||1) + '</div>' : '');
-    card.onclick = function() { pickCompanion(def.id); };
+    card.onclick = function(ev) { ev.stopPropagation(); pickCompanion(def.id); };
     grid.appendChild(card);
   });
 }
@@ -6855,12 +7304,18 @@ function pickCompanion(id) {
   if (!USER) return;
   USER.companionId = id;
   ensureCompanionData(id);
+  checkGearUnlocks();
   saveUser();
   renderCompanionHome();
   renderCompanionScreen();
   renderCompanionGrid('companionPickGrid', true);
   closeCompanionPickModal();
-  showLootToast(getCompanionDef(id).emoji + ' ' + getCompanionDef(id).name + ' 加入你的冒險！');
+  triggerCompanionAnim('wave');
+  showLootToast(getCompanionDef(id).name + ' 加入你的冒險！');
+}
+function openCompanionPick() {
+  if (!USER) return;
+  showCompanionPickModal();
 }
 function showCompanionPickModal() {
   renderCompanionGrid('companionPickGrid', true);
@@ -6869,9 +7324,885 @@ function showCompanionPickModal() {
 function closeCompanionPickModal() {
   document.getElementById('companionPickModal').classList.remove('show');
 }
-function maybeShowCompanionPick() {
-  if (USER && !USER.companionId) setTimeout(showCompanionPickModal, 400);
+function fxCompanionEvolve(charId, oldLv, newLv) {
+  var def = getCompanionDef(charId);
+  var oldTier = getCompanionVisualTier(oldLv);
+  var newTier = getCompanionVisualTier(newLv);
+  var stageChanged = newTier > oldTier;
+  if (typeof playSfx === 'function') playSfx(stageChanged ? 'evolve' : 'level');
+  if (stageChanged) {
+    var old = document.getElementById('evolveFx');
+    if (old) old.remove();
+    var el = document.createElement('div');
+    el.id = 'evolveFx';
+    el.className = 'evolve-overlay';
+    el.innerHTML =
+      '<div class="evolve-card pop-in hero-tier-' + newTier + '">' +
+        '<div class="evolve-label">✨ STAGE UP!</div>' +
+        '<div class="evolve-stage-old">' + getCompanionStageName(oldLv) + '</div>' +
+        '<div class="evolve-arrow">⬇️</div>' +
+        '<div class="evolve-avatars">' +
+          '<div class="evolve-av-wrap">' + renderCharacterHtml(charId, 72, 'idle', oldLv) + '</div>' +
+          '<div class="evolve-spark">✦</div>' +
+          '<div class="evolve-av-wrap evolve-av-new">' + renderCharacterHtml(charId, 88, 'wave', newLv) + '</div>' +
+        '</div>' +
+        '<div class="evolve-stage-new">' + (def ? def.name : '') + ' · ' + getCompanionStageName(newLv) + '</div>' +
+        '<div class="evolve-lv">Lv.' + oldLv + ' → Lv.' + newLv + '</div>' +
+      '</div>';
+    document.body.appendChild(el);
+    setTimeout(function() {
+      if (el.parentNode) el.remove();
+      renderCompanionHome();
+      renderCompanionScreen();
+    }, 3200);
+  } else if (typeof fxLevelUp === 'function') {
+    fxLevelUp((def ? def.name : '') + ' Lv.' + newLv);
+  }
+  triggerCompanionAnim('wave');
+  applyCompanionHeroStage(newLv);
+  renderCompanionHome();
+  renderCompanionScreen();
 }
+function highlightCompanionStrip() {
+  renderCompanionHome();
+}
+function pkInitGear() {
+  if (!pk) return;
+  pk.gearUsed = { fifty: false, shield: false, focus: false };
+}
+function pkUpdateGearButtons() {
+  if (!pk || pk.phase !== 'battle') return;
+  var fx = getPkGearEffects();
+  var b5050 = document.getElementById('pkGear5050');
+  var bFocus = document.getElementById('pkGearFocus');
+  if (b5050) b5050.style.display = (fx.has5050 && !pk.gearUsed.fifty) ? 'block' : 'none';
+  if (bFocus) bFocus.style.display = (fx.focus && !pk.gearUsed.focus) ? 'block' : 'none';
+}
+function pkUseGear5050() {
+  if (!pk || pk.gearUsed.fifty || pk.submitted) return;
+  var fx = getPkGearEffects();
+  if (!fx.has5050) return;
+  pk.gearUsed.fifty = true;
+  var q = pk.qs[pk.round - 1];
+  var wrongs = document.querySelectorAll('#pkOpts .opt-btn');
+  var n = 0;
+  wrongs.forEach(function(b) {
+    var v = b.getAttribute('data-opt') || b.textContent;
+    if (n < 2 && v !== q.ans) { b.classList.add('hide'); n++; }
+  });
+  pkUpdateGearButtons();
+  showLootToast('👕 黃金球衣：50/50 生效！');
+}
+function pkUseGearFocus() {
+  if (!pk || pk.gearUsed.focus || pk.submitted) return;
+  var fx = getPkGearEffects();
+  if (!fx.focus) return;
+  pk.gearUsed.focus = true;
+  var q = pk.qs[pk.round - 1];
+  var wrongs = document.querySelectorAll('#pkOpts .opt-btn');
+  var n = 0;
+  wrongs.forEach(function(b) {
+    var v = b.getAttribute('data-opt') || b.textContent;
+    if (n < 2 && v !== q.ans) { b.classList.add('hide'); n++; }
+  });
+  pkUpdateGearButtons();
+  showLootToast('🎀 神秘兜帽：專注生效！');
+}
+
+
+// ========== 進度：雙星星 / 成就 / SAB 評級 / 音效動畫 / 教學 ==========
+const ACHIEVEMENTS = [
+  { id:'first_challenge', name:'初試啼聲', description:'完成第一次挑戰', emoji:'🎯', starReward:5 },
+  { id:'perfect_10', name:'滿分王', description:'一次挑戰 10/10 全對', emoji:'💯', starReward:10 },
+  { id:'pk_streak_3', name:'連勝三場', description:'PK 連勝 3 場', emoji:'🔥', starReward:15 },
+  { id:'grade_clear', name:'課題征服者', description:'通關同一年級全部課題', emoji:'📚', starReward:30 },
+  { id:'dse_warrior', name:'DSE 戰士', description:'完成 10 次 DSE 難度挑戰', emoji:'⚔️', starReward:20 },
+  { id:'century', name:'百題斬', description:'累積答對 100 題', emoji:'✨', starReward:20 },
+  { id:'millennium', name:'千題斬', description:'累積答對 1000 題', emoji:'🌟', starReward:100 },
+  { id:'gacha_10', name:'抽卡達人', description:'累積抽卡 10 次', emoji:'🎴', starReward:10 },
+  { id:'pk_speed', name:'快閃高手', description:'PK 中 5 回合全部搶先答對', emoji:'⚡', starReward:25 }
+];
+
+function migrateProgression(u) {
+  if (!u.stats) u.stats = { challenges:0, dseChallenges:0, gachaCount:0, pkWinStreak:0, totalCorrect:0 };
+  if (!u.achievements) u.achievements = {};
+  if (!u.clearGrades) u.clearGrades = {};
+  if (u.lifetimeStars == null) u.lifetimeStars = u.stars || 0;
+  if (u.stars == null) u.stars = 0;
+  if (u.tutorialDone == null) u.tutorialDone = false;
+  if (u.displayTitleId == null) u.displayTitleId = null;
+  return u;
+}
+
+function getLifetimeStars() {
+  if (!USER) return 0;
+  migrateProgression(USER);
+  return USER.lifetimeStars || 0;
+}
+
+function getSpendableStars() {
+  if (!USER) return 0;
+  return USER.stars || 0;
+}
+
+function addStars(spendable, lifetime) {
+  if (!USER) return;
+  migrateProgression(USER);
+  USER.stars = (USER.stars || 0) + spendable;
+  USER.lifetimeStars = (USER.lifetimeStars || 0) + (lifetime != null ? lifetime : spendable);
+}
+
+function spendStars(amount) {
+  if (!USER || USER.stars < amount) return false;
+  USER.stars -= amount;
+  return true;
+}
+
+function getTitleForUser() {
+  if (typeof getDisplayTitle === 'function') return getDisplayTitle();
+  return getTitle(getLifetimeStars());
+}
+
+function calcClearGrade(correct, total) {
+  if (correct >= total && total >= 10) return 'S';
+  if (correct >= 8) return 'A';
+  if (correct >= 6) return 'B';
+  return 'C';
+}
+
+function gradeEmoji(g) {
+  return g === 'S' ? '🏆' : g === 'A' ? '🌟' : g === 'B' ? '💪' : '📝';
+}
+
+function saveClearGrade(key, correct, total) {
+  if (!USER) return 'C';
+  migrateProgression(USER);
+  var g = calcClearGrade(correct, total);
+  var prev = USER.clearGrades[key];
+  var rank = { S:4, A:3, B:2, C:1 };
+  if (!prev || rank[g] > rank[prev]) USER.clearGrades[key] = g;
+  return USER.clearGrades[key];
+}
+
+function isHistoryCleared(key) {
+  if (!USER || !USER.history) return false;
+  var v = USER.history[key];
+  return v === true || (v && v.cleared);
+}
+
+function markHistoryCleared(key) {
+  if (!USER) return;
+  if (!USER.history) USER.history = {};
+  USER.history[key] = true;
+}
+
+function unlockAchievement(id) {
+  if (!USER) return;
+  migrateProgression(USER);
+  if (USER.achievements[id]) return;
+  var def = null;
+  for (var i = 0; i < ACHIEVEMENTS.length; i++) if (ACHIEVEMENTS[i].id === id) { def = ACHIEVEMENTS[i]; break; }
+  if (!def) return;
+  USER.achievements[id] = true;
+  addStars(def.starReward, def.starReward);
+  showAchievementPopup(def);
+  saveUser();
+}
+
+function countGradeClears(gradeNum) {
+  if (!USER || !USER.clearGrades) return 0;
+  var seen = {};
+  var prefix = 'g' + gradeNum + '_t';
+  for (var k in USER.clearGrades) {
+    if (k.indexOf(prefix) !== 0 || USER.clearGrades[k] === 'C') continue;
+    var tid = k.replace(/_(easy|dse)$/, '');
+    seen[tid] = true;
+  }
+  return Object.keys(seen).length;
+}
+
+function checkAchievements(event, data) {
+  if (!USER) return;
+  migrateProgression(USER);
+  data = data || {};
+  if (event === 'challenge_done') {
+    USER.stats.challenges = (USER.stats.challenges || 0) + 1;
+    if (difficulty === 'dse') USER.stats.dseChallenges = (USER.stats.dseChallenges || 0) + 1;
+    if (USER.stats.challenges >= 1) unlockAchievement('first_challenge');
+    if (data.correct >= data.total && data.total >= 10) unlockAchievement('perfect_10');
+    if ((USER.lifetimeCorrect || 0) >= 100) unlockAchievement('century');
+    if ((USER.lifetimeCorrect || 0) >= 1000) unlockAchievement('millennium');
+    if ((USER.stats.dseChallenges || 0) >= 10) unlockAchievement('dse_warrior');
+    var topics = (curriculumGenerators && curriculumGenerators[grade]) || [];
+    if (topics.length && countGradeClears(grade) >= topics.length) unlockAchievement('grade_clear');
+  }
+  if (event === 'gacha') {
+    USER.stats.gachaCount = (USER.stats.gachaCount || 0) + 1;
+    if (USER.stats.gachaCount >= 10) unlockAchievement('gacha_10');
+  }
+  if (event === 'pk_win') {
+    USER.stats.pkWinStreak = (USER.stats.pkWinStreak || 0) + 1;
+    if (USER.stats.pkWinStreak >= 3) unlockAchievement('pk_streak_3');
+  }
+  if (event === 'pk_lose') USER.stats.pkWinStreak = 0;
+}
+
+function showAchievementPopup(def) {
+  playSfx('achievement');
+  var old = document.getElementById('achPopup');
+  if (old) old.remove();
+  var el = document.createElement('div');
+  el.id = 'achPopup';
+  el.className = 'ach-popup';
+  el.innerHTML = '<div class="ach-popup-card pop-in">' +
+    '<div class="ach-popup-label">🏅 成就解鎖</div>' +
+    '<div class="ach-popup-emoji">' + def.emoji + '</div>' +
+    '<div class="ach-popup-name">' + def.name + '</div>' +
+    '<div class="ach-popup-desc">' + def.description + '</div>' +
+    '<div class="ach-popup-reward">+' + def.starReward + '⭐</div></div>';
+  document.body.appendChild(el);
+  setTimeout(function() { if (el.parentNode) el.remove(); }, 3200);
+}
+
+function renderAchievements() {
+  var list = document.getElementById('achList');
+  if (!list || !USER) return;
+  migrateProgression(USER);
+  list.innerHTML = '';
+  ACHIEVEMENTS.forEach(function(a) {
+    var on = !!USER.achievements[a.id];
+    var row = document.createElement('div');
+    row.className = 'ach-row' + (on ? ' unlocked' : '');
+    row.innerHTML = '<div class="ach-row-emoji">' + (on ? a.emoji : '❔') + '</div>' +
+      '<div class="ach-row-body"><div class="ach-row-name">' + a.name + '</div>' +
+      '<div class="ach-row-desc">' + a.description + '</div></div>' +
+      '<div class="ach-row-reward">' + (on ? '✓' : '+' + a.starReward + '⭐') + '</div>';
+    list.appendChild(row);
+  });
+  var lt = document.getElementById('achLifetimeStars');
+  if (lt) lt.textContent = getLifetimeStars();
+  var st = document.getElementById('achSpendStars');
+  if (st) st.textContent = getSpendableStars();
+}
+
+function runTutorialIfNeeded() {
+  if (!USER || USER.tutorialDone) return;
+  setTimeout(function() {
+    var m = document.getElementById('tutorialModal');
+    if (m) m.classList.add('show');
+  }, 600);
+}
+
+function closeTutorial(stepDone) {
+  var m = document.getElementById('tutorialModal');
+  if (m) m.classList.remove('show');
+  if (stepDone && USER) { USER.tutorialDone = true; saveUser(); }
+}
+
+function updateTopicCountHint() {
+  var hint = document.getElementById('mapScrollHint');
+  if (!hint || typeof curriculumGenerators === 'undefined') return;
+  var topics = curriculumGenerators[grade] || curriculumGenerators[1] || [];
+  hint.textContent = '↓ 向下滑動查看全部 ' + topics.length + ' 課';
+}
+
+
+// ========== 雲端 API（班級榜 / 兌換券 / Server PK）==========
+(function() {
+  var origin = (typeof location !== 'undefined' && location.origin) ? location.origin : '';
+  var isFile = origin.indexOf('file') === 0;
+  var isGhPages = typeof location !== 'undefined' && /github\.io$/i.test(location.hostname || '');
+  window.MATH_HERO_API = window.MATH_HERO_API || (isFile || isGhPages ? '' : origin);
+
+  window.cloudApi = {
+    base: window.MATH_HERO_API,
+    online: false,
+    lastSync: 0,
+
+    apiUrl: function(path) {
+      var base = (window.MATH_HERO_API || '').replace(/\/$/, '');
+      if (!base) return '';
+      return base + path;
+    },
+
+    fetchJson: function(path, opts) {
+      var url = this.apiUrl(path);
+      if (!url) return Promise.resolve(null);
+      opts = opts || {};
+      opts.headers = opts.headers || { 'Content-Type': 'application/json' };
+      return fetch(url, opts).then(function(r) {
+        if (!r.ok) return r.json().catch(function() { return { error: r.status }; }).then(function(j) { throw new Error(j.error || ('HTTP ' + r.status)); });
+        return r.json();
+      }).catch(function(e) {
+        console.warn('[cloud]', e.message || e);
+        return null;
+      });
+    },
+
+    ping: function() {
+      var self = this;
+      return this.fetchJson('/api/public/health').then(function(j) {
+        self.online = !!(j && j.ok);
+        return self.online;
+      });
+    },
+
+    ensurePlayerKey: function(u) {
+      if (!u) return '';
+      if (!u.playerKey) u.playerKey = (u.name || 'p').replace(/[^a-zA-Z0-9\u4e00-\u9fff]/g, '_').slice(0, 24) + '_' + Date.now().toString(36);
+      return u.playerKey;
+    },
+
+    syncPlayer: function(u) {
+      if (!u || !u.classCode) return Promise.resolve(null);
+      this.ensurePlayerKey(u);
+      var wk = (typeof getWeeklyStats === 'function') ? getWeeklyStats() : { weeklyCorrect: 0, weeklyClears: 0, weeklyPkWins: 0 };
+      return this.fetchJson('/api/public/class/sync', {
+        method: 'POST',
+        body: JSON.stringify({
+          classCode: u.classCode,
+          playerKey: u.playerKey,
+          name: u.name,
+          avatar: u.avatar,
+          lifetimeStars: typeof getLifetimeStars === 'function' ? getLifetimeStars() : (u.lifetimeStars || 0),
+          weeklyCorrect: wk.weeklyCorrect || 0,
+          weeklyClears: wk.weeklyClears || 0,
+          pkWins: u.pkWins || 0
+        })
+      });
+    },
+
+    fetchClassLeaderboard: function(classCode, mode) {
+      if (!classCode) return Promise.resolve([]);
+      var q = '/api/public/class/leaderboard?code=' + encodeURIComponent(classCode) + '&mode=' + (mode || 'weekly');
+      return this.fetchJson(q).then(function(j) { return (j && j.players) ? j.players : []; });
+    },
+
+    registerCoupon: function(u, coupon) {
+      this.ensurePlayerKey(u);
+      return this.fetchJson('/api/public/coupon/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: coupon.name,
+          icon: coupon.icon,
+          desc: coupon.desc,
+          rarity: coupon.rarity || 'N',
+          playerKey: u.playerKey,
+          playerName: u.name
+        })
+      }).then(function(j) {
+        if (j && j.coupon && j.coupon.code) return j.coupon.code;
+        return null;
+      });
+    },
+
+    redeemCoupon: function(pin, code) {
+      return this.fetchJson('/api/public/admin/redeem', {
+        method: 'POST',
+        body: JSON.stringify({ pin: pin, code: code })
+      });
+    },
+
+    listCouponsAdmin: function(pin, pendingOnly) {
+      var q = '/api/public/admin/coupons?pin=' + encodeURIComponent(pin) + (pendingOnly ? '&pending=1' : '');
+      return this.fetchJson(q).then(function(j) { return (j && j.coupons) ? j.coupons : []; });
+    },
+
+    pkCreateRoom: function(data) {
+      return this.fetchJson('/api/public/pk/room', { method: 'POST', body: JSON.stringify(data) });
+    },
+
+    pkJoinRoom: function(code, guestKey, guestName) {
+      return this.fetchJson('/api/public/pk/join', {
+        method: 'POST',
+        body: JSON.stringify({ code: code, guestKey: guestKey, guestName: guestName })
+      });
+    },
+
+    pkPollMessages: function(code, since) {
+      var q = '/api/public/pk/messages/' + encodeURIComponent(code) + '?since=' + (since || 0);
+      return this.fetchJson(q).then(function(j) { return (j && j.messages) ? j.messages : []; });
+    },
+
+    pkSendMessage: function(code, message) {
+      return this.fetchJson('/api/public/pk/message', {
+        method: 'POST',
+        body: JSON.stringify({ code: code, message: message })
+      });
+    }
+  };
+
+  function makeLocalCode() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    var s = 'MH-';
+    for (var i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return s;
+  }
+  window.makeLocalCouponCode = makeLocalCode;
+
+  window.cloudSyncUser = function() {
+    if (!USER) return;
+    if (typeof migrateProgression === 'function') migrateProgression(USER);
+    cloudApi.syncPlayer(USER).then(function() {
+      cloudApi.lastSync = Date.now();
+    });
+  };
+
+  cloudApi.ping();
+})();
+
+
+// ========== 週任務 & BOSS 關 & 班級 ==========
+var WEEKLY_QUEST_DEFS = [
+  { id: 'w_correct_20', name: '本週答對 20 題', emoji: '📝', target: 20, field: 'weeklyCorrect', reward: 15 },
+  { id: 'w_clear_3', name: '本週通關 3 課', emoji: '📚', target: 3, field: 'weeklyClears', reward: 20 },
+  { id: 'w_pk_2', name: '本週 PK 勝 2 場', emoji: '⚔️', target: 2, field: 'weeklyPkWins', reward: 25 }
+];
+
+function getWeekKeyClient() {
+  var d = new Date();
+  var onejan = new Date(d.getFullYear(), 0, 1);
+  var week = Math.ceil(((d - onejan) / 86400000 + onejan.getDay() + 1) / 7);
+  return d.getFullYear() + '-W' + week;
+}
+
+function migrateWeekly(u) {
+  if (!u) return u;
+  var wk = getWeekKeyClient();
+  if (!u.weekly || u.weekly.weekKey !== wk) {
+    u.weekly = {
+      weekKey: wk,
+      weeklyCorrect: 0,
+      weeklyClears: 0,
+      weeklyPkWins: 0,
+      claimed: {}
+    };
+  }
+  if (!u.weekly.claimed) u.weekly.claimed = {};
+  if (u.classCode == null) u.classCode = '';
+  if (u.gachaPity == null) u.gachaPity = 0;
+  if (u.itemsSkip == null) u.itemsSkip = 0;
+  return u;
+}
+
+function getWeeklyStats() {
+  if (!USER) return { weeklyCorrect: 0, weeklyClears: 0, weeklyPkWins: 0 };
+  migrateWeekly(USER);
+  return USER.weekly;
+}
+
+function recordWeeklyCorrect(n) {
+  if (!USER) return;
+  migrateWeekly(USER);
+  USER.weekly.weeklyCorrect += (n || 1);
+  saveUser();
+}
+
+function recordWeeklyClear() {
+  if (!USER) return;
+  migrateWeekly(USER);
+  USER.weekly.weeklyClears += 1;
+  saveUser();
+}
+
+function recordWeeklyPkWin() {
+  if (!USER) return;
+  migrateWeekly(USER);
+  USER.weekly.weeklyPkWins += 1;
+  saveUser();
+}
+
+function isBossLesson(index, total) {
+  if (index === 3 || index === 7) return true;
+  if (total >= 10 && index === total - 1) return true;
+  return false;
+}
+
+function renderWeeklyPanel() {
+  var panel = document.getElementById('weeklyPanel');
+  if (!panel || !USER) return;
+  migrateWeekly(USER);
+  var html = '<div class="daily-head"><span class="panel-title" style="font-size:12px">🗓️ 本週任務</span>' +
+    '<span class="daily-streak" style="color:#8be9fd">' + USER.weekly.weekKey + '</span></div>';
+  WEEKLY_QUEST_DEFS.forEach(function(q) {
+    var cur = USER.weekly[q.field] || 0;
+    var done = cur >= q.target;
+    var claimed = !!USER.weekly.claimed[q.id];
+    html += '<div class="weekly-row' + (done ? ' done' : '') + '">' +
+      '<span>' + q.emoji + ' ' + q.name + '</span>' +
+      '<span style="font-size:11px;color:#a29bfe">' + Math.min(cur, q.target) + '/' + q.target + '</span>' +
+      (claimed ? '<span style="color:#55efc4;font-size:11px">✓</span>' :
+        (done ? '<button class="btn-sm btn gold" onclick="claimWeekly(\'' + q.id + '\')">+' + q.reward + '⭐</button>' :
+          '<span style="font-size:10px;opacity:.6">+' + q.reward + '⭐</span>')) +
+      '</div>';
+  });
+  panel.innerHTML = html;
+}
+
+function claimWeekly(id) {
+  if (!USER) return;
+  migrateWeekly(USER);
+  var def = null;
+  for (var i = 0; i < WEEKLY_QUEST_DEFS.length; i++) {
+    if (WEEKLY_QUEST_DEFS[i].id === id) { def = WEEKLY_QUEST_DEFS[i]; break; }
+  }
+  if (!def || USER.weekly.claimed[id]) return;
+  if ((USER.weekly[def.field] || 0) < def.target) { alert('尚未完成'); return; }
+  USER.weekly.claimed[id] = true;
+  if (typeof addStars === 'function') addStars(def.reward, def.reward);
+  saveUser();
+  renderWeeklyPanel();
+  if (typeof cloudSyncUser === 'function') cloudSyncUser();
+  if (typeof playSfx === 'function') playSfx('achievement');
+}
+
+function saveClassCode() {
+  var inp = document.getElementById('homeClassCode') || document.getElementById('inpClassCode');
+  if (!inp || !USER) return;
+  USER.classCode = String(inp.value || '').trim().toUpperCase().slice(0, 16);
+  if (typeof cloudApi !== 'undefined') cloudApi.ensurePlayerKey(USER);
+  saveUser();
+  if (typeof cloudSyncUser === 'function') cloudSyncUser();
+  renderClassBadge();
+  alert(USER.classCode ? ('已加入班級 ' + USER.classCode) : '已清除班級代碼');
+}
+
+function renderClassBadge() {
+  var el = document.getElementById('classBadge');
+  if (!el || !USER) return;
+  migrateWeekly(USER);
+  el.textContent = USER.classCode ? ('🏫 ' + USER.classCode) : '🏫 未加入班級';
+}
+
+function renderTitlePicker() {
+  var el = document.getElementById('titlePicker');
+  if (!el || !USER) return;
+  migrateProgression(USER);
+  var stars = typeof getLifetimeStars === 'function' ? getLifetimeStars() : (USER.lifetimeStars || 0);
+  el.innerHTML = '';
+  TITLE_TIERS.forEach(function(t) {
+    if (stars < t.min) return;
+    var btn = document.createElement('button');
+    btn.className = 'title-pick-btn' + (USER.displayTitleId === t.id ? ' on' : '');
+    btn.textContent = t.emoji + ' ' + t.name;
+    btn.onclick = function() {
+      USER.displayTitleId = t.id;
+      saveUser();
+      updateHeader();
+      renderTitlePicker();
+    };
+    el.appendChild(btn);
+  });
+}
+
+function getDisplayTitle() {
+  if (!USER) return getTitle(0);
+  migrateProgression(USER);
+  if (USER.displayTitleId) {
+    for (var i = 0; i < TITLE_TIERS.length; i++) {
+      if (TITLE_TIERS[i].id === USER.displayTitleId && getLifetimeStars() >= TITLE_TIERS[i].min) {
+        return TITLE_TIERS[i];
+      }
+    }
+  }
+  return getTitle(getLifetimeStars());
+}
+
+function renderAdminCoupons(pin) {
+  var list = document.getElementById('adminCouponList');
+  if (!list) return;
+  list.innerHTML = '<p style="color:#a29bfe;text-align:center">載入中...</p>';
+  if (typeof cloudApi === 'undefined' || !cloudApi.online) {
+    list.innerHTML = '<p style="color:#ff7675">需要連接伺服器（本機 npm run dev 或部署後設定 MATH_HERO_API）</p>';
+    return;
+  }
+  cloudApi.listCouponsAdmin(pin, true).then(function(rows) {
+    if (!rows.length) {
+      list.innerHTML = '<p style="color:#a29bfe;text-align:center">暫無待兌換券</p>';
+      return;
+    }
+    list.innerHTML = rows.map(function(c) {
+      return '<div class="admin-coupon-row"><b>' + c.code + '</b> · ' + c.playerName +
+        '<br>' + c.icon + ' ' + c.name + '</div>';
+    }).join('');
+  });
+}
+
+function adminRedeemCoupon() {
+  var pinEl = document.getElementById('adminPin');
+  var codeEl = document.getElementById('adminCouponCode');
+  var msg = document.getElementById('adminMsg');
+  var pin = pinEl ? pinEl.value : '';
+  var code = codeEl ? String(codeEl.value || '').trim().toUpperCase() : '';
+  if (!pin || !code) { if (msg) msg.textContent = '請輸入 PIN 同券號'; return; }
+  cloudApi.redeemCoupon(pin, code).then(function(j) {
+    if (!j || !j.ok) {
+      if (msg) msg.textContent = (j && j.error) ? j.error : '兌換失敗';
+      return;
+    }
+    if (msg) msg.textContent = '✅ 已兌換：' + j.coupon.name + '（' + j.coupon.playerName + '）';
+    if (codeEl) codeEl.value = '';
+    renderAdminCoupons(pin);
+  });
+}
+
+function useSkipCard() {
+  if (!USER || !USER.itemsSkip) { alert('沒有跳過卡！'); return; }
+  if (quiz.idx >= quiz.qs.length - 1) { alert('最後一題不能跳過'); return; }
+  USER.itemsSkip--;
+  quiz.idx++;
+  saveUser();
+  updateHeader();
+  renderQuizQ();
+}
+
+
+// ========== 音效 / BGM / 抽卡翻牌 / 通關評級 juice ==========
+var SFX_ENABLED = true;
+var BGM_ENABLED = false;
+var _audioCtx = null;
+var _bgmTimer = null;
+var _bgmMuted = true;
+
+function initJuicePrefs(u) {
+  if (!u) return;
+  if (u.bgmEnabled != null) BGM_ENABLED = !!u.bgmEnabled;
+  if (u.sfxEnabled != null) SFX_ENABLED = !!u.sfxEnabled;
+  updateAudioButtons();
+  if (BGM_ENABLED) startBgm(); else stopBgm();
+}
+
+function saveJuicePrefs() {
+  if (!USER) return;
+  USER.bgmEnabled = BGM_ENABLED;
+  USER.sfxEnabled = SFX_ENABLED;
+}
+
+function getAudioCtx() {
+  try {
+    if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    return _audioCtx;
+  } catch (e) { return null; }
+}
+
+function tone(freq, dur, vol, type, delay) {
+  var ctx = getAudioCtx();
+  if (!ctx || !SFX_ENABLED) return;
+  delay = delay || 0;
+  var o = ctx.createOscillator();
+  var g = ctx.createGain();
+  o.type = type || 'sine';
+  o.frequency.value = freq;
+  o.connect(g);
+  g.connect(ctx.destination);
+  var t0 = ctx.currentTime + delay;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(vol || 0.12, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.start(t0);
+  o.stop(t0 + dur + 0.05);
+}
+
+function playSfx(type) {
+  if (!SFX_ENABLED) return;
+  if (type === 'tap') { tone(520, 0.06, 0.06, 'triangle'); return; }
+  if (type === 'btn') { tone(660, 0.08, 0.08, 'square'); return; }
+  if (type === 'correct') {
+    tone(880, 0.12, 0.14, 'sine');
+    tone(1175, 0.14, 0.1, 'sine', 0.07);
+    tone(1568, 0.1, 0.06, 'sine', 0.14);
+    return;
+  }
+  if (type === 'wrong') { tone(180, 0.22, 0.12, 'sawtooth'); tone(140, 0.18, 0.08, 'sawtooth', 0.08); return; }
+  if (type === 'level') {
+    tone(523, 0.12, 0.1, 'sine');
+    tone(659, 0.12, 0.1, 'sine', 0.1);
+    tone(784, 0.16, 0.12, 'sine', 0.2);
+    tone(1047, 0.2, 0.14, 'sine', 0.32);
+    return;
+  }
+  if (type === 'evolve') {
+    tone(392, 0.15, 0.1, 'sine');
+    tone(523, 0.15, 0.11, 'sine', 0.12);
+    tone(659, 0.18, 0.12, 'sine', 0.24);
+    tone(880, 0.25, 0.14, 'triangle', 0.38);
+    return;
+  }
+  if (type === 'gacha_spin') { tone(300, 0.08, 0.07, 'square'); tone(400, 0.08, 0.07, 'square', 0.09); tone(500, 0.1, 0.08, 'square', 0.18); return; }
+  if (type === 'gacha_n') { tone(440, 0.15, 0.1, 'sine'); return; }
+  if (type === 'gacha_r') { tone(523, 0.12, 0.11, 'sine'); tone(784, 0.18, 0.12, 'sine', 0.1); return; }
+  if (type === 'gacha_ssr') {
+    tone(523, 0.1, 0.12, 'sine');
+    tone(659, 0.1, 0.12, 'sine', 0.08);
+    tone(784, 0.1, 0.13, 'sine', 0.16);
+    tone(988, 0.12, 0.14, 'sine', 0.24);
+    tone(1175, 0.2, 0.15, 'triangle', 0.32);
+    tone(1568, 0.28, 0.12, 'sine', 0.42);
+    return;
+  }
+  if (type === 'rank_a') { tone(784, 0.14, 0.11, 'sine'); tone(988, 0.16, 0.1, 'sine', 0.12); return; }
+  if (type === 'rank_s') {
+    tone(659, 0.1, 0.1, 'sine');
+    tone(880, 0.1, 0.12, 'sine', 0.08);
+    tone(1175, 0.12, 0.14, 'sine', 0.16);
+    tone(1568, 0.25, 0.15, 'triangle', 0.26);
+    return;
+  }
+  if (type === 'achievement') { tone(880, 0.12, 0.1, 'sine'); tone(1108, 0.18, 0.12, 'sine', 0.1); return; }
+  if (type === 'gacha') playSfx('gacha_spin');
+  else tone(440, 0.12, 0.1, 'sine');
+}
+
+function startBgm() {
+  if (_bgmTimer || !BGM_ENABLED) return;
+  _bgmMuted = false;
+  var chords = [[261.63, 329.63, 392.00], [293.66, 369.99, 440.00], [329.63, 415.30, 493.88]];
+  var idx = 0;
+  _bgmTimer = setInterval(function() {
+    if (!BGM_ENABLED || _bgmMuted) return;
+    var c = chords[idx % chords.length];
+    tone(c[0], 0.35, 0.025, 'sine');
+    tone(c[1], 0.35, 0.02, 'sine', 0.05);
+    tone(c[2], 0.35, 0.018, 'sine', 0.1);
+    idx++;
+  }, 3200);
+}
+
+function stopBgm() {
+  _bgmMuted = true;
+  if (_bgmTimer) { clearInterval(_bgmTimer); _bgmTimer = null; }
+}
+
+function toggleBgm() {
+  BGM_ENABLED = !BGM_ENABLED;
+  saveJuicePrefs();
+  if (USER && typeof saveUser === 'function') saveUser();
+  if (BGM_ENABLED) { getAudioCtx(); startBgm(); }
+  else stopBgm();
+  updateAudioButtons();
+}
+
+function toggleSfx() {
+  SFX_ENABLED = !SFX_ENABLED;
+  saveJuicePrefs();
+  if (USER && typeof saveUser === 'function') saveUser();
+  updateAudioButtons();
+  if (SFX_ENABLED) playSfx('tap');
+}
+
+function updateAudioButtons() {
+  var b = document.getElementById('btnBgm');
+  var s = document.getElementById('btnSfx');
+  if (b) { b.textContent = BGM_ENABLED ? '🎵' : '🎵✕'; b.title = BGM_ENABLED ? '關閉 BGM' : '開啟 BGM'; b.classList.toggle('audio-off', !BGM_ENABLED); }
+  if (s) { s.textContent = SFX_ENABLED ? '🔊' : '🔇'; s.title = SFX_ENABLED ? '關閉音效' : '開啟音效'; s.classList.toggle('audio-off', !SFX_ENABLED); }
+}
+
+function bindJuiceClicks() {
+  document.addEventListener('click', function(e) {
+    var t = e.target.closest('.btn, .btn-sm, .nav-item, .grade-tab, .quest-node, .companion-card, .gear-item, .diff-btn');
+    if (t && SFX_ENABLED && !t.disabled) playSfx('tap');
+  }, true);
+}
+
+function fxGachaReveal(rarity) {
+  playSfx('gacha_spin');
+}
+
+function showGachaResult(rarity, icon, name, desc, extra) {
+  var modal = document.getElementById('gachaModal');
+  var card = document.getElementById('gachaFlipCard');
+  var glow = document.getElementById('gachaGlow');
+  if (!modal || !card) return;
+  card.classList.remove('flipped', 'rarity-N', 'rarity-R', 'rarity-SSR', 'gacha-shake');
+  if (glow) glow.className = 'gacha-glow';
+  document.getElementById('gachaTier').textContent = '???';
+  document.getElementById('gachaIcon').textContent = '✨';
+  document.getElementById('gachaName').textContent = '抽卡中...';
+  document.getElementById('gachaDesc').textContent = '';
+  document.getElementById('gachaClaimBtn').style.display = 'none';
+  modal.classList.add('show');
+  card.classList.add('gacha-shake');
+  playSfx('gacha_spin');
+  setTimeout(function() {
+    card.classList.remove('gacha-shake');
+    document.getElementById('gachaTier').textContent = rarity + (extra || '');
+    document.getElementById('gachaIcon').textContent = icon;
+    document.getElementById('gachaName').textContent = name;
+    document.getElementById('gachaDesc').textContent = desc;
+    card.classList.add('flipped', 'rarity-' + rarity);
+    if (glow) glow.className = 'gacha-glow rarity-' + rarity;
+    if (rarity === 'SSR') {
+      playSfx('gacha_ssr');
+      spawnSsrParticles();
+    } else if (rarity === 'R') playSfx('gacha_r');
+    else playSfx('gacha_n');
+    document.getElementById('gachaClaimBtn').style.display = 'block';
+  }, 750);
+}
+
+function spawnSsrParticles() {
+  var box = document.getElementById('gachaParticleBox');
+  if (!box) return;
+  box.innerHTML = '';
+  for (var i = 0; i < 24; i++) {
+    var p = document.createElement('div');
+    p.className = 'gacha-particle';
+    p.style.left = (20 + Math.random() * 60) + '%';
+    p.style.animationDelay = (Math.random() * 0.6) + 's';
+    p.style.background = ['#f1c40f', '#ff7675', '#ffeaa7', '#fff'][Math.floor(Math.random() * 4)];
+    box.appendChild(p);
+  }
+}
+
+function fxGradeReveal(gradeMark) {
+  if (gradeMark === 'S') {
+    playSfx('rank_s');
+    var old = document.getElementById('gradeSFx');
+    if (old) old.remove();
+    var el = document.createElement('div');
+    el.id = 'gradeSFx';
+    el.className = 'grade-s-overlay';
+    el.innerHTML = '<div class="grade-s-burst"></div><div class="grade-s-rays"></div>' +
+      '<div class="grade-s-content pop-in"><div class="grade-s-crown">👑</div>' +
+      '<div class="grade-s-title">S 級</div><div class="grade-s-sub">滿分通關 · 傳說時刻</div></div>';
+    document.body.appendChild(el);
+    setTimeout(function() { if (el.parentNode) el.remove(); }, 2800);
+    return;
+  }
+  if (gradeMark === 'A') {
+    playSfx('rank_a');
+    var a = document.createElement('div');
+    a.className = 'grade-a-flash';
+    document.getElementById('app').appendChild(a);
+    setTimeout(function() { if (a.parentNode) a.remove(); }, 600);
+  }
+}
+
+function fxLevelUp(name) {
+  playSfx('level');
+  var old = document.getElementById('levelUpFx');
+  if (old) old.remove();
+  var el = document.createElement('div');
+  el.id = 'levelUpFx';
+  el.className = 'level-up-overlay';
+  el.innerHTML = '<div class="level-up-card pop-in"><div style="font-size:42px">⬆️</div><div class="level-up-title">LEVEL UP!</div><div class="level-up-sub">' + (name || '') + '</div></div>';
+  document.body.appendChild(el);
+  setTimeout(function() { if (el.parentNode) el.remove(); }, 1800);
+}
+
+function fxCorrectFlash() {
+  var el = document.createElement('div');
+  el.className = 'fx-flash ok';
+  var app = document.getElementById('app');
+  if (app) app.appendChild(el);
+  setTimeout(function() { if (el.parentNode) el.remove(); }, 450);
+}
+
+try {
+  bindJuiceClicks();
+} catch (_juiceBind) {}
+
 
 // USER / selectedAv / loadUser / doLogin / pickAv / migrateUser 由登入模組定義
 let grade = 1, topicId = 'g1_t1', difficulty = 'easy';
@@ -6887,8 +8218,8 @@ function saveUser() {
 function saveLB() {
   let lb = JSON.parse(localStorage.getItem('mh_lb') || '[]');
   const i = lb.findIndex(x => x.name === USER.name);
-  const entry = { name:USER.name, avatar:USER.avatar, stars:USER.stars, coins:USER.coins,
-    pkWins:USER.pkWins||0, title:getTitle(USER.stars).name };
+  const entry = { name:USER.name, avatar:USER.avatar, stars:getLifetimeStars(), coins:USER.coins,
+    pkWins:USER.pkWins||0, title:getTitleForUser().name };
   if (i >= 0) lb[i] = entry; else lb.push(entry);
   lb.sort((a,b) => b.stars - a.stars);
   localStorage.setItem('mh_lb', JSON.stringify(lb.slice(0,50)));
@@ -6909,22 +8240,34 @@ function setAvatarEl(el, av, size) {
 
 function updateHeader() {
   if (!USER) return;
+  migrateProgression(USER);
   setAvatarEl(document.getElementById('hdrAv'), USER.avatar, 36);
   document.getElementById('hdrName').textContent = USER.name;
-  document.getElementById('hdrTitle').textContent = getTitle(USER.stars).emoji + ' ' + getTitle(USER.stars).name;
+  var t = getTitleForUser();
+  document.getElementById('hdrTitle').textContent = t.emoji + ' ' + t.name;
   document.getElementById('hdrCoins').textContent = USER.coins;
-  document.getElementById('hdrStars').textContent = USER.stars;
-  document.getElementById('cnt5050').textContent = USER.items5050 || 0;
+  document.getElementById('hdrStars').textContent = getSpendableStars();
+  var hl = document.getElementById('hdrLifetime');
+  var hs = document.getElementById('hdrSpend');
+  if (hl) hl.textContent = getLifetimeStars();
+  if (hs) hs.textContent = getSpendableStars();
+  var c5050 = document.getElementById('cnt5050');
+  if (c5050) c5050.textContent = USER.items5050 || 0;
+  var cskip = document.getElementById('cntSkip');
+  if (cskip) cskip.textContent = USER.itemsSkip || 0;
+  var homeClass = document.getElementById('homeClassCode');
+  if (homeClass && USER.classCode) homeClass.value = USER.classCode;
 }
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if (id === 'scrHome') { renderTopics(); renderDailyPanel(); renderCompanionHome(); }
+  if (id === 'scrHome') { renderTopics(); renderDailyPanel(); renderCompanionHome(); updateTopicCountHint(); if (typeof renderWeeklyPanel === 'function') renderWeeklyPanel(); if (typeof renderClassBadge === 'function') renderClassBadge(); }
   if (id === 'scrCompanion') renderCompanionScreen();
+  if (id === 'scrAchievements') { renderAchievements(); if (typeof renderTitlePicker === 'function') renderTitlePicker(); }
   if (id === 'scrGacha') renderCoupons();
   if (id === 'scrShop') renderShop();
-  if (id === 'scrLB') renderLB();
+  if (id === 'scrLB') { if (typeof lbMode === 'undefined') lbMode = 'class'; renderLB(); }
 }
 function nav(id, el) {
   showScreen(id);
@@ -6957,7 +8300,8 @@ function enterGameHome() {
     var list = document.getElementById('topicList');
     if (list) list.innerHTML = '<p style="color:#ff7675;text-align:center;padding:12px">課題載入失敗，請重新整理頁面</p>';
   }
-  try { maybeShowCompanionPick(); } catch (e) { console.error(e); }
+  try { highlightCompanionStrip(); runTutorialIfNeeded(); } catch (e) { console.error(e); }
+  try { if (typeof renderWeeklyPanel === 'function') renderWeeklyPanel(); if (typeof renderClassBadge === 'function') renderClassBadge(); if (typeof cloudSyncUser === 'function') cloudSyncUser(); if (typeof initJuicePrefs === 'function') initJuicePrefs(USER); } catch (e) { console.error(e); }
 }
 
 function initUI() {
@@ -7006,9 +8350,16 @@ function updateSelectedQuestPanel() {
     return;
   }
   titleEl.textContent = topic.title;
-  var cleared = USER && (USER.history || {})[topic.id + '_' + difficulty];
+  var cleared = USER && isHistoryCleared(topic.id + '_' + difficulty);
+  var g = USER && USER.clearGrades && USER.clearGrades[topic.id + '_' + difficulty];
   var diffLabel = difficulty === 'dse' ? 'DSE 難度' : '簡單難度';
-  subEl.textContent = (GRADE_NAMES[grade] || '') + ' · ' + diffLabel + (cleared ? ' · ✅ 已通關' : ' · 未挑戰');
+  var topics = curriculumGenerators[grade] || [];
+  var tidx = -1;
+  for (var ti = 0; ti < topics.length; ti++) if (topics[ti].id === topic.id) { tidx = ti; break; }
+  var boss = typeof isBossLesson === 'function' && tidx >= 0 && isBossLesson(tidx, topics.length);
+  subEl.textContent = (GRADE_NAMES[grade] || '') + ' · ' + diffLabel + (boss ? ' · 👹 BOSS (+5⭐)' : '') + (cleared ? (' · ✅ 已通關' + (g ? ' ' + gradeEmoji(g) + g : '')) : ' · 未挑戰');
+  var startBtn = document.getElementById('btnStartSingle');
+  if (startBtn) startBtn.textContent = boss ? '👹 BOSS 挑戰（10 題）' : '⚔️ 開始單人挑戰（10 題）';
 }
 
 function renderTopics() {
@@ -7024,22 +8375,26 @@ function renderTopics() {
   }
   list.innerHTML = '';
   const topics = curriculumGenerators[grade] || curriculumGenerators[1] || [];
-  topics.forEach(t => {
-    const cleared = (USER.history || {})[t.id + '_' + difficulty];
+  topics.forEach(function(t, idx) {
+    const key = t.id + '_' + difficulty;
+    const cleared = isHistoryCleared(key);
+    const g = (USER.clearGrades || {})[key];
     const selected = t.id === topicId;
+    const boss = typeof isBossLesson === 'function' && isBossLesson(idx, topics.length);
     const d = document.createElement('div');
-    d.className = 'quest-node' + (selected ? ' on' : '') + (cleared ? ' cleared' : '');
+    d.className = 'quest-node' + (selected ? ' on' : '') + (cleared ? ' cleared' : '') + (boss ? ' boss' : '');
     d.innerHTML =
-      '<div class="quest-node-badge"><span>' + questLessonNum(t.title) + '</span>課</div>' +
+      '<div class="quest-node-badge"><span>' + (boss ? '👹' : questLessonNum(t.title)) + '</span>' + (boss ? 'BOSS' : '課') + '</div>' +
       '<div class="quest-node-body">' +
-        '<div class="quest-node-title">' + t.title + '</div>' +
-        '<div class="quest-node-meta">' + (cleared ? '✅ 已通關' : '🔒 未挑戰') + ' · ' + (difficulty === 'dse' ? 'DSE' : '簡單') + '</div>' +
+        '<div class="quest-node-title">' + t.title + (boss ? ' <span style="color:#f1c40f;font-size:10px">BOSS</span>' : '') + (g ? ' <span class="grade-badge grade-' + g + '">' + g + '</span>' : '') + '</div>' +
+        '<div class="quest-node-meta">' + (cleared ? '✅ 已通關' : '🔒 未挑戰') + ' · ' + (difficulty === 'dse' ? 'DSE' : '簡單') + (boss ? ' · +5⭐' : '') + '</div>' +
       '</div>' +
-      '<div class="quest-node-action">' + (selected ? '出發' : '選') + '</div>';
-    d.onclick = () => { topicId = t.id; renderTopics(); };
+      '<div class="quest-node-action">' + (selected ? (boss ? '挑戰' : '出發') : '選') + '</div>';
+    d.onclick = function() { topicId = t.id; renderTopics(); };
     list.appendChild(d);
   });
   updateSelectedQuestPanel();
+  updateTopicCountHint();
 }
 
 function getTopic() {
@@ -7151,7 +8506,8 @@ function pickQuiz(opt, btn) {
     if (v === ans) b.classList.add('ok');
     else if (b === btn && !ok) b.classList.add('bad');
   });
-  if (ok) { quiz.correct++; quiz.score += 100; }
+  if (ok) { quiz.correct++; quiz.score += 100; playSfx('correct'); fxCorrectFlash(); if (typeof triggerCompanionAnim === 'function') triggerCompanionAnim('happy'); if (typeof recordWeeklyCorrect === 'function') recordWeeklyCorrect(1); }
+  else playSfx('wrong');
   recordDailyQuestion(ok);
   const ex = document.getElementById('qzExplain');
   ex.style.display = 'block';
@@ -7187,7 +8543,7 @@ function use5050() {
 function finishSingle() {
   const isDaily = quiz.mode === 'daily';
   const key = topicId + '_' + difficulty;
-  const first = !isDaily && !USER.history[key];
+  const first = !isDaily && !isHistoryCleared(key);
   var coins, stars;
   if (isDaily) {
     coins = quiz.correct * ECONOMY.coinsPerCorrect;
@@ -7195,18 +8551,34 @@ function finishSingle() {
   } else {
     var r = calcRewards(difficulty, quiz.correct, quiz.qs.length, first);
     coins = r.coins; stars = r.stars;
+    var topics = curriculumGenerators[grade] || [];
+    var tidx = -1;
+    for (var ti = 0; ti < topics.length; ti++) if (topics[ti].id === topicId) { tidx = ti; break; }
+    if (typeof isBossLesson === 'function' && tidx >= 0 && isBossLesson(tidx, topics.length)) {
+      stars += 5;
+    }
   }
-  USER.coins += coins; USER.stars += stars;
-  if (first) USER.history[key] = true;
+  USER.coins += coins;
+  addStars(stars, stars);
+  if (first) {
+    markHistoryCleared(key);
+    if (typeof recordWeeklyClear === 'function') recordWeeklyClear();
+  }
+  var gradeMark = saveClearGrade(key, quiz.correct, quiz.qs.length);
+  checkAchievements('challenge_done', { correct: quiz.correct, total: quiz.qs.length });
   saveUser();
+  if (typeof cloudSyncUser === 'function') cloudSyncUser();
   const acc = Math.round(quiz.correct / quiz.qs.length * 100);
-  document.getElementById('resEmoji').textContent = acc === 100 ? '🏆' : acc >= 70 ? '🌟' : '💪';
+  var badge = document.getElementById('resGradeBadge');
+  if (badge) { badge.textContent = gradeMark + ' 級'; badge.className = 'grade-badge grade-' + gradeMark; badge.style.display = isDaily ? 'none' : 'inline-block'; }
+  document.getElementById('resEmoji').textContent = gradeMark === 'S' ? '🏆' : acc >= 70 ? '🌟' : '💪';
   document.getElementById('resEval').textContent = isDaily
     ? (acc === 100 ? '每日委託完美！' : '每日練習完成！')
-    : (acc === 100 ? '滿分！太厲害了！' : acc >= 70 ? '做得不錯！' : '再接再厲！');
+    : (gradeMark === 'S' ? '滿分 S 級！太厲害了！' : gradeMark === 'A' ? 'A 級！做得好好！' : gradeMark === 'B' ? 'B 級，繼續加油！' : '完成挑戰，下次再進步！');
   document.getElementById('resScore').textContent = quiz.score + ' 分 · +' + stars + '⭐ +' + coins + '🪙';
-  var detail = isDaily ? ('每日快打 ' + quiz.correct + '/' + quiz.qs.length + ' 題') : ((first ? '首次通關！' : '重玩') + ' 答對 ' + quiz.correct + '/' + quiz.qs.length);
-  if (USER.companionId) detail += ' · ' + getCompanionDef(USER.companionId).emoji + ' 夥伴 EXP 已更新';
+  var detail = isDaily ? ('每日快打 ' + quiz.correct + '/' + quiz.qs.length + ' 題') : ((first ? '首次通關！' : '重玩') + ' 答對 ' + quiz.correct + '/' + quiz.qs.length + ' · 評級 ' + gradeMark);
+  if (USER.companionId) { var cd = getCompanionDef(USER.companionId); detail += ' · ' + (cd ? cd.name : '') + ' EXP 已更新'; }
+  if (!isDaily && typeof fxGradeReveal === 'function') fxGradeReveal(gradeMark);
   document.getElementById('resDetail').textContent = detail;
   showScreen('scrResult');
 }
@@ -7245,6 +8617,7 @@ function pkCreate() {
   }
   if (!qs.length) { alert('題目生成失敗，請換個課題再試'); return; }
   pk = { code, role:'host', round:1, myWins:0, opWins:0, phase:'wait', selected:null, submitted:false, qs };
+  pkInitGear();
   showScreen('scrPK');
   document.getElementById('pkCodeDisp').textContent = code;
   setAvatarEl(document.getElementById('pkMyAv'), USER.avatar, 40);
@@ -7261,6 +8634,7 @@ function pkJoin() {
   const code = document.getElementById('pkJoinCode').value.trim().toUpperCase();
   if (code.length < 8) { alert('請輸入 8 位房間代碼'); return; }
   pk = { code, role:'guest', round:1, myWins:0, opWins:0, phase:'wait', selected:null, submitted:false, qs:[] };
+  pkInitGear();
   showScreen('scrPK');
   document.getElementById('pkCodeDisp').textContent = code;
   setAvatarEl(document.getElementById('pkMyAv'), USER.avatar, 40);
@@ -7299,6 +8673,36 @@ function pkShowPhase(p) {
 
 let mqttBrokerIdx = 0;
 
+function useServerPk() {
+  return typeof cloudApi !== 'undefined' && cloudApi.online && cloudApi.base;
+}
+
+function initServerPk(code, role) {
+  if (typeof cloudApi !== 'undefined') cloudApi.ensurePlayerKey(USER);
+  if (role === 'host') {
+    cloudApi.pkCreateRoom({ code: code, hostKey: USER.playerKey, hostName: USER.name, grade: grade, topicId: topicId, difficulty: difficulty });
+    document.getElementById('pkWaitMsg').textContent = '✅ 伺服器房間 ' + code + ' 已建立，等待對手...';
+  } else {
+    cloudApi.pkJoinRoom(code, USER.playerKey, USER.name);
+    document.getElementById('pkWaitMsg').textContent = '✅ 已連接伺服器房間，正在加入...';
+    pkSendHello();
+  }
+  pk._msgSince = Date.now() - 1000;
+  if (pk._pollTimer) clearInterval(pk._pollTimer);
+  pk._pollTimer = setInterval(function() {
+    if (!pk || pk.transport !== 'server') return;
+    cloudApi.pkPollMessages(pk.code, pk._msgSince || 0).then(function(msgs) {
+      if (!msgs || !msgs.length) return;
+      for (var i = 0; i < msgs.length; i++) {
+        var m = msgs[i];
+        if (m._at) pk._msgSince = Math.max(pk._msgSince || 0, m._at);
+        if (m._from === pk.role) continue;
+        handlePKMsg(m);
+      }
+    });
+  }, 900);
+}
+
 function initPKNetwork(code, role) {
   pk._seenIds = {};
   pk.mqttReady = false;
@@ -7307,6 +8711,12 @@ function initPKNetwork(code, role) {
     bc = new BroadcastChannel('pk_' + code);
     bc.onmessage = e => handlePKMsg(e.data);
   } catch (e) { bc = null; }
+  if (useServerPk()) {
+    pk.transport = 'server';
+    initServerPk(code, role);
+    return;
+  }
+  pk.transport = 'mqtt';
   mqttBrokerIdx = 0;
   connectMqtt(code, role);
   document.getElementById('pkWaitMsg').textContent = role === 'host'
@@ -7363,6 +8773,11 @@ function sendPK(msg) {
   msg._from = pk.role;
   msg._ts = Date.now();
   msg._id = msg._from + '_' + msg.type + '_' + msg._ts + '_' + (msg.round || 0);
+  if (pk.transport === 'server' && typeof cloudApi !== 'undefined') {
+    cloudApi.pkSendMessage(pk.code, msg);
+    if (bc) bc.postMessage(msg);
+    return;
+  }
   const data = JSON.stringify(msg);
   if (mqttClient && mqttClient.connected) {
     mqttClient.publish(mqttTopic(pk.code), data, { qos: 1 });
@@ -7449,8 +8864,9 @@ function pkRunCountdown(startAt) {
       document.getElementById('pkCountdown').textContent = '⚔️';
       pkShowPhase('battle');
       pkRenderQ();
-      pkTimeLeft = PK_SEC;
+      pkTimeLeft = PK_SEC + (getPkGearEffects().timeBonus || 0);
       pkTimerTick();
+      pkUpdateGearButtons();
     }
   };
   tick();
@@ -7480,12 +8896,14 @@ function pkRenderQ() {
   q.opts.forEach(opt => {
     const b = document.createElement('button');
     b.className = 'opt-btn'; b.innerHTML = opt;
+    b.setAttribute('data-opt', opt);
     b.onclick = () => { pk.selected = opt; document.querySelectorAll('#pkOpts .opt-btn').forEach(x => x.style.outline='');
       b.style.outline = '2px solid #f1c40f'; };
     og.appendChild(b);
   });
   renderMath(document.getElementById('pkQText'));
   renderMath(og);
+  pkUpdateGearButtons();
 }
 
 function pkSubmitAns(timeout) {
@@ -7493,12 +8911,19 @@ function pkSubmitAns(timeout) {
   pk.submitted = true;
   const q = pk.qs[pk.round - 1];
   const ans = timeout ? '' : (pk.selected || '');
-  const ok = ans === q.ans;
+  let ok = ans === q.ans;
+  var fx = getPkGearEffects();
+  if (!ok && fx.shield && pk.gearUsed && !pk.gearUsed.shield) {
+    pk.gearUsed.shield = true;
+    ok = true;
+    showLootToast('🛡️ 算術護甲：抵消答錯！');
+  }
   const timeMs = Date.now() - (pk.startAt || Date.now());
   sendPK({ type:'answer', round:pk.round, answer:ans, isCorrect:ok, timeMs, role:pk.role });
   pk.myAnswer = { answer:ans, isCorrect:ok, timeMs };
   document.getElementById('pkSubmit').style.display = 'none';
   document.getElementById('pkTimer').textContent = '⏳';
+  if (!ok && fx.hint && q.hint) showLootToast('🧣 公式披風：' + String(q.hint).replace(/<[^>]+>/g,'').slice(0, 40));
   if (pk.opAnswer && pk.role === 'host') pkJudgeRound();
 }
 
@@ -7589,17 +9014,21 @@ function pkTryAdvanceRound() {
 function pkEndMatch() {
   const won = pk.myWins > pk.opWins;
   USER.coins += won ? ECONOMY.pkWinCoins : ECONOMY.pkLoseCoins;
-  USER.stars += won ? ECONOMY.pkWinStars : ECONOMY.pkLoseStars;
-  if (won) USER.pkWins = (USER.pkWins||0)+1; else USER.pkLosses = (USER.pkLosses||0)+1;
+  addStars(won ? ECONOMY.pkWinStars : ECONOMY.pkLoseStars, won ? ECONOMY.pkWinStars : ECONOMY.pkLoseStars);
+  if (won) { USER.pkWins = (USER.pkWins||0)+1; checkAchievements('pk_win'); if (typeof recordWeeklyPkWin === 'function') recordWeeklyPkWin(); }
+  else { USER.pkLosses = (USER.pkLosses||0)+1; checkAchievements('pk_lose'); }
   saveUser();
+  if (typeof cloudSyncUser === 'function') cloudSyncUser();
   pkShowPhase('end');
   document.getElementById('pkEndEmoji').textContent = won ? '🏆' : '💪';
   document.getElementById('pkEndTxt').textContent = (won ? '你贏了！' : '對手更強！') + ' ' + pk.myWins + ':' + pk.opWins;
+  if (pk._pollTimer) clearInterval(pk._pollTimer);
   if (mqttClient) { try { mqttClient.end(true); } catch (e) {} mqttClient = null; }
 }
 
 function pkExit() {
   if (pk && pk._mqttTimer) clearTimeout(pk._mqttTimer);
+  if (pk && pk._pollTimer) clearInterval(pk._pollTimer);
   if (mqttClient) { try { mqttClient.end(true); } catch (e) {} mqttClient = null; }
   if (pk && pk._helloTimer) clearInterval(pk._helloTimer);
   if (bc) { try { bc.close(); } catch (e) {} bc = null; }
@@ -7609,35 +9038,108 @@ function pkExit() {
 
 // ========== 抽卡 & 商店 ==========
 function drawGacha() {
-  if (USER.stars < ECONOMY.gachaCostStars) { alert('需要 50 ⭐'); return; }
-  USER.stars -= ECONOMY.gachaCostStars;
-  const r = Math.random() * 100;
-  let rarity, name, icon, desc;
-  if (r < 70) {
+  if (getSpendableStars() < ECONOMY.gachaCostStars) { alert('需要 50 可用⭐（累積星唔會減）'); return; }
+  if (!spendStars(ECONOMY.gachaCostStars)) { alert('星星不足'); return; }
+  migrateProgression(USER);
+  migrateWeekly(USER);
+  USER.gachaPity = (USER.gachaPity || 0) + 1;
+  var forceR = USER.gachaPity >= 10;
+  var r = Math.random() * 100;
+  var rarity, name, icon, desc, isCoupon = false;
+  if (forceR) {
+    USER.gachaPity = 0;
+    rarity = 'R'; name = '🧃 紙包飲品兌換券'; icon = '🧃'; desc = '向老師兌換紙包飲品（保底）'; isCoupon = true;
+  } else if (r < 70) {
     rarity = 'N';
-    if (Math.random() < 0.5) { USER.items5050++; name = '+1 50/50 刪除卡'; icon = '🌓'; desc = '答題刪除兩個錯選'; }
-    else { name = '🍬 小糖果兌換券'; icon = '🍬'; desc = '向老師兌換小糖果'; USER.coupons.push({ name, icon, desc, used:false }); }
+    if (Math.random() < 0.5) { USER.items5050++; name = '+1 50/50 刪除卡'; icon = '🌓'; desc = '答題刪除兩個錯選'; USER.gachaPity = 0; }
+    else { name = '🍬 小糖果兌換券'; icon = '🍬'; desc = '向老師兌換小糖果'; isCoupon = true; }
   } else if (r < 95) {
-    rarity = 'R'; name = '🧃 紙包飲品兌換券'; icon = '🧃'; desc = '向老師兌換紙包飲品';
-    USER.coupons.push({ name, icon, desc, used:false });
+    USER.gachaPity = 0;
+    rarity = 'R'; name = '🧃 紙包飲品兌換券'; icon = '🧃'; desc = '向老師兌換紙包飲品'; isCoupon = true;
   } else {
-    rarity = 'SSR'; name = '🍿 零食大禮包'; icon = '🍿'; desc = '超級大獎！';
-    USER.coupons.push({ name, icon, desc, used:false });
+    USER.gachaPity = 0;
+    rarity = 'SSR'; name = '🍿 零食大禮包'; icon = '🍿'; desc = '超級大獎！向老師兌換'; isCoupon = true;
   }
+  if (isCoupon) {
+    var coupon = { name: name, icon: icon, desc: desc, used: false, rarity: rarity, code: (typeof makeLocalCouponCode === 'function' ? makeLocalCouponCode() : 'MH-LOCAL') };
+    USER.coupons.push(coupon);
+    if (typeof cloudApi !== 'undefined' && cloudApi.online) {
+      cloudApi.registerCoupon(USER, coupon).then(function(code) {
+        if (code) { coupon.code = code; saveUser(); renderCoupons(); }
+      });
+    }
+  }
+  checkAchievements('gacha');
   saveUser();
-  document.getElementById('gachaTier').textContent = rarity;
-  document.getElementById('gachaIcon').textContent = icon;
-  document.getElementById('gachaName').textContent = name;
-  document.getElementById('gachaDesc').textContent = desc;
-  document.getElementById('gachaModal').classList.add('show');
+  var pityTxt = USER.gachaPity ? (' · 保底 ' + USER.gachaPity + '/10') : '';
+  if (typeof showGachaResult === 'function') {
+    showGachaResult(rarity, icon, name, desc + (isCoupon ? '\n券號會顯示喺抽卡列表' : ''), pityTxt);
+  }
 }
-function closeGachaModal() { document.getElementById('gachaModal').classList.remove('show'); renderCoupons(); }
+function closeGachaModal() {
+  document.getElementById('gachaModal').classList.remove('show');
+  var card = document.getElementById('gachaFlipCard');
+  if (card) card.classList.remove('flipped', 'rarity-N', 'rarity-R', 'rarity-SSR', 'gacha-shake');
+  renderCoupons();
+}
 function renderCoupons() {
   const el = document.getElementById('couponList');
+  if (!el) return;
   el.innerHTML = (USER && USER.coupons || []).length ? '' : '<p style="color:#a29bfe;font-size:12px;text-align:center">尚無獎券</p>';
-  (USER && USER.coupons || []).forEach((c,i) => {
+  (USER && USER.coupons || []).forEach(function(c) {
     el.innerHTML += '<div style="background:rgba(108,92,231,.2);border:1px dashed #f1c40f;border-radius:12px;padding:10px;margin-bottom:6px;font-size:12px">' +
-      c.icon + ' <b>' + c.name + '</b><br><span style="color:#a29bfe">' + c.desc + '</span></div>';
+      c.icon + ' <b>' + c.name + '</b>' + (c.used ? ' <span style="color:#636e72">(已兌換)</span>' : '') +
+      '<br><span style="color:#a29bfe">' + c.desc + '</span>' +
+      (c.code ? '<div class="coupon-code">' + c.code + '</div>' : '') + '</div>';
+  });
+}
+var lbMode = 'class';
+function setLbMode(mode) {
+  lbMode = mode;
+  var bc = document.getElementById('lbBtnClass');
+  var bl = document.getElementById('lbBtnLocal');
+  if (bc) bc.className = mode === 'class' ? 'on' : '';
+  if (bl) bl.className = mode === 'local' ? 'on' : '';
+  renderLB();
+}
+function renderLB() {
+  const el = document.getElementById('lbList');
+  const sub = document.getElementById('lbSub');
+  if (!el) return;
+  if (lbMode === 'local') {
+    if (sub) sub.textContent = '本機累積星排行';
+    const lb = JSON.parse(localStorage.getItem('mh_lb') || '[]');
+    el.innerHTML = lb.map(function(x,i) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:6px">' +
+      '<b style="color:#f1c40f">#' + (i+1) + '</b><span class="av-slot" style="width:28px;height:28px;display:inline-flex">' + avatarHtml(x.avatar, 28) + '</span>' +
+      '<div style="flex:1"><b>' + x.name + '</b><div style="font-size:10px;color:#a29bfe">' + x.title + '</div></div>' +
+      '<div style="text-align:right;font-size:12px">⭐' + x.stars + '<br>🪙' + x.coins + '</div></div>';
+    }).join('') || '<p style="color:#a29bfe;text-align:center">暂无</p>';
+    return;
+  }
+  if (!USER || !USER.classCode) {
+    if (sub) sub.textContent = '請喺主選單輸入班級代碼';
+    el.innerHTML = '<p style="color:#a29bfe;text-align:center">未加入班級</p>';
+    return;
+  }
+  if (sub) sub.textContent = '班級 ' + USER.classCode + ' · 本週答對題數';
+  el.innerHTML = '<p style="color:#a29bfe;text-align:center">載入中...</p>';
+  if (typeof cloudSyncUser === 'function') cloudSyncUser();
+  if (typeof cloudApi === 'undefined' || !cloudApi.fetchClassLeaderboard) {
+    el.innerHTML = '<p style="color:#ff7675;text-align:center">需要伺服器（本機 npm run dev）</p>';
+    return;
+  }
+  cloudApi.fetchClassLeaderboard(USER.classCode, 'weekly').then(function(rows) {
+    if (!rows.length) {
+      el.innerHTML = '<p style="color:#a29bfe;text-align:center">班級暫無資料，完成題目後會同步</p>';
+      return;
+    }
+    el.innerHTML = rows.map(function(x,i) {
+      return '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:6px">' +
+      '<b style="color:#f1c40f">#' + (i+1) + '</b><span style="font-size:22px">' + (x.avatar || '🧑‍🎓') + '</span>' +
+      '<div style="flex:1"><b>' + x.name + '</b><div style="font-size:10px;color:#a29bfe">本週答對 ' + (x.weeklyCorrect||0) + ' · PK勝 ' + (x.pkWins||0) + '</div></div>' +
+      '<div style="text-align:right;font-size:12px">⭐' + (x.lifetimeStars||0) + '</div></div>';
+    }).join('');
   });
 }
 function renderShop() {
@@ -7654,15 +9156,6 @@ function buyShop(id, cost, type) {
   if (type === '5050') USER.items5050++;
   else USER.itemsSkip++;
   saveUser(); alert('購買成功！'); renderShop();
-}
-function renderLB() {
-  const lb = JSON.parse(localStorage.getItem('mh_lb') || '[]');
-  document.getElementById('lbList').innerHTML = lb.map((x,i) =>
-    '<div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,255,255,.06);border-radius:12px;margin-bottom:6px">' +
-    '<b style="color:#f1c40f">#' + (i+1) + '</b><span class="av-slot" style="width:28px;height:28px;display:inline-flex">' + avatarHtml(x.avatar, 28) + '</span>' +
-    '<div style="flex:1"><b>' + x.name + '</b><div style="font-size:10px;color:#a29bfe">' + x.title + '</div></div>' +
-    '<div style="text-align:right;font-size:12px">⭐' + x.stars + '<br>🪙' + x.coins + '</div></div>'
-  ).join('') || '<p style="color:#a29bfe;text-align:center">暂无</p>';
 }
 
 try {
