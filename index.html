@@ -817,6 +817,10 @@ function formatQuad(a, b, c) {
   return res;
 }
 
+function formatQuadEq(a, b, c) {
+  return formatQuad(a, b, c) + " = 0";
+}
+
 function formatFactor(a, m) {
   const ax = a === 1 ? "x" : `${a}x`;
   return m >= 0 ? `(${ax} + ${m})` : `(${ax} - ${Math.abs(m)})`;
@@ -3768,12 +3772,16 @@ const LEGACY_DIFFICULTY_TOPIC_IDS = new Set(["g3_t1", "g3_t2", "g3_t3", "g3_t4",
 /** 將原有 5 課題包裝為支援 easy/dse（DSE 用不同亂數種子重新生成） */
 function wrapLegacyTopic(topic) {
   const legacyGen = topic.generate.bind(topic);
-  const hasBuiltInDiff = LEGACY_DIFFICULTY_TOPIC_IDS.has(topic.id);
+  const genSrc = legacyGen.toString();
+  const acceptsDifficulty =
+    LEGACY_DIFFICULTY_TOPIC_IDS.has(topic.id) ||
+    /difficulty\s*===\s*["']dse["']/.test(genSrc) ||
+    /\bdifficulty\b/.test(genSrc);
   return {
     id: topic.id,
     title: topic.title,
     generate: (difficulty = "easy") => {
-      if (hasBuiltInDiff) return legacyGen(difficulty);
+      if (acceptsDifficulty) return legacyGen(difficulty);
       if (difficulty === "easy") return legacyGen();
       const original = Math.random;
       Math.random = mulberry32(hashCode(topic.id + "_dse"));
@@ -3791,8 +3799,28 @@ function buildFullCurriculum() {
   for (const [gradeStr, topics] of Object.entries(rawCurriculumGenerators)) {
     const grade = Number(gradeStr);
     const legacy = topics.map(wrapLegacyTopic);
-    const extra = extraTopicsByGrade[grade] || [];
-    result[grade] = [...legacy, ...extra];
+    const extra = (extraTopicsByGrade[grade] || []).map(wrapLegacyTopic);
+    if (grade === 4) {
+      const byId = new Map([...legacy, ...extra].map(t => [t.id, t]));
+      const g4Plan = [
+        { id: "g4_t1", title: "1. 一元二次方程 (一)", src: "g4_t1" },
+        { id: "g4_t2", title: "2. 一元二次方程 (二)", src: "g4_t6" },
+        { id: "g4_t3", title: "3. 直線的方程", src: "g4_t5" },
+        { id: "g4_t4", title: "4. 函數和函數的圖像", src: "g4_t2" },
+        { id: "g4_t5", title: "5. 續多項式", src: "g4_t3" },
+        { id: "g4_t6", title: "6. 指數函數與對數函數", src: "g4_t4" },
+        { id: "g4_t7", title: "7. 變分", src: "g4_t8" },
+        { id: "g4_t8", title: "8. 三角學（一）", src: "g4_t9" },
+        { id: "g4_t9", title: "9. 續方程", src: "g4_t12" },
+      ];
+      result[4] = g4Plan.map(({ id, title, src }) => {
+        const t = byId.get(src);
+        if (!t) throw new Error(`Missing Form 4 topic source: ${src}`);
+        return { ...t, id, title };
+      });
+    } else {
+      result[grade] = [...legacy, ...extra];
+    }
   }
   return result;
 }
@@ -4444,7 +4472,7 @@ const rawCurriculumGenerators = {
   4: [
     {
       id: "g4_t1",
-      title: "1. 二次方程與判別式 Δ",
+      title: "1. 一元二次方程 (一)",
       generate: () =>
         generate10Unique(() => {
           const type = rand(1, 3);
@@ -5697,6 +5725,348 @@ function g3ProbabilityIntroQuestion(difficulty) {
   };
 }
 
+function g4Quad2NatureLabel(delta) {
+  if (delta > 0) return "2 個相異實根";
+  if (delta === 0) return "1 個重根（兩相等實根）";
+  return "0 個實根（沒有實根）";
+}
+
+function g4Quad2FormEqFromRoots(r1, r2) {
+  return formatQuadEq(1, -(r1 + r2), r1 * r2);
+}
+
+function g4PickLeadCoeff(dse) {
+  const pool = dse ? [-3, -2, -1, 1, 2, 3] : [-2, -1, 1, 2];
+  return pool[rand(0, pool.length - 1)];
+}
+
+function g4PickInt(dse, easyLo, easyHi, dseLo, dseHi) {
+  return rand(dse ? dseLo : easyLo, dse ? dseHi : easyHi);
+}
+
+function g4NonZeroInt(dse, easyLo, easyHi, dseLo, dseHi) {
+  let n = g4PickInt(dse, easyLo, easyHi, dseLo, dseHi);
+  while (n === 0) n = g4PickInt(dse, easyLo, easyHi, dseLo, dseHi);
+  return n;
+}
+
+function g4QuadraticPart2Question(difficulty = "easy", fixedType) {
+  const dse = difficulty === "dse";
+  const type = fixedType || (dse ? rand(8, 15) : rand(1, 7));
+
+  // --- 簡單 ---
+  if (type === 1) {
+    const a = g4PickLeadCoeff(dse);
+    const b = g4PickInt(dse, -8, 8, -14, 14);
+    const c = g4PickInt(dse, -10, 10, -18, 18);
+    const delta = b * b - 4 * a * c;
+    const poly = formatQuad(a, b, c);
+    const ans = `$\\Delta = ${delta}$`;
+    const wrongPool = [delta + 4, delta - 4, b * b + 4 * a * c, -delta, b * b - 4 * c].filter(x => x !== delta);
+    const opts = createUniqueOpts(ans, i => `$\\Delta = ${wrongPool[(i - 1) % wrongPool.length]}$`);
+    return {
+      q: `求方程 $${poly} = 0$ 的判別式 $\\Delta$ 之值`,
+      ans,
+      opts,
+      hint: `$\\Delta = b^2 - 4ac = (${b})^2 - 4(${a})(${c}) = ${delta}$`,
+    };
+  }
+
+  if (type === 2) {
+    const a = g4PickLeadCoeff(dse);
+    const b = g4PickInt(dse, -7, 7, -13, 13);
+    const c = g4PickInt(dse, -8, 8, -16, 16);
+    const delta = b * b - 4 * a * c;
+    const poly = formatQuad(a, b, c);
+    const ans = g4Quad2NatureLabel(delta);
+    const all = ["2 個相異實根", "1 個重根（兩相等實根）", "0 個實根（沒有實根）", "無限多個實根"];
+    const opts = createUniqueOpts(ans, i => all.filter(x => x !== ans)[i - 1] || all[i]);
+    return {
+      q: `方程 $${poly} = 0$ 的實根數目是？`,
+      ans,
+      opts,
+      hint: `$\\Delta = ${delta}$，${delta > 0 ? "$\\Delta > 0$" : delta === 0 ? "$\\Delta = 0$" : "$\\Delta < 0$"} $\\implies$ ${ans}`,
+    };
+  }
+
+  if (type === 3) {
+    const a = g4PickInt(dse, 1, 2, 1, 3);
+    let xRoot = g4NonZeroInt(dse, -6, 6, -10, 10);
+    const b = -2 * a * xRoot;
+    const k = a * xRoot * xRoot;
+    const poly = `${formatQuad(a, b, 0)} + k = 0`;
+    const ans = `$k = ${k}$`;
+    const opts = createUniqueOpts(ans, i => `$k = ${[k + 2, k - 3, -k, k + 5, k - 7][i - 1]}$`);
+    return {
+      q: `若 $${poly}$ 有相等實根，求 $k$`,
+      ans,
+      opts,
+      hint: `$\\Delta = 0 \\implies (${b})^2 - 4(${a})(k) = 0 \\implies k = ${k}$`,
+    };
+  }
+
+  if (type === 4) {
+    let r1 = g4PickInt(dse, -5, 5, -12, 12);
+    let r2 = g4PickInt(dse, -5, 5, -12, 12);
+    while (r1 === r2) r2 = g4PickInt(dse, -5, 5, -12, 12);
+    const eq = g4Quad2FormEqFromRoots(r1, r2);
+    const sum = r1 + r2;
+    const prod = r1 * r2;
+    const ans = `$${eq}$`;
+    const opts = createUniqueOpts(ans, i => {
+      if (i === 1) return `$${g4Quad2FormEqFromRoots(r1, r2 + 1)}$`;
+      if (i === 2) return `$${g4Quad2FormEqFromRoots(r1 + 1, r2)}$`;
+      return `$${formatQuadEq(1, prod, sum)}$`;
+    });
+    return {
+      q: `以 $x$ 為未知數，寫出以 ${r1} 和 ${r2} 為根的二次方程`,
+      ans,
+      opts,
+      hint: `兩根之和 $= ${r1 + r2}$，兩根之積 $= ${r1 * r2}$ $\\implies$ $x^2 - (${r1 + r2})x + (${r1 * r2}) = 0$`,
+    };
+  }
+
+  if (type === 5) {
+    const a = g4PickLeadCoeff(dse);
+    const sumTarget = g4PickInt(dse, -6, 6, -10, 10);
+    const b = -a * sumTarget;
+    const c = g4PickInt(dse, -9, 9, -15, 15);
+    const poly = formatQuad(a, b, c);
+    const sum = roundTo(-b / a, 2);
+    const ans = `$\\alpha + \\beta = ${sum}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$\\alpha + \\beta = ${sum + 1}$`, `$\\alpha + \\beta = ${sum - 1}$`, `$\\alpha + \\beta = ${-sum}$`, `$\\alpha + \\beta = ${roundTo(c / a, 2)}$`][i - 1],
+    );
+    return {
+      q: `若 $\\alpha$、$\\beta$ 為 $${poly} = 0$ 的兩根，求 $\\alpha + \\beta$`,
+      ans,
+      opts,
+      hint: `$\\alpha + \\beta = -\\dfrac{b}{a} = -\\dfrac{${b}}{${a}} = ${sum}$`,
+    };
+  }
+
+  if (type === 6) {
+    const a = g4PickLeadCoeff(dse);
+    const b = g4PickInt(dse, -8, 8, -14, 14);
+    const prodTarget = g4NonZeroInt(dse, -6, 6, -10, 10);
+    const c = a * prodTarget;
+    const poly = formatQuad(a, b, c);
+    const prod = roundTo(c / a, 2);
+    const ans = `$\\alpha\\beta = ${prod}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$\\alpha\\beta = ${prod + 1}$`, `$\\alpha\\beta = ${prod - 1}$`, `$\\alpha\\beta = ${-prod}$`, `$\\alpha\\beta = ${roundTo(-b / a, 2)}$`][i - 1],
+    );
+    return {
+      q: `若 $\\alpha$、$\\beta$ 為 $${poly} = 0$ 的兩根，求 $\\alpha\\beta$`,
+      ans,
+      opts,
+      hint: `$\\alpha\\beta = \\dfrac{c}{a} = \\dfrac{${c}}{${a}} = ${prod}$`,
+    };
+  }
+
+  if (type === 7) {
+    const n = g4PickInt(dse, 2, 12, 2, 20);
+    const sq = n * n;
+    const neg = -sq;
+    const ans = `$${n}i$`;
+    const opts = createUniqueOpts(ans, i => [`$${n + 1}i$`, `$-${n}i$`, `$${sq}i$`, `$\\sqrt{${neg}}$`][i - 1]);
+    return {
+      q: `化簡 $\\sqrt{${neg}}$（以虛數表示）`,
+      ans,
+      opts,
+      hint: `$\\sqrt{${neg}} = \\sqrt{${sq}} \\times \\sqrt{-1} = ${n}i$`,
+    };
+  }
+
+  if (!dse) return null;
+
+  // --- DSE ---
+  if (type === 8) {
+    const a = g4PickLeadCoeff(true);
+    const bLin = g4NonZeroInt(true, 2, 10, 3, 16);
+    const bound = roundTo((bLin * bLin) / (4 * a), 2);
+    const poly = `${formatQuad(a, -bLin, 0)} + k = 0`;
+    const ans = a > 0 ? `$k < ${bound}$` : `$k > ${bound}$`;
+    const opts = createUniqueOpts(ans, i =>
+      a > 0
+        ? [`$k > ${bound}$`, `$k \\leq ${bound}$`, `$k \\geq ${bound}$`, `$k < ${bound + 2}$`][i - 1]
+        : [`$k < ${bound}$`, `$k \\geq ${bound}$`, `$k \\leq ${bound - 1}$`, `$k > ${bound - 2}$`][i - 1],
+    );
+    return {
+      q: `若 $${poly}$ 有兩個相異實根，求 $k$ 的取值範圍`,
+      ans,
+      opts,
+      hint: `$\\Delta = (${bLin})^2 - 4(${a})k > 0 \\implies k ${a > 0 ? "<" : ">"} ${bound}$`,
+    };
+  }
+
+  if (type === 9) {
+    const a = g4PickLeadCoeff(true);
+    const bLin = g4NonZeroInt(true, 2, 8, 3, 14);
+    const bound = roundTo((bLin * bLin) / (4 * a), 2);
+    const poly = `${formatQuad(a, -bLin, 0)} + k = 0`;
+    const ans = a > 0 ? `$k > ${bound}$` : `$k < ${bound}$`;
+    const opts = createUniqueOpts(ans, i =>
+      a > 0
+        ? [`$k < ${bound}$`, `$k \\leq ${bound}$`, `$k \\geq ${bound - 1}$`, `$k > ${bound - 2}$`][i - 1]
+        : [`$k > ${bound}$`, `$k \\leq ${bound}$`, `$k \\geq ${bound + 1}$`, `$k < ${bound + 2}$`][i - 1],
+    );
+    return {
+      q: `若 $${poly}$ 沒有實根，求 $k$ 的取值範圍`,
+      ans,
+      opts,
+      hint: `$\\Delta = ${bLin * bLin} - 4(${a})k < 0 \\implies k ${a > 0 ? ">" : "<"} ${bound}$`,
+    };
+  }
+
+  if (type === 10) {
+    const a = g4PickLeadCoeff(true);
+    const sum = g4PickInt(true, 2, 8, -10, 10);
+    const prod = g4PickInt(true, -8, 8, -15, 15);
+    const b = -a * sum;
+    const c = a * prod;
+    const poly = formatQuad(a, b, c);
+    const ansVal = sum * sum - 2 * prod;
+    const ans = `$\\alpha^2 + \\beta^2 = ${ansVal}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$\\alpha^2 + \\beta^2 = ${ansVal + 2}$`, `$\\alpha^2 + \\beta^2 = ${sum * sum}$`, `$\\alpha^2 + \\beta^2 = ${prod * 2}$`, `$\\alpha^2 + \\beta^2 = ${ansVal - 2}$`][i - 1],
+    );
+    return {
+      q: `若 $\\alpha$、$\\beta$ 為 $${poly} = 0$ 的兩根，求 $\\alpha^2 + \\beta^2$`,
+      ans,
+      opts,
+      hint: `$\\alpha^2 + \\beta^2 = (\\alpha+\\beta)^2 - 2\\alpha\\beta = (${sum})^2 - 2(${prod}) = ${ansVal}$`,
+    };
+  }
+
+  if (type === 11) {
+    const a = g4PickLeadCoeff(true);
+    const sum = g4PickInt(true, 2, 6, 2, 10);
+    const prod = g4NonZeroInt(true, 2, 6, -10, 10);
+    const b = -a * sum;
+    const c = a * prod;
+    const poly = formatQuad(a, b, c);
+    const frac = roundTo(sum / prod, 2);
+    const ans = `$\\dfrac{1}{\\alpha} + \\dfrac{1}{\\beta} = ${frac}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$\\dfrac{1}{\\alpha} + \\dfrac{1}{\\beta} = ${frac + 1}$`, `$\\dfrac{1}{\\alpha} + \\dfrac{1}{\\beta} = ${roundTo(prod / sum, 2)}$`, `$\\dfrac{1}{\\alpha} + \\dfrac{1}{\\beta} = ${sum}$`, `$\\dfrac{1}{\\alpha} + \\dfrac{1}{\\beta} = ${frac - 0.5}$`][i - 1],
+    );
+    return {
+      q: `若 $\\alpha$、$\\beta$ 為 $${poly} = 0$ 的兩根，求 $\\dfrac{1}{\\alpha} + \\dfrac{1}{\\beta}$`,
+      ans,
+      opts,
+      hint: `$\\dfrac{1}{\\alpha} + \\dfrac{1}{\\beta} = \\dfrac{\\alpha+\\beta}{\\alpha\\beta} = \\dfrac{${sum}}{${prod}} = ${frac}$`,
+    };
+  }
+
+  if (type === 12) {
+    const sum = g4PickInt(true, -5, 5, -12, 12);
+    const prod = g4PickInt(true, -6, 6, -18, 18);
+    const eqDirect = formatQuadEq(1, -sum, prod);
+    const ans = `$${eqDirect}$`;
+    const opts = createUniqueOpts(ans, i => {
+      const w = [
+        formatQuadEq(1, sum, prod),
+        formatQuadEq(1, -prod, sum),
+        formatQuadEq(1, sum, -Math.abs(prod)),
+      ];
+      return `$${w[i - 1]}$`;
+    });
+    return {
+      q: `寫出以 $x$ 為未知數，兩根之和為 $${sum}$、兩根之積為 $${prod}$ 的二次方程`,
+      ans,
+      opts,
+      hint: `$x^2 - (\\alpha+\\beta)x + \\alpha\\beta = x^2 - (${sum})x + (${prod}) = 0$`,
+    };
+  }
+
+  if (type === 13) {
+    const a = g4PickLeadCoeff(true);
+    const sum = g4PickInt(true, 2, 6, 2, 10);
+    const prod = g4PickInt(true, 1, 5, -8, 8);
+    const b = -a * sum;
+    const c = a * prod;
+    const poly = formatQuad(a, b, c);
+    const newSum = sum + 2;
+    const newProd = prod + sum + 1;
+    const newEq = formatQuadEq(1, -newSum, newProd);
+    const ans = `$${newEq}$`;
+    const opts = createUniqueOpts(ans, i =>
+      [`$${formatQuadEq(1, -sum, prod)}$`, `$${formatQuadEq(1, -(newSum + 1), newProd)}$`, `$${formatQuadEq(1, -(sum + 1), prod + 1)}$`, `$${formatQuadEq(1, newSum, newProd)}$`][i - 1],
+    );
+    return {
+      q: `若 $\\alpha$、$\\beta$ 為 $${poly} = 0$ 的兩根，寫出以 $\\alpha+1$、$\\beta+1$ 為根的新方程`,
+      ans,
+      opts,
+      hint: `新根之和 $= (\\alpha+1)+(\\beta+1) = ${sum}+2 = ${newSum}$；新根之積 $= (\\alpha+1)(\\beta+1) = \\alpha\\beta + \\alpha + \\beta + 1 = ${prod} + ${sum} + 1 = ${newProd}$`,
+    };
+  }
+
+  if (type === 14) {
+    const items = [
+      { q: "$\\sqrt{2}$ 屬於哪類數？", ans: "無理數", hint: "$\\sqrt{2}$ 不能寫成兩整數之比，是無理數" },
+      { q: "$\\pi$ 屬於哪類數？", ans: "無理數", hint: "$\\pi$ 是無理數" },
+      { q: "$0.\\dot{1}$（循環小數）屬於哪類數？", ans: "有理數", hint: "循環小數可寫成分數，是有理數" },
+      { q: "$7i$ 屬於哪類數？", ans: "虛數", hint: "$7i = 7\\sqrt{-1}$ 是虛數（純虛數）" },
+    ];
+    const item = items[rand(0, items.length - 1)];
+    const pool = ["有理數", "無理數", "整數", "虛數", "複數"];
+    const opts = createUniqueOpts(item.ans, i => pool.filter(x => x !== item.ans)[i - 1] || pool[i]);
+    return { q: item.q, ans: item.ans, opts, hint: item.hint };
+  }
+
+  if (type === 15) {
+    const a = g4PickLeadCoeff(true);
+    const bLin = g4NonZeroInt(true, 3, 10, 4, 18);
+    const bound = roundTo((bLin * bLin) / (4 * a), 2);
+    const poly = `${formatQuad(a, -bLin, 0)} + k = 0`;
+    const ans = `$k = ${bound}$`;
+    const opts = createUniqueOpts(ans, i => `$k = ${[bound + 1, bound - 1, bound + 2, roundTo(bound / 2, 2)][i - 1]}$`);
+    return {
+      q: `若 $${poly}$ 有相等實根，求 $k$`,
+      ans,
+      opts,
+      hint: `$\\Delta = 0 \\implies (${bLin})^2 - 4(${a})k = 0 \\implies k = ${bound}$`,
+    };
+  }
+
+  return null;
+}
+
+function g4QuadraticPart2Set(difficulty = "easy") {
+  const dse = difficulty === "dse";
+  const typePool = dse ? [8, 9, 10, 11, 12, 13, 14, 15] : [1, 2, 3, 4, 5, 6, 7];
+  const order = shuffleArray(typePool);
+  const qList = [];
+  const seen = new Set();
+
+  for (const t of order) {
+    if (qList.length >= 10) break;
+    const q = g4QuadraticPart2Question(difficulty, t);
+    if (!q?.q || !q.ans) continue;
+    const key = q.q.slice(0, 40) + q.ans;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    qList.push(q);
+  }
+
+  let guard = 0;
+  while (qList.length < 10 && guard < 40) {
+    guard++;
+    const q = g4QuadraticPart2Question(difficulty);
+    if (!q?.q) continue;
+    const key = q.q.slice(0, 40) + q.ans;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    qList.push(q);
+  }
+
+  while (qList.length < 10 && qList.length > 0) {
+    qList.push({ ...qList[qList.length % qList.length] });
+  }
+  return qList;
+}
+
 const extraTopicsByGrade = {
   1: [
     {
@@ -6253,47 +6623,8 @@ const extraTopicsByGrade = {
   4: [
     {
       id: "g4_t6",
-      title: "6. 判別式進階",
-      generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          const a = rand(1, dse ? 3 : 2);
-          let xRoot = rand(-6, 6);
-          while (xRoot === 0) xRoot = rand(-6, 6);
-          const b = -2 * a * xRoot;
-          const k = a * xRoot * xRoot;
-          const poly = `${a === 1 ? "" : a}x^2 ${b >= 0 ? "+ " + b + "x" : "- " + Math.abs(b) + "x"} + k = 0`;
-          const opts = createUniqueOpts(`$k = ${k}$`, i => `$k = ${[k + 2, k - 3, -k, k + 5][i - 1]}$`);
-          return {
-            q: `若 $${poly}$ 有相等實根，求 $k$`,
-            ans: `$k = ${k}$`,
-            opts,
-            hint: `$\\Delta = 0 \\implies k = ${k}$`,
-          };
-        }),
-    },
-    {
-      id: "g4_t7",
-      title: "7. 餘式定理",
-      generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          let k = rand(dse ? -5 : -3, dse ? 5 : 3);
-          while (k === 0) k = rand(-3, 3);
-          const a = rand(1, dse ? 3 : 2);
-          const b = rand(-5, 5);
-          const c = rand(-8, 8);
-          const R = a * k * k + b * k + c;
-          const polyStr = formatQuad(a, b, c);
-          const divStr = k > 0 ? `(x - ${k})` : `(x + ${Math.abs(k)})`;
-          const opts = createUniqueOpts(`$R = ${R}$`, i => `$R = ${[R + 3, R - 2, -R, R + 5][i - 1]}$`);
-          return {
-            q: `$P(x) = ${polyStr}$ 除以 $${divStr}$ 的餘數 $R$？`,
-            ans: `$R = ${R}$`,
-            opts,
-            hint: `$R = P(${k}) = ${R}$`,
-          };
-        }),
+      title: "6. 一元二次方程 (二) 進階",
+      generate: (difficulty = "easy") => g4QuadraticPart2Set(difficulty),
     },
     {
       id: "g4_t8",
@@ -6352,46 +6683,6 @@ const extraTopicsByGrade = {
             ans: `$${item.ans}$`,
             opts,
             hint: `$${item.hint}$`,
-          };
-        }),
-    },
-    {
-      id: "g4_t10",
-      title: "10. 圓的基本性質",
-      generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          const centerAngle = rand(dse ? 6 : 4, dse ? 18 : 12) * 10;
-          const circumAngle = centerAngle / 2;
-          const opts = createUniqueOpts(`$${circumAngle}^{\\circ}$`, i =>
-            [`$${centerAngle}^{\\circ}$`, `$${180 - circumAngle}^{\\circ}$`, `$${circumAngle + 10}^{\\circ}$`, `$${circumAngle - 10}^{\\circ}$`][i - 1],
-          );
-          return {
-            q: `同弧圓心角 $${centerAngle}^{\\circ}$，求圓周角`,
-            ans: `$${circumAngle}^{\\circ}$`,
-            opts,
-            hint: `圓周角 $= \\frac{1}{2} \\times$ 圓心角 $= ${circumAngle}^{\\circ}$`,
-          };
-        }),
-    },
-    {
-      id: "g4_t11",
-      title: "11. 百分法進階",
-      generate: (difficulty = "easy") =>
-        generate10Unique(() => {
-          const dse = difficulty === "dse";
-          const P = rand(5, dse ? 20 : 12) * 1000;
-          const r = rand(3, dse ? 10 : 6);
-          const years = dse ? 3 : 2;
-          const ans = Math.round(P * Math.pow(1 + r / 100, years));
-          const opts = createUniqueOpts(`$${ans}$`, i =>
-            [`$${P + (P * r * years) / 100}$`, `$${ans + 500}$`, `$${Math.round(P * (1 + r / 100))}$`, `$${ans - 300}$`][i - 1],
-          );
-          return {
-            q: `投資 $${P}$，年增長率 $${r}\\%$，${years} 年後總值（取整）？`,
-            ans: `$${ans}$`,
-            opts,
-            hint: `$${P}(1+${r}\\%)^${years} \\approx ${ans}$`,
           };
         }),
     },
