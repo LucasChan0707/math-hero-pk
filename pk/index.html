@@ -368,7 +368,7 @@ input.inp{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(108,9
   <div class="login-hero">
     <div class="login-logo">🏰📐</div>
     <div class="title-main">數學勇者地城</div>
-    <p class="sub">Online Quest · PK 對戰 · 中一至中六<br>跟課本課題順序逐關挑戰</p>
+    <p class="sub">Online Quest · PK 對戰 · 中一至中六 · M2<br>跟課本課題順序逐關挑戰</p>
     <span class="server-tag">🌐 本機存檔 · 隨時繼續冒險</span>
     <button type="button" class="teacher-portal-link" onclick="openTeacherPortal()">👩‍🏫 老師後台登入</button>
   </div>
@@ -3888,8 +3888,8 @@ function buildFullCurriculum() {
     if (grade === 4) {
       const byId = new Map([...legacy, ...extra].map(t => [t.id, t]));
       const g4Plan = [
-        { id: "g4_t1", title: "1. 一元二次方程 (一)", src: "g4_t1" },
-        { id: "g4_t2", title: "2. 一元二次方程 (二)", src: "g4_t6" },
+        { id: "g4_t1", title: "1. 一元二次方程（一）", src: "g4_t1" },
+        { id: "g4_t2", title: "2. 一元二次方程（二）", src: "g4_t6" },
         { id: "g4_t3", title: "3. 直線的方程", src: "g4_t5" },
         { id: "g4_t4", title: "4. 函數和函數的圖像", src: "g4_t2" },
         { id: "g4_t5", title: "5. 續多項式", src: "g4_t3" },
@@ -5043,6 +5043,7 @@ const rawCurriculumGenerators = {
         }),
     },
   ],
+  7: [],
 };
 
 function roundTo(n, dp) {
@@ -6517,6 +6518,264 @@ function g4QuadraticPart2Set(difficulty = "easy") {
   return qList;
 }
 
+function m2Binom(n, k) {
+  if (k < 0 || k > n) return 0;
+  let num = 1;
+  let den = 1;
+  for (let i = 0; i < k; i++) {
+    num *= n - i;
+    den *= i + 1;
+  }
+  return num / den;
+}
+
+function m2Gen(lesson, difficulty = "easy") {
+  const dse = difficulty === "dse";
+  switch (lesson) {
+    case 1: {
+      const n = rand(dse ? 10 : 6, dse ? 20 : 12);
+      const sum = (n * (n + 1)) / 2;
+      const correct = `$${sum}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${sum + n}$`, `$${sum - n}$`, `$${n * n}$`, `$${sum + 1}$`][i - 1],
+      );
+      return {
+        q: `用數學歸納法相關公式，求 $1 + 2 + \\cdots + ${n}$`,
+        ans: correct,
+        opts,
+        hint: `$\\sum_{k=1}^{${n}} k = \\frac{${n}(${n}+1)}{2} = ${sum}$`,
+      };
+    }
+    case 2: {
+      const n = rand(dse ? 4 : 3, dse ? 7 : 5);
+      const k = rand(1, n - 1);
+      const coeff = m2Binom(n, k);
+      const correct = `$${coeff}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${m2Binom(n, k + 1)}$`, `$${m2Binom(n + 1, k)}$`, `$${coeff + 1}$`, `$${coeff * 2}$`][i - 1],
+      );
+      return {
+        q: `$(x + 1)^{${n}}$ 展開式中 $x^{${k}}$ 的係數是？`,
+        ans: correct,
+        opts,
+        hint: `$\\binom{${n}}{${k}} = ${coeff}$`,
+      };
+    }
+    case 3: {
+      const deg = rand(15, 75);
+      const rad = (deg * Math.PI) / 180;
+      const s = Math.sin(rad);
+      const c = Math.cos(rad);
+      const val = Math.round((s * s + c * c) * 1000) / 1000;
+      const correct = `$${val}$`;
+      const opts = createUniqueOpts(correct, i => [`$${val + 0.1}$`, `$${val - 0.1}$`, `$2$`, `$0$`][i - 1]);
+      return {
+        q: `若 $\\theta = ${deg}^\\circ$，求 $\\sin^2\\theta + \\cos^2\\theta$`,
+        ans: correct,
+        opts,
+        hint: `恆等式 $\\sin^2\\theta + \\cos^2\\theta = 1$`,
+      };
+    }
+    case 4: {
+      const deg = rand(10, 40);
+      const rad = (deg * Math.PI) / 180;
+      const s = Math.sin(rad);
+      const c = Math.cos(rad);
+      const ans = Math.round(2 * s * c * 1000) / 1000;
+      const correct = `$${ans}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${Math.round((s + c) * 1000) / 1000}$`, `$${Math.round((c - s) * 1000) / 1000}$`, `$${ans + 0.2}$`, `$${ans - 0.2}$`][i - 1],
+      );
+      return {
+        q: `若 $\\theta = ${deg}^\\circ$，求 $\\sin 2\\theta$（三位有效數字）`,
+        ans: correct,
+        opts,
+        hint: `$\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$`,
+      };
+    }
+    case 5: {
+      const n = rand(dse ? 50 : 20, dse ? 200 : 100);
+      const approx = Math.round(Math.pow(1 + 1 / n, n) * 1000) / 1000;
+      const correct = `$${approx}$`;
+      const opts = createUniqueOpts(correct, i => [`$${approx + 0.05}$`, `$${approx - 0.05}$`, `$2.718$`, `$3$`][i - 1]);
+      return {
+        q: `估算 $\\left(1 + \\frac{1}{${n}}\\right)^{${n}}$（三位小數）`,
+        ans: correct,
+        opts,
+        hint: `當 $n \\to \\infty$，極限趨近 $e \\approx 2.718$`,
+      };
+    }
+    case 6: {
+      const n = rand(2, dse ? 6 : 5);
+      const xVal = rand(1, 4);
+      const deriv = n * Math.pow(xVal, n - 1);
+      const correct = `$${deriv}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${n * Math.pow(xVal, n)}$`, `$${Math.pow(xVal, n - 1)}$`, `$${deriv + n}$`, `$${deriv - 1}$`][i - 1],
+      );
+      return {
+        q: `若 $f(x) = x^{${n}}$，求 $f'(${xVal})$`,
+        ans: correct,
+        opts,
+        hint: `$f'(x) = ${n}x^{${n - 1}}$，代入 $x=${xVal}$`,
+      };
+    }
+    case 7: {
+      const m = rand(1, 3);
+      const c0 = rand(-3, 3);
+      const x0 = rand(1, 4);
+      const slope = 2 * m * x0;
+      const correct = `$${slope}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${2 * m}$`, `$${slope + 2}$`, `$${m * x0}$`, `$${slope - 2}$`][i - 1],
+      );
+      return {
+        q: `曲線 $y = ${m}x^2 + ${c0}$ 在 $x = ${x0}$ 的切線斜率是？`,
+        ans: correct,
+        opts,
+        hint: `$\\frac{dy}{dx} = ${2 * m}x$，在 $x=${x0}$ 得 $${slope}$`,
+      };
+    }
+    case 8: {
+      const n = rand(1, dse ? 4 : 3);
+      const correct = n === 1 ? `$\\frac{x^2}{2} + C$` : `$\\frac{x^{${n + 1}}}{${n + 1}} + C$`;
+      const wrong = [
+        `$x^{${n}} + C$`,
+        `$${n}x^{${n - 1}} + C$`,
+        `$\\frac{x^{${n}}}{${n}} + C$`,
+        `$\\frac{x^{${n + 2}}}{${n + 2}} + C$`,
+      ];
+      const opts = createUniqueOpts(correct, i => wrong[i - 1]);
+      return {
+        q: `求 $\\int x^{${n}} \\, dx$`,
+        ans: correct,
+        opts,
+        hint: `$\\int x^n dx = \\frac{x^{n+1}}{n+1} + C$`,
+      };
+    }
+    case 9: {
+      const a = rand(1, dse ? 4 : 3);
+      const ans = (a * a * a) / 3;
+      const correct = `$${ans}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${a * a}$`, `$${ans + a}$`, `$${ans - 1}$`, `$${a * a * a}$`][i - 1],
+      );
+      return {
+        q: `求 $\\int_0^{${a}} x^2 \\, dx$`,
+        ans: correct,
+        opts,
+        hint: `$\\left[\\frac{x^3}{3}\\right]_0^{${a}} = \\frac{${a}^3}{3} = ${ans}$`,
+      };
+    }
+    case 10: {
+      const a = rand(2, dse ? 5 : 4);
+      const area = (a * a * a) / 3;
+      const correct = `$${area}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${a * a}$`, `$${area + a}$`, `$${2 * area}$`, `$${area - 1}$`][i - 1],
+      );
+      return {
+        q: `曲線 $y = x^2$ 與 $x$ 軸、$x = ${a}$ 圍成的面積是？`,
+        ans: correct,
+        opts,
+        hint: `面積 $= \\int_0^{${a}} x^2 dx = ${area}$`,
+      };
+    }
+    case 11: {
+      const a = rand(1, 4);
+      const b = rand(1, 4);
+      const c = rand(1, 4);
+      const d = rand(1, 4);
+      const det = a * d - b * c;
+      const correct = `$${det}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${a * d + b * c}$`, `$${a + d}$`, `$${det + 2}$`, `$${det - 2}$`][i - 1],
+      );
+      return {
+        q: `矩陣 $\\begin{pmatrix} ${a} & ${b} \\\\ ${c} & ${d} \\end{pmatrix}$ 的行列式是？`,
+        ans: correct,
+        opts,
+        hint: `$\\det = ad - bc = ${a}\\times${d} - ${b}\\times${c} = ${det}$`,
+      };
+    }
+    case 12: {
+      const xAns = rand(1, 5);
+      const yAns = rand(1, 5);
+      const a1 = rand(1, 3);
+      const b1 = rand(1, 3);
+      const c1 = a1 * xAns + b1 * yAns;
+      const a2 = rand(1, 3);
+      const b2 = rand(-2, 2) || 1;
+      const c2 = a2 * xAns + b2 * yAns;
+      const correct = `$x = ${xAns},\\ y = ${yAns}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$x = ${xAns + 1},\\ y = ${yAns}$`, `$x = ${xAns},\\ y = ${yAns + 1}$`, `$x = ${yAns},\\ y = ${xAns}$`, `$x = ${xAns - 1},\\ y = ${yAns - 1}$`][i - 1],
+      );
+      return {
+        q: `解方程組：$\\begin{cases} ${a1}x + ${b1}y = ${c1} \\\\ ${a2}x + ${b2}y = ${c2} \\end{cases}$`,
+        ans: correct,
+        opts,
+        hint: `可消元或代入，得 $x=${xAns}, y=${yAns}$`,
+      };
+    }
+    case 13: {
+      const x = rand(1, 6);
+      const y = rand(1, 6);
+      const mag = Math.round(Math.sqrt(x * x + y * y) * 100) / 100;
+      const correct = `$${mag}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${x + y}$`, `$${Math.abs(x - y)}$`, `$${mag + 1}$`, `$${mag - 1}$`][i - 1],
+      );
+      return {
+        q: `向量 $\\vec{a} = (${x}, ${y})$ 的模是？`,
+        ans: correct,
+        opts,
+        hint: `$|\\vec{a}| = \\sqrt{${x}^2 + ${y}^2} = ${mag}$`,
+      };
+    }
+    case 14: {
+      const x1 = rand(1, 4);
+      const y1 = rand(1, 4);
+      const x2 = rand(1, 4);
+      const y2 = rand(1, 4);
+      const dot = x1 * x2 + y1 * y2;
+      const cross = x1 * y2 - y1 * x2;
+      if (rand(0, 1) === 0) {
+        const correct = `$${dot}$`;
+        const opts = createUniqueOpts(correct, i =>
+          [`$${dot + x1}$`, `$${dot - y1}$`, `$${x1 * x2}$`, `$${y1 * y2}$`][i - 1],
+        );
+        return {
+          q: `$\\vec{a}=(${x1},${y1}),\\ \\vec{b}=(${x2},${y2})$，求 $\\vec{a}\\cdot\\vec{b}$`,
+          ans: correct,
+          opts,
+          hint: `$\\vec{a}\\cdot\\vec{b} = ${x1}\\times${x2} + ${y1}\\times${y2} = ${dot}$`,
+        };
+      }
+      const correct = `$${cross}$`;
+      const opts = createUniqueOpts(correct, i =>
+        [`$${dot}$`, `$${cross + 2}$`, `$${x1 * y2}$`, `$${y1 * x2}$`][i - 1],
+      );
+      return {
+        q: `$\\vec{a}=(${x1},${y1}),\\ \\vec{b}=(${x2},${y2})$（平面上），求 $\\vec{a}\\times\\vec{b}$ 的純量值（$z$ 分量）`,
+        ans: correct,
+        opts,
+        hint: `$\\vec{a}\\times\\vec{b} = ${x1}\\times${y2} - ${y1}\\times${x2} = ${cross}$`,
+      };
+    }
+    default:
+      return { q: "?", ans: "$0$", opts: ["$0$", "$1$", "$2$", "$3$"], hint: "" };
+  }
+}
+
+function m2Topic(lesson, title) {
+  return {
+    id: `m2_t${lesson}`,
+    title,
+    generate: (difficulty = "easy") => generate10Unique(() => m2Gen(lesson, difficulty)),
+  };
+}
+
 const extraTopicsByGrade = {
   1: [
     {
@@ -7545,6 +7804,22 @@ const extraTopicsByGrade = {
         }),
     },
   ],
+  7: [
+    m2Topic(1, "1. 數學歸納法"),
+    m2Topic(2, "2. 二項式定理"),
+    m2Topic(3, "3. 三角學（一）"),
+    m2Topic(4, "4. 三角學（二）"),
+    m2Topic(5, "5. 極限與數 e"),
+    m2Topic(6, "6. 求導法"),
+    m2Topic(7, "7. 求導法的應用"),
+    m2Topic(8, "8. 不定積分法及其應用"),
+    m2Topic(9, "9. 定積分法"),
+    m2Topic(10, "10. 定積分法的應用"),
+    m2Topic(11, "11. 矩陣與行列式"),
+    m2Topic(12, "12. 線性方程組"),
+    m2Topic(13, "13. 向量簡介"),
+    m2Topic(14, "14. 純量積與向量積"),
+  ],
 };
 
 function gcd(a, b) {
@@ -7596,7 +7871,7 @@ function calcRewards(diff, correct, total, first) {
 
 const AVATARS = typeof LOGIN_AVATARS !== 'undefined' ? LOGIN_AVATARS : ['🧑‍🎓','👦','👧','🦸','🧙','🐱'];
 let startingSingle = false;
-const GRADE_NAMES = {1:'中一',2:'中二',3:'中三',4:'中四',5:'中五',6:'中六'};
+const GRADE_NAMES = {1:'中一',2:'中二',3:'中三',4:'中四',5:'中五',6:'中六',7:'M2'};
 const SHOP = [
   { id:'5050', name:'🌓 50/50 刪除卡', cost:30, type:'5050' },
   { id:'skip', name:'⏭️ 跳過卡', cost:50, type:'skip' }
@@ -9221,7 +9496,7 @@ function initUI() {
   const gt = document.getElementById('gradeTabs');
   if (!gt) return;
   gt.innerHTML = '';
-  for (let g = 1; g <= 6; g++) {
+  for (let g = 1; g <= 7; g++) {
     const b = document.createElement('button');
     b.className = 'grade-tab' + (g === 1 ? ' on' : '');
     b.textContent = GRADE_NAMES[g];
